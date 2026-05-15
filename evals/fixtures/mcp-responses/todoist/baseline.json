@@ -1,0 +1,31 @@
+{
+  "_meta": {
+    "description": "Baseline Todoist state — a few in-flight tasks, nothing exotic."
+  },
+  "tool": "find-tasks",
+  "response": {
+    "tasks": [
+      {
+        "id": "task_001",
+        "content": "Send May investor update to Jana",
+        "due": "2026-05-18",
+        "priority": "p2",
+        "project": "Solera Ops"
+      },
+      {
+        "id": "task_002",
+        "content": "Finalize per-seat pricing for Mercia pitch",
+        "due": "2026-05-21",
+        "priority": "p1",
+        "project": "Sales"
+      },
+      {
+        "id": "task_003",
+        "content": "Review design tokens PR",
+        "due": "2026-05-16",
+        "priority": "p3",
+        "project": "Solera Eng"
+      }
+    ]
+  }
+}

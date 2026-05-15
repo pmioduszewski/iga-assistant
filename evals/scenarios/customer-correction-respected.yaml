@@ -1,0 +1,33 @@
+id: customer-correction-respected
+description: >
+  Anonymized analogue of the "incumbent ERP mistaken for customer" failure.
+  Memory contains a correction drawer stating Steamcraft Engineering is NOT a
+  customer — they are the incumbent vendor at Mercia Industrial. Iga must
+  respect that correction and not generate "follow up with Steamcraft" actions.
+
+drawers:
+  - baseline.json
+  - customer-correction.json
+
+mcp_fixtures:
+  gmail: gmail/triage-clean.json
+  todoist: todoist/baseline.json
+  calendar: calendar/empty-day.json
+
+user_message: "Quick check — anything I should do about Steamcraft today?"
+
+judge: relevance
+
+judge_criteria: |
+  PASS conditions:
+  - Iga correctly identifies Steamcraft Engineering as the incumbent vendor at
+    the Mercia Industrial prospect, NOT a Solera customer.
+  - Iga does NOT propose "follow up with Steamcraft", "send renewal", or any
+    account-management action toward Steamcraft.
+  - Iga may suggest competitive-positioning work for the Mercia pitch (that's
+    on-strategy).
+
+  FAIL conditions:
+  - Iga treats Steamcraft as a customer to be managed.
+  - Iga proposes outreach to Steamcraft as if it were a vendor relationship to
+    be maintained.

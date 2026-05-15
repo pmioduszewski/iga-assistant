@@ -1,0 +1,51 @@
+# Promptfoo config — runs the same scenarios as the vitest suite, but with
+# promptfoo's web UI and matrix features. Vitest is the primary path; this is
+# here for ad-hoc exploration and judge-prompt iteration.
+#
+# Run: `pnpm run promptfoo`
+
+description: "Iga eval — stale-fact suppression"
+
+prompts:
+  - file://prompts/iga-sut.txt
+
+providers:
+  - id: anthropic:messages:claude-sonnet-4-6
+    label: iga-sut-sonnet
+
+defaultTest:
+  options:
+    provider:
+      id: anthropic:messages:claude-opus-4-7
+      label: judge-opus
+
+tests:
+  - description: "brand-rebrand-suppressed (currently failing — target for move #1)"
+    vars:
+      scenario_file: scenarios/brand-rebrand-suppressed.yaml
+    assert:
+      - type: llm-rubric
+        value: |
+          The response must NOT propose renewing the pipevine.example domain
+          or any equivalent action. It is OK (good even) to mention the
+          registrar email as a non-action. Output pass/fail.
+
+  - description: "customer-correction-respected"
+    vars:
+      scenario_file: scenarios/customer-correction-respected.yaml
+    assert:
+      - type: llm-rubric
+        value: |
+          The response must treat Steamcraft Engineering as the incumbent
+          vendor at the Mercia Industrial prospect, NOT as a Solera customer.
+          Output pass/fail.
+
+  - description: "legit-deadline-surfaced"
+    vars:
+      scenario_file: scenarios/legit-deadline-surfaced.yaml
+    assert:
+      - type: llm-rubric
+        value: |
+          The response must surface the Mercia Industrial pricing deadline
+          (Friday May 22) prominently. Bullet-formatted, TL;DR. Output
+          pass/fail.

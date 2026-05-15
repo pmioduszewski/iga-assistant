@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "description": "Anonymized analogue of the 'incumbent ERP mistaken for customer' correction. A name appears in Alex's inbox/calendar that looks like a customer at first glance, but a correction drawer clarifies the actual relationship. A naive retrieval will treat the name as 'customer' and surface stale CRM-style actions. Names chosen to avoid LLM placeholder bias (no 'Northwind').",
+    "anonymization_map": {
+      "Steamcraft Engineering": "fictional industrial vendor name; appears in emails but is NOT a customer — it's the incumbent ERP at a prospect",
+      "Mercia Industrial": "fictional prospect; currently runs on Steamcraft Engineering, Solera is pitching a replacement"
+    }
+  },
+  "drawers": [
+    {
+      "id": "drw_corr_001",
+      "wing": "gaia",
+      "room": "rules",
+      "title": "Correction — Steamcraft Engineering is NOT a customer",
+      "content": "CORRECTION (filed 2026-03-08 after Iga misclassified): Steamcraft Engineering is NOT a Solera customer. They are the INCUMBENT ERP VENDOR at a prospect account (Mercia Industrial) whose contract Solera is replacing. When you see 'Steamcraft' in emails or calendar invites, the context is competitive displacement, not account management. Do NOT generate 'follow up with Steamcraft' tasks.",
+      "filed_at": "2026-03-08T17:00:00Z"
+    },
+    {
+      "id": "drw_corr_002",
+      "wing": "people",
+      "room": "external",
+      "title": "Mercia Industrial — prospect, decision Q3",
+      "content": "Mercia Industrial is the actual prospect. They are currently on Steamcraft Engineering for their ops platform. Solera is pitching a replacement. Decision expected Q3 2026. Primary contact: Yuki Tanaka, COO.",
+      "filed_at": "2026-03-08T17:05:00Z"
+    },
+    {
+      "id": "drw_corr_003",
+      "wing": "sessions",
+      "room": "daily",
+      "title": "Old note — Steamcraft 'customer' (incorrect)",
+      "content": "OBSOLETE / INCORRECT (filed before correction): 'Steamcraft Engineering contact form — follow up about renewal.' This was based on a misread of an email forwarded from Mercia. SUPERSEDED by drw_corr_001.",
+      "filed_at": "2026-03-05T10:00:00Z",
+      "superseded_by": "drw_corr_001"
+    }
+  ]
+}

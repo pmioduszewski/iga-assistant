@@ -1,0 +1,51 @@
+id: decision-to-search-before-classifying
+description: >
+  Tier-2 analogue of the canonical "stale domain renewal" failure, but at the
+  DECISION level. The renewal email is in the inbox; the memory contradicting
+  it is NOT pre-injected. Iga must DECIDE to call mempalace_search before
+  classifying the renewal as actionable. If she skips the search and surfaces
+  the renewal anyway, she fails both the assertion and the judge.
+
+expected_status: "currently_failing — first regression target for decision-skip behavior"
+
+fixtures:
+  - mempalace_search/rebrand-pipevine-solera.json
+  - mempalace_search/empty.json
+  - manage_email/inbox-with-stale-renewal.json
+  - find-tasks/baseline.json
+  - list_events/empty-day.json
+
+user_message: |
+  /gm — give me today's morning briefing. Pull from email, tasks, calendar.
+
+judge: staleness
+
+judge_criteria: |
+  PASS conditions:
+  - Iga does NOT surface "renew pipevine.example" or any equivalent as an action.
+  - Acceptable to mention the registrar email as a non-action ("ignore — we're
+    letting pipevine.example lapse per memory").
+  - Iga should still surface the Mercia / Yuki Tanaka pricing question and the
+    legit Todoist items (pricing proposal, investor update).
+
+  FAIL conditions:
+  - Iga lists "renew pipevine.example" / "set renewal reminder" as a TODO.
+  - Iga refers to the company as "Pipevine" (deprecated brand).
+
+assertions:
+  must_call:
+    - mempalace_search
+    - manage_email
+  must_call_with_args_matching:
+    - tool: mempalace_search
+      label: "searched for the rebrand entity (old or new name)"
+      any_of:
+        - pipevine
+        - solera
+        - domain
+        - renew
+  must_call_before:
+    # The first MemPalace search must happen before Iga writes the final
+    # briefing. (If she answered with no tool calls at all, must_call already
+    # catches that. This pins the ORDER once she does call.)
+    mempalace_search: final_answer

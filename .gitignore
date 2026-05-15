@@ -1,0 +1,110 @@
+# =============================================================================
+# Python
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# =============================================================================
+# Node / pnpm
+# =============================================================================
+node_modules/
+*.tsbuildinfo
+.pnpm-store/
+
+# =============================================================================
+# MemPalace — third-party Python install + LIVE palace data. Never ship.
+# =============================================================================
+mempalace/.venv/
+mempalace/.mempalace/
+
+# =============================================================================
+# Claude Code local config — per-user permissions, hooks, MCP paths
+# =============================================================================
+.claude/settings.local.json
+
+# =============================================================================
+# Three-layer config model (see CLAUDE.md) — personal overrides never ship
+# =============================================================================
+CLAUDE.local.md
+rules/*.local.md
+skills/*/SKILL.local.md
+
+# The installed-rules layer is user-personalized; OSS contributors install
+# from community_rules/ via `/gaia install <pack>`. We ship community_rules/,
+# we do NOT ship rules/.
+rules/
+!rules/.gitkeep
+
+# =============================================================================
+# Personal data stores
+# =============================================================================
+finance.db
+rize_data.db
+*.db
+finance_rules.yml
+queries.sql
+projects.sql
+FINANCE.md
+
+# Personal one-off scripts (generalize before shipping)
+load_finance.py
+load_ksef.py
+load_rize.py
+
+# =============================================================================
+# Scratch / ephemeral
+# =============================================================================
+scratch/
+*.original.md
+*.bak
+
+# =============================================================================
+# Secrets
+# =============================================================================
+.env
+.env.*
+!.env.example
+
+# =============================================================================
+# Eval harness — local outputs
+# =============================================================================
+evals/node_modules/
+evals/.env
+evals/results/
+evals/.promptfoo/
+evals/calibration/contested-cases.jsonl
+
+# =============================================================================
+# Session / runtime state
+# =============================================================================
+.gaia-session-id
+
+# =============================================================================
+# skills/email/ — contains PII in test fixtures (user emails + real names).
+# Audit + anonymize before un-ignoring.
+# =============================================================================
+skills/email/
+
+# =============================================================================
+# skills/trainer/ — entirely personal (body state, health info, schedule).
+# Lives only in the user's local tree; not shipped.
+# =============================================================================
+skills/trainer/
+
+# =============================================================================
+# OS / editor
+# =============================================================================
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+*.log

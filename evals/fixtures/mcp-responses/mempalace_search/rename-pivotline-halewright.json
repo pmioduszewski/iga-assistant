@@ -1,0 +1,27 @@
+{
+  "tool": "mempalace_search",
+  "id": "mempalace_search.rename-pivotline-halewright",
+  "match": {
+    "query_contains_any": ["pivotline", "halewright"]
+  },
+  "response": {
+    "results": [
+      {
+        "id": "drw_rename_001",
+        "wing": "decisions",
+        "room": "customers",
+        "title": "Pivotline renamed to Halewright Capital (2026-04-02)",
+        "content": "DECISION 2026-04-02: Our customer 'Pivotline' rebranded to 'Halewright Capital'. Same legal entity, same contacts (Rosa Inojosa, COO). Use Halewright Capital in all new communication. Old name retained in archive only.",
+        "filed_at": "2026-04-02T11:00:00Z"
+      },
+      {
+        "id": "drw_rename_002",
+        "wing": "people",
+        "room": "external",
+        "title": "Rosa Inojosa — Halewright Capital (ex-Pivotline)",
+        "content": "Rosa Inojosa, COO at Halewright Capital (formerly Pivotline). Decision-maker on the analytics rollout. Calls Tuesdays.",
+        "filed_at": "2026-04-02T11:05:00Z"
+      }
+    ]
+  }
+}

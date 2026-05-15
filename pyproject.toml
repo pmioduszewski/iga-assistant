@@ -1,0 +1,39 @@
+[project]
+name = "iga-assistant"
+version = "0.0.1"
+description = "Personal AI assistant with persistent memory. Working name; OSS rename pending brand decision."
+requires-python = ">=3.11"
+authors = [{ name = "Paweł Mioduszewski" }]
+license = { text = "MIT" }
+readme = "README.md"
+
+# Runtime deps: the top-level scripts (load_finance.py, load_ksef.py, load_rize.py)
+# use only stdlib. Skills declare their own optional dep groups below.
+dependencies = []
+
+[project.optional-dependencies]
+# Dev / test deps used across the repo
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+]
+
+# Per-skill optional groups — install with `uv sync --extra <name>`
+proactive-research = [
+  # scanner.py uses stdlib only; tests need pytest (already in [dev])
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+  "evals/test",
+  "skills",
+]
+pythonpath = [
+  "skills/iga-proactive-research/engine",
+]
+addopts = "-ra"
+
+[tool.uv]
+# MemPalace runs in its own isolated venv at mempalace/.venv — do NOT manage it here.
+# That venv was created with `python3.14 -m venv` and pip-installs `mempalace==3.3.4`.
+package = false

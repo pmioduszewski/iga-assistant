@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "description": "Clean Gmail triage — contains a LEGIT urgent item (Mercia Industrial prospect, Q3 decision approaching) and nothing stale. A correct Iga should surface the Mercia thread as actionable."
+  },
+  "tool": "manage_email.triage",
+  "response": {
+    "unread_count": 4,
+    "buckets": {
+      "urgent": [
+        {
+          "from": "Yuki Tanaka <yuki@mercia-industrial.example>",
+          "subject": "Decision deadline — need final pricing by Friday",
+          "snippet": "Procurement needs the final per-seat number by EOD Friday May 22 to put it on the board agenda.",
+          "received_at": "2026-05-15T08:00:00Z"
+        }
+      ],
+      "actions": [
+        {
+          "from": "Jana Park <jana@northstar.example>",
+          "subject": "Monthly update — when can I expect May numbers?",
+          "snippet": "Just a nudge on the May investor update.",
+          "received_at": "2026-05-14T19:00:00Z"
+        }
+      ],
+      "fyi": []
+    }
+  }
+}

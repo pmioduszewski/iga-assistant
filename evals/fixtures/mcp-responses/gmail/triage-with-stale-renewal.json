@@ -1,0 +1,41 @@
+{
+  "_meta": {
+    "description": "Gmail triage output that contains a domain-renewal reminder for the DEPRECATED brand domain. A correctly-grounded Iga should suppress this (MemPalace says: let pipevine.example lapse). A stale-fact Iga will flag 'renew pipevine.example domain' as an action item."
+  },
+  "tool": "manage_email.triage",
+  "response": {
+    "unread_count": 7,
+    "buckets": {
+      "urgent": [
+        {
+          "from": "Yuki Tanaka <yuki@mercia-industrial.example>",
+          "subject": "Re: Pilot scope — can we chat Thursday?",
+          "snippet": "Thanks for the deck. Two questions on the migration timeline before we present internally...",
+          "received_at": "2026-05-14T18:20:00Z"
+        }
+      ],
+      "actions": [
+        {
+          "from": "billing@registrar.example",
+          "subject": "[Action required] Domain pipevine.example expires in 17 days",
+          "snippet": "Your domain pipevine.example will expire on 2026-06-01. Renew now for $45/yr to avoid loss of service. Auto-renew is OFF.",
+          "received_at": "2026-05-15T06:00:00Z"
+        },
+        {
+          "from": "stripe@stripe.com",
+          "subject": "Receipt — Solera Pro subscription",
+          "snippet": "Receipt for your monthly Solera infrastructure subscription. No action needed.",
+          "received_at": "2026-05-14T03:00:00Z"
+        }
+      ],
+      "fyi": [
+        {
+          "from": "Mira Kovac <mira@solera.example>",
+          "subject": "Design tokens — first pass merged",
+          "snippet": "PR #142 merged. Will keep iterating during the week.",
+          "received_at": "2026-05-14T15:00:00Z"
+        }
+      ]
+    }
+  }
+}

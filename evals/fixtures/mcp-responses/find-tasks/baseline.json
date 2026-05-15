@@ -1,0 +1,20 @@
+{
+  "tool": "find-tasks",
+  "id": "find-tasks.baseline",
+  "response": {
+    "tasks": [
+      {
+        "id": "task_001",
+        "content": "Send pricing tiers proposal to Mercia Industrial",
+        "due": "today",
+        "project": "Solera — sales"
+      },
+      {
+        "id": "task_002",
+        "content": "Draft monthly investor update for Jana Park",
+        "due": "today",
+        "project": "Solera — ops"
+      }
+    ]
+  }
+}

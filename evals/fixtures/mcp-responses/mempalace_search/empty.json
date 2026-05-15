@@ -1,0 +1,8 @@
+{
+  "tool": "mempalace_search",
+  "id": "mempalace_search.empty",
+  "response": {
+    "results": [],
+    "note": "No drawers matched. (default fallback fixture)"
+  }
+}

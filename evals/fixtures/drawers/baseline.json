@@ -1,0 +1,89 @@
+{
+  "_meta": {
+    "description": "Synthetic baseline MemPalace drawers. Persona: 'Alex Rivera', a synthetic dev/founder. All facts hand-crafted, no real personal data. Fictional company names chosen to avoid placeholder bias (see README — 'Fixture personas').",
+    "persona": "alex_rivera",
+    "drawer_count": 10
+  },
+  "drawers": [
+    {
+      "id": "drw_0001",
+      "wing": "people",
+      "room": "team",
+      "title": "Mira Kovac — co-founder",
+      "content": "Mira Kovac is co-founder of Solera. Lead designer. Based in Lisbon. Timezone WET. Prefers async over meetings.",
+      "filed_at": "2026-01-12T09:00:00Z"
+    },
+    {
+      "id": "drw_0002",
+      "wing": "people",
+      "room": "team",
+      "title": "Dan Howe — contractor",
+      "content": "Dan Howe handles infra/devops on contract. ~10h/week. Reachable on Signal.",
+      "filed_at": "2026-01-15T14:00:00Z"
+    },
+    {
+      "id": "drw_0003",
+      "wing": "projects",
+      "room": "active",
+      "title": "Solera — mobile app launch Q2",
+      "content": "Solera (formerly Pipevine) public beta targets June 2026. iOS first, Android in July. Pricing decision pending.",
+      "filed_at": "2026-02-01T10:00:00Z"
+    },
+    {
+      "id": "drw_0004",
+      "wing": "preferences",
+      "room": "communication",
+      "title": "Alex prefers TL;DR responses",
+      "content": "Alex wants summaries first, detail underneath. Hates restating questions. No 'let me know if' trailing offers.",
+      "filed_at": "2026-01-05T08:00:00Z"
+    },
+    {
+      "id": "drw_0005",
+      "wing": "decisions",
+      "room": "infra",
+      "title": "Hosted on Vercel + Neon",
+      "content": "Decided 2026-01-20: Vercel for web, Neon Postgres for primary DB. Migrated off Render due to cold starts.",
+      "filed_at": "2026-01-20T16:00:00Z"
+    },
+    {
+      "id": "drw_0006",
+      "wing": "preferences",
+      "room": "tools",
+      "title": "Linear for issue tracking",
+      "content": "Solera uses Linear, team workspace 'solera-eng'. Cycles are 2 weeks, Mon-Sun.",
+      "filed_at": "2026-01-22T11:00:00Z"
+    },
+    {
+      "id": "drw_0007",
+      "wing": "people",
+      "room": "external",
+      "title": "Jana Park — investor",
+      "content": "Jana Park, partner at Northstar Ventures. Led Solera seed round (Mar 2026). Monthly update emails.",
+      "filed_at": "2026-03-10T09:00:00Z"
+    },
+    {
+      "id": "drw_0008",
+      "wing": "decisions",
+      "room": "product",
+      "title": "Free tier capped at 3 projects",
+      "content": "Pricing decision 2026-03-25: free tier 3 projects max. Pro tier $19/mo unlimited.",
+      "filed_at": "2026-03-25T15:00:00Z"
+    },
+    {
+      "id": "drw_0009",
+      "wing": "projects",
+      "room": "active",
+      "title": "Solera — design system migration",
+      "content": "Migrating from ad-hoc Tailwind to design tokens. Mira owns. Target end of May 2026.",
+      "filed_at": "2026-04-02T13:00:00Z"
+    },
+    {
+      "id": "drw_0010",
+      "wing": "preferences",
+      "room": "schedule",
+      "title": "No meetings before 10am local",
+      "content": "Alex does deep work mornings. Meetings only after 10am Europe/Madrid.",
+      "filed_at": "2026-02-14T07:00:00Z"
+    }
+  ]
+}

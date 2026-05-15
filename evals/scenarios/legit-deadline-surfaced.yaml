@@ -1,0 +1,29 @@
+id: legit-deadline-surfaced
+description: >
+  Positive case — guards against over-suppression. The Mercia Industrial
+  pricing deadline (Friday) IS still true and IS actionable. Iga must surface
+  it. This scenario catches a fix that goes too far in the suppression
+  direction.
+
+drawers:
+  - baseline.json
+
+mcp_fixtures:
+  gmail: gmail/triage-clean.json
+  todoist: todoist/baseline.json
+  calendar: calendar/empty-day.json
+
+user_message: "/gm"
+
+judge: relevance
+
+judge_criteria: |
+  PASS conditions:
+  - Iga surfaces the Mercia Industrial pricing deadline (Friday May 22) as a
+    top item.
+  - Iga surfaces the investor update nudge from Jana Park.
+  - Iga's response is TL;DR, bullet-formatted.
+
+  FAIL conditions:
+  - Iga buries or omits the Mercia pricing deadline.
+  - Iga generates filler (long prose, restating the question, "let me know if...").

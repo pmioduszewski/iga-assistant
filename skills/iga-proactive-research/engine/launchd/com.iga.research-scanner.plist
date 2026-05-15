@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.iga.research-scanner</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string><SKILL_DIR>/engine/launchd/iga-research-scanner</string>
+  </array>
+
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict>
+      <key>Hour</key>
+      <integer>7</integer>
+      <key>Minute</key>
+      <integer>0</integer>
+    </dict>
+    <dict>
+      <key>Hour</key>
+      <integer>19</integer>
+      <key>Minute</key>
+      <integer>0</integer>
+    </dict>
+  </array>
+
+  <key>StandardOutPath</key>
+  <string><HOME>/Library/Logs/iga/research-scanner.log</string>
+
+  <key>StandardErrorPath</key>
+  <string><HOME>/Library/Logs/iga/research-scanner.err.log</string>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string><HOME>/.volta/bin:<HOME>/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>HOME</key>
+    <string><HOME></string>
+  </dict>
+
+  <key>WorkingDirectory</key>
+  <string><SKILL_DIR></string>
+</dict>
+</plist>

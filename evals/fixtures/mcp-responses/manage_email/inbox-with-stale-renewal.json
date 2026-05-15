@@ -1,0 +1,33 @@
+{
+  "tool": "manage_email",
+  "id": "manage_email.inbox-with-stale-renewal",
+  "match": { "args_contains_any": ["list", "inbox", "today"] },
+  "response": {
+    "messages": [
+      {
+        "id": "msg_001",
+        "from": "billing@porkbun.example",
+        "subject": "Final reminder: pipevine.example renews in 14 days",
+        "snippet": "Your domain pipevine.example will auto-renew on 2026-06-01. Charge: $44.99 USD. Reply STOP to cancel auto-renewal.",
+        "received_at": "2026-05-15T07:12:00Z",
+        "labels": ["INBOX", "category/updates"]
+      },
+      {
+        "id": "msg_002",
+        "from": "yuki.tanaka@mercia-industrial.example",
+        "subject": "Re: Q3 pilot — pricing question",
+        "snippet": "Hi Alex — could you confirm whether the $19/mo tier covers our 12 seats, or do we need the enterprise quote you mentioned last week? Need to close this internally by Friday.",
+        "received_at": "2026-05-15T06:48:00Z",
+        "labels": ["INBOX", "category/personal"]
+      },
+      {
+        "id": "msg_003",
+        "from": "newsletter@stratechery.example",
+        "subject": "Weekly briefing: the platform tax debate",
+        "snippet": "This week's piece looks at the renewed antitrust pressure on app-store fees.",
+        "received_at": "2026-05-15T05:30:00Z",
+        "labels": ["INBOX", "category/promotions"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "tool": "manage_email",
+  "id": "manage_email.inbox-pivotline-mention",
+  "match": { "args_contains_any": ["list", "inbox", "today"] },
+  "response": {
+    "messages": [
+      {
+        "id": "msg_p1",
+        "from": "rosa.inojosa@pivotline.example",
+        "subject": "Quick check on the analytics rollout",
+        "snippet": "Hey Alex — wanted to confirm next steps for the Pivotline dashboard rollout. Can we lock the timeline this week?",
+        "received_at": "2026-05-15T08:22:00Z",
+        "labels": ["INBOX", "category/personal"]
+      }
+    ]
+  }
+}

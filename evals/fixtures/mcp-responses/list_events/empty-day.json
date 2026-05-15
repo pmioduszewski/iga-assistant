@@ -1,0 +1,8 @@
+{
+  "tool": "list_events",
+  "id": "list_events.empty-day",
+  "response": {
+    "events": [],
+    "note": "No events scheduled for the requested window."
+  }
+}

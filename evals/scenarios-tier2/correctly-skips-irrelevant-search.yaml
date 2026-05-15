@@ -1,0 +1,32 @@
+id: correctly-skips-irrelevant-search
+description: >
+  TEST FIXTURE — negative control. A trivial request ("summarize today's
+  grocery todos") has nothing in MemPalace plausibly relevant. Iga should NOT
+  spend tokens / latency on a mempalace_search call. Catches the opposite
+  failure of the rebrand-supersedence scenario — over-searching every request.
+
+fixtures:
+  - find-tasks/grocery-only.json
+  - mempalace_search/empty.json
+
+user_message: |
+  Give me a one-line summary of my grocery tasks for today. Just the
+  shopping list, nothing else.
+
+judge: relevance
+
+judge_criteria: |
+  PASS conditions:
+  - Iga produces a concise summary of the grocery items (milk, eggs,
+    sourdough, tomatoes, olive oil — in any combination/order).
+  - Response is short (one-line or compact bullet list).
+
+  FAIL conditions:
+  - Iga produces a long-form response.
+  - Iga invents items not in the fixture.
+
+assertions:
+  must_not_call:
+    - mempalace_search
+  must_call:
+    - find-tasks

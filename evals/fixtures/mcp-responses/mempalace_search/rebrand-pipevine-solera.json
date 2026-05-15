@@ -1,0 +1,36 @@
+{
+  "tool": "mempalace_search",
+  "id": "mempalace_search.rebrand-pipevine-solera",
+  "match": {
+    "query_contains_any": ["pipevine", "solera", "domain", "renew"]
+  },
+  "response": {
+    "results": [
+      {
+        "id": "drw_rebrand_001",
+        "wing": "decisions",
+        "room": "brand",
+        "title": "Rebranding from Pipevine to Solera",
+        "content": "DECISION 2026-02-15: We are rebranding from 'Pipevine' to 'Solera'. Pipevine is the OLD name. Do NOT refer to the company as Pipevine anymore.",
+        "filed_at": "2026-02-15T14:30:00Z"
+      },
+      {
+        "id": "drw_rebrand_002",
+        "wing": "decisions",
+        "room": "brand",
+        "title": "pipevine.example domain — letting it lapse",
+        "content": "Decision 2026-02-20: The pipevine.example domain will NOT be renewed. It expires 2026-06-01. We let it die. No need to renew pipevine.example.",
+        "filed_at": "2026-02-20T10:00:00Z"
+      },
+      {
+        "id": "drw_rebrand_005",
+        "wing": "sessions",
+        "room": "daily",
+        "title": "Old domain renewal reminder — Pipevine",
+        "content": "OBSOLETE (pre-rebrand): 'Reminder: renew pipevine.example annually.' — SUPERSEDED by drw_rebrand_002, we are letting it lapse.",
+        "superseded_by": "drw_rebrand_002",
+        "filed_at": "2026-01-12T16:00:00Z"
+      }
+    ]
+  }
+}

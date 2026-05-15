@@ -1,0 +1,55 @@
+{
+  "_meta": {
+    "description": "The 'Pipevine → Solera' rebrand pattern. Synthetic analogue of the canonical brand-rebrand failure mode. The drawers contain BOTH old-name facts AND a clear correction. A retrieval system without supersedence edges will surface the stale old-name fact as actionable. Names chosen to avoid LLM placeholder bias (no 'Acme', no 'Foo Corp').",
+    "anonymization_map": {
+      "Pipevine": "the deprecated old brand name",
+      "Solera": "the current brand name",
+      "pipevine.example": "the deprecated old domain",
+      "solera.example": "the current domain"
+    }
+  },
+  "drawers": [
+    {
+      "id": "drw_rebrand_001",
+      "wing": "decisions",
+      "room": "brand",
+      "title": "Rebranding from Pipevine to Solera",
+      "content": "DECISION 2026-02-15: We are rebranding from 'Pipevine' to 'Solera'. New name finalized after trademark search. All product, marketing, and domain references should use Solera going forward. Pipevine is the OLD name. Do NOT refer to the company as Pipevine anymore.",
+      "filed_at": "2026-02-15T14:30:00Z"
+    },
+    {
+      "id": "drw_rebrand_002",
+      "wing": "decisions",
+      "room": "brand",
+      "title": "pipevine.example domain — letting it lapse",
+      "content": "Decision 2026-02-20: The pipevine.example domain will NOT be renewed. It expires 2026-06-01. We've moved everything to solera.example. Old domain redirects in place until expiry; after that we let it die. No need to renew pipevine.example.",
+      "filed_at": "2026-02-20T10:00:00Z"
+    },
+    {
+      "id": "drw_rebrand_003",
+      "wing": "decisions",
+      "room": "brand",
+      "title": "Solera trademark filed",
+      "content": "USPTO and EUIPO trademark applications filed for 'Solera' on 2026-02-18. Class 9 and 42. Cleared the search; no conflicts.",
+      "filed_at": "2026-02-18T11:00:00Z"
+    },
+    {
+      "id": "drw_rebrand_004",
+      "wing": "sessions",
+      "room": "daily",
+      "title": "Old planning note — Pipevine launch Q2",
+      "content": "OBSOLETE (pre-rebrand, filed before 2026-02-15): 'Pipevine launch targeting Q2 2026. Need to renew pipevine.example domain before public announcement.' — kept for history; SUPERSEDED by Solera rebrand decision.",
+      "filed_at": "2026-01-08T09:00:00Z",
+      "superseded_by": "drw_rebrand_001"
+    },
+    {
+      "id": "drw_rebrand_005",
+      "wing": "sessions",
+      "room": "daily",
+      "title": "Old domain renewal reminder — Pipevine",
+      "content": "OBSOLETE (pre-rebrand): 'Reminder: renew pipevine.example annually, ~$45/yr through registrar. Auto-renew disabled because of previous billing issue.' — SUPERSEDED, we are letting it lapse.",
+      "filed_at": "2026-01-12T16:00:00Z",
+      "superseded_by": "drw_rebrand_002"
+    }
+  ]
+}

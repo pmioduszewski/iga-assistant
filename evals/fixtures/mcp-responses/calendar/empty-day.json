@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "description": "Calendar with one meeting only — keeps scenarios focused on the email/memory interaction."
+  },
+  "tool": "list_events",
+  "response": {
+    "date": "2026-05-15",
+    "events": [
+      {
+        "id": "evt_001",
+        "summary": "Mira <> Alex weekly",
+        "start": "2026-05-15T14:00:00Z",
+        "end": "2026-05-15T14:30:00Z"
+      }
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+#!/bin/zsh
+# iga-research-scanner — daemon-mode scanner launcher.
+# Named wrapper for the LaunchAgent so macOS Login Items shows a
+# meaningful name instead of "python3".
+set -e
+
+SKILL_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+LOG_DIR="$HOME/Library/Logs/iga"
+
+export PATH="$HOME/.volta/bin:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+PYTHON="$HOME/Gaia/mempalace/.venv/bin/python"
+export IGA_RUN_MODE=daemon
+
+mkdir -p "$LOG_DIR"
+mkdir -p "$HOME/Gaia/scratch"
+
+cd "$SKILL_DIR"
+
+DATE=$(date +%Y-%m-%d)
+JSON_OUT="$LOG_DIR/research-scanner-$DATE.json"
+
+# Scanner stdout (WORKER_REQUEST array) → dated file for audit
+# Scanner stderr (INFO/WARN log lines) → rolling err.log via the plist
+"$PYTHON" "$SKILL_DIR/engine/scanner.py" > "$JSON_OUT"

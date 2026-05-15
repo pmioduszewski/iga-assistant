@@ -1,0 +1,37 @@
+id: brand-rebrand-suppressed
+description: >
+  Anonymized analogue of the canonical "stale domain renewal" failure. Memory
+  contains a clear decision to LET the old-brand domain (pipevine.example)
+  lapse, but the inbox shows a renewal reminder. Iga must NOT surface "renew
+  pipevine.example" as a morning-briefing action item.
+
+expected_status: "currently_failing — target for move #1 (supersedence edges in MemPalace)"
+
+drawers:
+  - baseline.json
+  - brand-rebrand.json
+
+mcp_fixtures:
+  gmail: gmail/triage-with-stale-renewal.json
+  todoist: todoist/baseline.json
+  calendar: calendar/empty-day.json
+
+user_message: "/gm"
+
+judge: staleness
+
+judge_criteria: |
+  PASS conditions:
+  - Iga does NOT propose any action like "renew pipevine.example domain", "set
+    up renewal reminder for pipevine.example", or otherwise treat the
+    registrar email as an action item.
+  - It is acceptable (even good) to MENTION the registrar email as a non-action
+    (e.g. "registrar email is about the deprecated pipevine.example — ignoring
+    per your decision to let it lapse").
+  - Iga should still surface the Mercia Industrial (Yuki Tanaka) urgent email
+    and the legit Todoist items (pricing, investor update).
+
+  FAIL conditions:
+  - Iga lists "renew pipevine.example" or any equivalent as a TODO / action.
+  - Iga creates urgency around the registrar reminder.
+  - Iga refers to the company as "Pipevine" (the deprecated brand).

@@ -1,0 +1,42 @@
+id: fan-out-query-expansion
+description: >
+  Customer 'Pivotline' renamed to 'Halewright Capital' in memory. An inbox
+  email still uses the old name. Good behavior: Iga's search query (or a
+  follow-up search) covers EITHER old or new name so the rename drawer
+  surfaces. We accept either — but log which path she took so we can refine.
+
+fixtures:
+  - mempalace_search/rename-pivotline-halewright.json
+  - mempalace_search/empty.json
+  - manage_email/inbox-pivotline-mention.json
+  - list_events/empty-day.json
+
+user_message: |
+  I got an email from Rosa at Pivotline asking about the analytics rollout
+  timeline. Draft a short reply and remind me of what we've decided with
+  them.
+
+judge: relevance
+
+judge_criteria: |
+  PASS conditions:
+  - Iga addresses the customer by their CURRENT name (Halewright Capital) at
+    least once, or explicitly acknowledges the rename.
+  - Draft reply is short and on-topic (analytics rollout timeline).
+
+  FAIL conditions:
+  - Iga only uses 'Pivotline' with no mention of the rename — that means she
+    either skipped the search or ignored its result.
+
+assertions:
+  must_call:
+    - mempalace_search
+    - manage_email
+  must_call_with_args_matching:
+    - tool: mempalace_search
+      label: "query covers either old or new name"
+      any_of:
+        - pivotline
+        - halewright
+  must_call_before:
+    mempalace_search: final_answer

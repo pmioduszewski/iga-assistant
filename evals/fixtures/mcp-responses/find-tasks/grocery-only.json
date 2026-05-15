@@ -1,0 +1,21 @@
+{
+  "tool": "find-tasks",
+  "id": "find-tasks.grocery-only",
+  "match": { "args_contains_any": ["grocery", "grocer", "today"] },
+  "response": {
+    "tasks": [
+      {
+        "id": "task_g1",
+        "content": "Grocery: milk, eggs, sourdough, tomatoes",
+        "due": "today",
+        "project": "Personal — errands"
+      },
+      {
+        "id": "task_g2",
+        "content": "Grocery: olive oil (running low)",
+        "due": "today",
+        "project": "Personal — errands"
+      }
+    ]
+  }
+}

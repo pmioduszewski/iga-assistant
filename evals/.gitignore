@@ -1,0 +1,9 @@
+node_modules/
+.env
+results/
+.promptfoo/
+*.log
+mocks/.cache/
+# pnpm-only project — npm/yarn lockfiles should never be committed.
+package-lock.json
+yarn.lock

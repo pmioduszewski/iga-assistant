@@ -823,4 +823,55 @@ enum ContractGuard {
     static let documentedEmailTriageCommand =
         "[ -x <abs-iga-email-triage-wrapper> ] || exit 90 ; "
         + "exec <abs-iga-email-triage-wrapper>"
+
+    // MARK: - Notify seam (osascript)
+    //
+    // The app is ad-hoc signed → macOS drops its UNUserNotifications. The
+    // reliable $0 path is `osascript display notification`, delivered by
+    // Apple's signed automation host (no Developer ID needed). title/body
+    // are passed as `argv` items — NOT interpolated into the script — so
+    // there is zero AppleScript injection surface. This is the ONLY
+    // sanctioned constructor for the notify subprocess.
+
+    static func notifyProcess(title: String, body: String) -> Process {
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+        p.arguments = [
+            "-e", "on run argv",
+            "-e", "display notification (item 1 of argv) "
+                + "with title (item 2 of argv)",
+            "-e", "end run",
+            "--", body, title,
+        ]
+        return p
+    }
+
+    /// Post one banner. Blocking but fast; callers dispatch off-main.
+    /// Returns whether osascript exited 0 + a short detail for the
+    /// Settings test (this is how we know delivery actually worked).
+    @discardableResult
+    static func runNotify(
+        title: String, body: String, timeout: TimeInterval = 8
+    ) -> (ok: Bool, detail: String) {
+        let proc = notifyProcess(title: title, body: body)
+        let errPipe = Pipe()
+        proc.standardError = errPipe
+        do { try proc.run() } catch {
+            return (false, "failed to launch osascript: \(error)")
+        }
+        let errData = drain(errPipe.fileHandleForReading)
+        let deadline = Date().addingTimeInterval(timeout)
+        while proc.isRunning && Date() < deadline { usleep(50_000) }
+        if proc.isRunning {
+            proc.terminate()
+            return (false, "osascript timed out after \(Int(timeout))s")
+        }
+        let code = proc.terminationStatus
+        let err = String(data: errData, encoding: .utf8)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return code == 0
+            ? (true, "delivered via osascript")
+            : (false, "osascript exit \(code)"
+                + (err.isEmpty ? "" : ": \(err.prefix(160))"))
+    }
 }

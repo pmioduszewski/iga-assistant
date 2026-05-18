@@ -106,6 +106,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             onSettings: { [weak sw] in sw?.show() })
 
         Notifier.shared.requestAuthorizationIfNeeded()
+        // Channel C: every posted nudge also lights the menu-bar dot —
+        // the always-reliable signal even if a banner is missed.
+        Notifier.shared.onPosted = { [weak self] in
+            self?.statusItemController.flagAttention()
+        }
         s.start()
         wh.start()
         hw.start()

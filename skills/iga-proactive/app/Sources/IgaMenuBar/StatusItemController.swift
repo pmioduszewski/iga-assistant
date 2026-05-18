@@ -26,8 +26,30 @@ final class StatusItemController: NSObject {
     private let panel: PanelController
     private let store: StateStore
     private var healthObservation: Task<Void, Never>?
+    /// Channel C: an unseen-nudge dot on the menu-bar icon. Always
+    /// reliable (no OS notification, no signing); the title is rendered
+    /// independently of the glyph image so the 3s glyph sync can't wipe
+    /// it. Cleared when the panel is opened (the user has seen it).
+    private var attention = false
     /// Opens the app-wide settings window (right-click → "Iga Settings…").
     private let onSettings: () -> Void
+
+    /// Flag/clear the unseen-nudge dot. `flagAttention` is wired to
+    /// `Notifier.onPosted` so every nudge also lights the icon.
+    func flagAttention() { attention = true; refreshBadge() }
+    func clearAttention() { attention = false; refreshBadge() }
+
+    private func refreshBadge() {
+        guard let button = statusItem.button else { return }
+        if attention {
+            button.attributedTitle = NSAttributedString(
+                string: " ●",
+                attributes: [.foregroundColor: NSColor.systemRed,
+                             .font: NSFont.systemFont(ofSize: 9)])
+        } else {
+            button.attributedTitle = NSAttributedString(string: "")
+        }
+    }
 
     init(
         panel: PanelController, store: StateStore,
@@ -87,6 +109,7 @@ final class StatusItemController: NSObject {
             return
         }
         panel.toggle()
+        if panel.isOpen { clearAttention() }
         statusItem.button?.highlight(panel.isOpen)
     }
 

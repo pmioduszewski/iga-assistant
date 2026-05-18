@@ -39,16 +39,20 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         }
     }
 
+    /// Set by AppDelegate → flags the menu-bar icon so a dropped/missed
+    /// banner is never the only signal (channel C — always reliable, no
+    /// signing). Called on the main actor after every post attempt.
+    var onPosted: (() -> Void)?
+
     func notify(id: String, title: String, body: String) {
         guard available, !deliveredIds.contains(id) else { return }
         deliveredIds.insert(id)
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        content.sound = .default
-        let req = UNNotificationRequest(
-            identifier: id, content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(req, withCompletionHandler: nil)
+        // Delivery goes through the sanctioned osascript seam (UN is
+        // dropped on this ad-hoc build). Blocking → off-main.
+        DispatchQueue.global(qos: .utility).async {
+            ContractGuard.runNotify(title: title, body: body)
+            DispatchQueue.main.async { self.onPosted?() }
+        }
     }
 
     // MARK: - Diagnostics + manual test (Settings ▸ Notifications)
@@ -65,85 +69,36 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     }
 
     func diagnose(_ completion: @escaping (Diag) -> Void) {
-        guard available else {
-            completion(Diag(bundleOK: false, authStatus: "n/a",
-                summary: "No app bundle — notifications unavailable "
-                       + "(running headless / from source?)."))
-            return
-        }
-        UNUserNotificationCenter.current().getNotificationSettings { s in
-            let st: String
-            switch s.authorizationStatus {
-            case .notDetermined: st = "notDetermined"
-            case .denied: st = "denied"
-            case .authorized: st = "authorized"
-            case .provisional: st = "provisional"
-            case .ephemeral: st = "ephemeral"
-            @unknown default: st = "unknown"
-            }
-            let verdict: String
-            switch s.authorizationStatus {
-            case .denied:
-                verdict = "Denied in System Settings ▸ Notifications ▸ Iga."
-            case .authorized, .provisional:
-                verdict = "Authorized — banners should appear."
-            default:
-                verdict = "Not yet authorized — press Test to request."
-            }
-            DispatchQueue.main.async {
-                completion(Diag(bundleOK: true, authStatus: st,
-                                summary: verdict))
-            }
-        }
+        let bundle = available
+        let verdict = bundle
+            ? "Delivery via osascript seam (works on ad-hoc builds). "
+              + "Press Test to confirm a banner appears + grant the "
+              + "one-time prompt if asked."
+            : "No app bundle — running headless/from source."
+        completion(Diag(bundleOK: bundle,
+                        authStatus: "osascript",
+                        summary: verdict))
     }
 
-    /// Request auth if needed, then post a real test notification and
-    /// report the actual delivery outcome (incl. the `add` error, which
-    /// is how an ad-hoc build's silent failure surfaces).
+    /// Post a real test banner through the sanctioned osascript seam and
+    /// report the ACTUAL outcome (this is the honest probe).
     func sendTest(_ completion: @escaping (Bool, String) -> Void) {
         guard available else {
             completion(false, "No app bundle — cannot post notifications.")
             return
         }
-        let center = UNUserNotificationCenter.current()
-        center.delegate = self
-        center.requestAuthorization(options: [.alert, .sound, .badge]) {
-            granted, err in
-            if let err = err {
-                DispatchQueue.main.async {
-                    completion(false, "Authorization error: "
-                        + err.localizedDescription
-                        + " — likely the ad-hoc signature (no Developer "
-                        + "Team). See Notifications task.")
-                }
-                return
-            }
-            guard granted else {
-                DispatchQueue.main.async {
-                    completion(false, "Authorization not granted. Enable "
-                        + "in System Settings ▸ Notifications ▸ Iga, "
-                        + "or it's blocked by the ad-hoc signature.")
-                }
-                return
-            }
-            self.authorized = true
-            let c = UNMutableNotificationContent()
-            c.title = "Iga — test notification"
-            c.body = "If you can see this, delivery works on this build. 🎉"
-            c.sound = .default
-            let req = UNNotificationRequest(
-                identifier: "iga-test-\(Int(Date().timeIntervalSince1970))",
-                content: c, trigger: nil)
-            center.add(req) { addErr in
-                DispatchQueue.main.async {
-                    if let addErr = addErr {
-                        completion(false, "Posted but failed: "
-                            + addErr.localizedDescription)
-                    } else {
-                        completion(true, "Posted. If no banner appears "
-                            + "within a few seconds, macOS is dropping it "
-                            + "(ad-hoc signature) — not a wiring bug.")
-                    }
+        DispatchQueue.global(qos: .userInitiated).async {
+            let r = ContractGuard.runNotify(
+                title: "Iga — test notification",
+                body: "If you can see this banner, delivery works. 🎉")
+            DispatchQueue.main.async {
+                self.onPosted?()
+                if r.ok {
+                    completion(true, "osascript posted OK. You should see "
+                        + "a banner now. (If a permission prompt appeared, "
+                        + "allow it and press Test again.)")
+                } else {
+                    completion(false, r.detail)
                 }
             }
         }

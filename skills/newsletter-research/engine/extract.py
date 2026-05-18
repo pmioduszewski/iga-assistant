@@ -317,3 +317,50 @@ def vault_drawer_body(f: Finding) -> str:
         f"WHY: {f.why_it_fits}\n"
         f"SOURCE: {f.source_newsletter} (msg {f.source_message_id})"
     )
+
+
+# --- Spec-driven worker input -----------------------------------------------
+
+
+def build_worker_context(
+    spec: dict,
+    drawer_context: dict,
+) -> dict:
+    """Merge a parsed hook spec with a MemPalace flag-drawer context dict into
+    the full input payload the worker receives on stdin.
+
+    Parameters
+    ----------
+    spec:
+        Parsed hook spec from ``hook_spec.parse_hook_spec`` (typed dict).
+    drawer_context:
+        Candidate context from the proactive engine (``drawer.id``,
+        ``drawer.title``, ``drawer.room``, ``drawer.target_date``,
+        ``drawer.context`` — same shape as the research port candidate).
+
+    Returns a plain dict suitable for ``json.dumps`` → stdin.  The worker
+    reads ``hook.*`` keys for the spec-driven parameters and ``drawer.*``
+    keys for the queued item context.
+
+    Pure / side-effect-free.
+    """
+    return {
+        # Drawer context (unmodified — mirrors research port shape).
+        "drawer.id": drawer_context.get("drawer.id", ""),
+        "drawer.title": drawer_context.get("drawer.title", ""),
+        "drawer.room": drawer_context.get("drawer.room", ""),
+        "drawer.target_date": drawer_context.get("drawer.target_date", ""),
+        "drawer.context": drawer_context.get("drawer.context", ""),
+        # Hook spec parameters — the worker uses these instead of hardcoded
+        # "dev libs" / "projects/*" assumptions.
+        "hook.name": spec["name"],
+        "hook.description": spec["description"],
+        "hook.trigger": spec["trigger"],
+        "hook.interest_profile": spec["interest_profile"],
+        "hook.scoring_context": spec["scoring_context"],
+        "hook.fit_threshold": spec["fit_threshold"],
+        "hook.output_wing": spec["output_wing"],
+        "hook.cadence": spec["cadence"],
+        "hook.status": spec["status"],
+        "hook.body": spec.get("body", ""),
+    }

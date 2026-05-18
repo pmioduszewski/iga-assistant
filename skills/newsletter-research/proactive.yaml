@@ -48,9 +48,29 @@
 # unchanged, shared with the research port.
 #
 # NOTE: this YAML is the upstream/generic layer. User-specific tuning
-# (project list, include/exclude topics, cooldown overrides) belongs in
-# SKILL.local.md per the CLAUDE.md composability contract — never edit this
-# file for personalization.
+# (hook spec, project list, include/exclude topics, cooldown overrides)
+# belongs in SKILL.local.md per the CLAUDE.md composability contract —
+# never edit this file for personalization.
+#
+# Hook context via flag drawer
+# ────────────────────────────
+# The flag drawer filed in `newsletter-research-queue` SHOULD include the
+# hook name in its metadata so the worker can load the right spec:
+#
+#   mempalace_add_drawer(
+#     wing="...", room="newsletter-research-queue",
+#     metadata={
+#       "title": "Newsletter/Dev: <subject>",
+#       "target_date": "YYYY-MM-DD",
+#       "hook_name": "dev-tools",          # <── hook spec slug
+#     },
+#     content="message-id: <id>; label Newsletter/Dev"
+#   )
+#
+# The worker reads `hook_name` from `drawer.metadata.hook_name` and loads
+# `rules/hooks/<hook_name>.md` (personal layer, gitignored). If absent, it
+# falls back to `skills/newsletter-research/examples/example-hook.md` for
+# demonstration purposes only — production hooks must be personal.
 
 proactive:
   - id: newsletter-research-queue

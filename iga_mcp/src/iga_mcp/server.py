@@ -75,7 +75,7 @@ def _session_jsonl_path(session_id: str) -> Path:
     Claude Code stores per-session JSONL files at:
         ~/.claude/projects/<sanitized-cwd>/<session-id>.jsonl
     where the sanitized cwd is the absolute cwd with `/` replaced by `-` and a
-    leading `-`. So /Users/you/Iga → -Users-pawel-Iga.
+    leading `-`. So /Users/you/Iga → -Users-you-Iga.
     """
     sanitized = str(IGA_HOME.resolve()).replace("/", "-")
     return Path.home() / ".claude" / "projects" / sanitized / f"{session_id}.jsonl"

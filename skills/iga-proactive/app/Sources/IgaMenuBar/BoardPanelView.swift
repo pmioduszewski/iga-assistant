@@ -106,18 +106,22 @@ struct BoardPanelView: View {
             HStack(spacing: 6) {
                 sectionHeader("Mail")
                 Spacer()
-                Button {
-                    emailTriage.runNow()
-                } label: {
-                    Label("Run now", systemImage: "arrow.clockwise")
-                        .font(.caption2)
+                if emailTriage.isRunning {
+                    ProgressView().controlSize(.small)
+                    Text("running…")
+                        .font(.caption2).foregroundStyle(.secondary)
+                } else {
+                    Button {
+                        emailTriage.runNow()
+                    } label: {
+                        Label("Run now", systemImage: "arrow.clockwise")
+                            .font(.caption2)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    .help("Run email triage now (ignores the "
+                          + "once-per-day marker). Takes a few seconds.")
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-                .disabled(emailTriage.lastStatus.map {
-                    $0.hasPrefix("email triage") && !$0.contains("ok")
-                        && !$0.contains("failed") } ?? false)
-                .help("Run email triage now (ignores the once-per-day marker)")
             }
 
             HStack(spacing: 6) {

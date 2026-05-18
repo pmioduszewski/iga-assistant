@@ -36,13 +36,22 @@ final class EmailTriageWatcher {
     private var interval: TimeInterval = 3600
     @ObservationIgnored
     private var timer: Timer?
-    @ObservationIgnored
-    private var inFlight = false
+    /// Observable so the Mail section can show a spinner + disable the
+    /// button while a (potentially multi-second) triage is in flight —
+    /// otherwise the click "feels dead". Also the reentrancy guard.
+    private(set) var isRunning = false
 
     /// Persisted civil day (local, yyyy-MM-dd) the triage last ran, so a
     /// relaunch never re-triggers a same-day Gmail mutation.
     @ObservationIgnored
     private let lastDayKey = "iga.emailTriage.lastDay"
+    /// lastRun/lastStatus are persisted so the panel shows the REAL last
+    /// triage (incl. the automatic 06:00 one) across app restarts —
+    /// without this, every relaunch wrongly shows "never".
+    @ObservationIgnored
+    private let lastRunKey = "iga.emailTriage.lastRunTs"
+    @ObservationIgnored
+    private let lastStatusKey = "iga.emailTriage.lastStatus"
 
     private static let dayFmt: DateFormatter = {
         let f = DateFormatter()
@@ -58,6 +67,11 @@ final class EmailTriageWatcher {
            let v = TimeInterval(env), v >= 60 {
             interval = v
         }
+        // Restore the real last-run so a relaunch doesn't show "never".
+        let d = UserDefaults.standard
+        let ts = d.double(forKey: lastRunKey)
+        if ts > 0 { lastRun = Date(timeIntervalSince1970: ts) }
+        lastStatus = d.string(forKey: lastStatusKey)
     }
 
     func start() {
@@ -76,7 +90,7 @@ final class EmailTriageWatcher {
     }
 
     private func trigger() {
-        guard !inFlight else { return }
+        guard !isRunning else { return }
         let now = Date()
         let today = Self.dayFmt.string(from: now)
         let hour = Calendar.current.component(.hour, from: now)
@@ -85,7 +99,7 @@ final class EmailTriageWatcher {
               UserDefaults.standard.string(forKey: lastDayKey) != today
         else { return }
 
-        inFlight = true
+        isRunning = true
         // Claim the day BEFORE running so a crash/timeout can't cause a
         // same-day retry storm (matches the launchd "fire once" intent).
         UserDefaults.standard.set(today, forKey: lastDayKey)
@@ -100,15 +114,20 @@ final class EmailTriageWatcher {
             let outcome = ContractGuard.runEmailTriage()
             await MainActor.run { [weak self] in
                 guard let self else { return }
-                self.inFlight = false
-                self.lastRun = Date()
-                self.lastStatus = outcome.ok
+                self.isRunning = false
+                let now = Date()
+                let status = outcome.ok
                     ? "email triage ok"
                     : "email triage failed: "
-                        + outcome.stderr
+                        + String(outcome.stderr
                             .trimmingCharacters(
                                 in: .whitespacesAndNewlines)
-                            .prefix(160)
+                            .prefix(160))
+                self.lastRun = now
+                self.lastStatus = status
+                let d = UserDefaults.standard
+                d.set(now.timeIntervalSince1970, forKey: self.lastRunKey)
+                d.set(status, forKey: self.lastStatusKey)
             }
         }
     }
@@ -117,8 +136,8 @@ final class EmailTriageWatcher {
     /// once-per-day marker — an explicit user action always runs. Relays only
     /// through the sanctioned `ContractGuard.runEmailTriage()` seam.
     func runNow() {
-        guard !inFlight else { return }
-        inFlight = true
+        guard !isRunning else { return }
+        isRunning = true
         run()
     }
 }

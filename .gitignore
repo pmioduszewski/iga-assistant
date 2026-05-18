@@ -135,3 +135,6 @@ skills/trainer/
 
 # ggshield local scan cache
 .cache_ggshield
+
+# Claude Code Agent-tool isolated worktrees (harness-managed, transient)
+.claude/worktrees/

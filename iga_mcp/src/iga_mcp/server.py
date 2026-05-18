@@ -42,6 +42,8 @@ from threading import Lock
 
 from mcp.server.fastmcp import FastMCP
 
+from iga_mcp import skills as _skills
+
 
 # Default home stays "Gaia" and the default style stays "gaia-compact" on
 # purpose: the ~/Gaia home directory and the installed output-style file are
@@ -217,6 +219,100 @@ def iga_reset(confirm: bool = False) -> dict:
         "session_id": sid,
         "hint": "Next iga_ask call will start a fresh session.",
     }
+
+
+# ---------------------------------------------------------------------------
+# Skill-contributed tools (typed, no SKILL.md reading, no subprocess guessing)
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def iga_habit_log(
+    habit: str,
+    op: str = "add",
+    date: str = "today",
+    amount: int | None = None,
+) -> dict:
+    """
+    Log a habit completion for a day.
+
+    Use this to record habits — do NOT read SKILL.md or call record.py directly.
+
+    habit  — habit name as configured in the tracker (e.g. "Push-ups").
+             Fuzzy-resolved to the real habit ("push ups", "Push-Ups",
+             " push-ups " all hit "Push-ups"). You do NOT need the id.
+    op     — one of: "add" (default), "remove", "set"
+    date   — YYYY-MM-DD or "today" (default)
+    amount — required when op="set"; ignored otherwise
+
+    On success: {ok: true, habit, habit_id, op, date, output}.
+    If the habit name can't be resolved: {ok: false, error, available:[names]}
+    — call iga_habit_list (or retry with one of `available`) instead of
+    inventing an id.
+    """
+    return _skills.habit_log(habit=habit, op=op, date=date, amount=amount)
+
+
+@mcp.tool()
+def iga_habit_list() -> dict:
+    """
+    List the user's habits (names to use with iga_habit_log).
+
+    Call this if iga_habit_log returns ok:false — it gives the exact habit
+    names (and ids) that exist, plus done_today when available.
+
+    Returns {"habits": [{"id","name","done_today"?}]}.
+    """
+    return _skills.habit_list()
+
+
+@mcp.tool()
+def iga_habit_summary() -> dict:
+    """
+    Return the current habit-tracker digest as a structured dict.
+
+    Use this to read habit state — do NOT call summary.py directly.
+    """
+    return _skills.habit_summary()
+
+
+@mcp.tool()
+def iga_mood_log(
+    emotion: str,
+    note: str = "",
+    at: str = "now",
+    people: str = "",
+    places: str = "",
+    events: str = "",
+) -> dict:
+    """
+    Log a mood / emotional state.
+
+    Use this to record a mood — do NOT read SKILL.md or call record.py directly.
+
+    emotion — emotion name (e.g. "calm", "excited"); semicolons separate multiple
+    note    — optional free-text note
+    at      — "now" (default) or ISO timestamp YYYY-MM-DD or YYYY-MM-DDTHH:MM
+    people  — comma-separated people tags
+    places  — comma-separated place tags
+    events  — comma-separated event tags
+
+    On success: {ok: true, emotion, at, output}.
+    If an emotion isn't in the canonical lexicon:
+    {ok: false, error, suggestions:[...]} — retry with a suggested emotion.
+    """
+    return _skills.mood_log(emotion=emotion, note=note, at=at, people=people, places=places, events=events)
+
+
+@mcp.tool()
+def iga_mood_summary(days: int = 14) -> dict:
+    """
+    Return the mood-tracker digest for the last N days as a structured dict.
+
+    Use this to read mood state — do NOT call summary.py directly.
+
+    days — lookback window (default 14)
+    """
+    return _skills.mood_summary(days=days)
 
 
 def run() -> None:

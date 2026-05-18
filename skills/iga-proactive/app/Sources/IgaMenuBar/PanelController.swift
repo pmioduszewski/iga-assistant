@@ -97,6 +97,8 @@ final class PanelController: NSObject {
     private let mood: MoodWidgetStore
     @ObservationIgnored
     private let moodSync: MoodIngestWatcher
+    @ObservationIgnored
+    private let emailTriage: EmailTriageWatcher
 
     /// Resolves the status-item button's frame in screen coordinates so the
     /// pair anchors under the icon (NOT the cursor). Injected by the status
@@ -111,7 +113,8 @@ final class PanelController: NSObject {
          host: WidgetHostStore,
          habits: HabitsWidgetStore,
          mood: MoodWidgetStore,
-         moodSync: MoodIngestWatcher) {
+         moodSync: MoodIngestWatcher,
+         emailTriage: EmailTriageWatcher) {
         self.store = store
         self.scheduler = scheduler
         self.loginItem = loginItem
@@ -119,6 +122,7 @@ final class PanelController: NSObject {
         self.habits = habits
         self.mood = mood
         self.moodSync = moodSync
+        self.emailTriage = emailTriage
         super.init()
     }
 
@@ -188,6 +192,7 @@ final class PanelController: NSObject {
             habits: habits,
             mood: mood,
             moodSync: moodSync,
+            emailTriage: emailTriage,
             onClose: { [weak self] in self?.close() }))
         hosting.translatesAutoresizingMaskIntoConstraints = true
         hosting.autoresizingMask = [.width, .height]
@@ -354,6 +359,7 @@ struct RootView: View {
     let habits: HabitsWidgetStore
     let mood: MoodWidgetStore
     let moodSync: MoodIngestWatcher
+    let emailTriage: EmailTriageWatcher
     let onClose: () -> Void
 
     var body: some View {
@@ -374,6 +380,7 @@ struct RootView: View {
                 habits: habits,
                 mood: mood,
                 moodSync: moodSync,
+                emailTriage: emailTriage,
                 store: store,
                 onClose: onClose)
                 .frame(width: PanelController.columnWidth,

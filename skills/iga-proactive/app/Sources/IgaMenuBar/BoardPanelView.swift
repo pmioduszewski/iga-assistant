@@ -12,6 +12,7 @@ import SwiftUI
 //   • the generic widget host (WidgetHostView)
 //   • the proactive-research surfacing, MIGRATED here as a board widget card
 //     (it no longer gets any special left-popover treatment)
+//   • the email triage status section (last-run + status + Run now button)
 //
 // SINGLE SCROLL CONTEXT (the user's defect #2): the board owns exactly ONE
 // vertical ScrollView. The habit/widget child views were changed to NOT nest
@@ -22,7 +23,8 @@ import SwiftUI
 // CONTRACT: pure presentation. No Process, no write, no JSON encode, no
 // sqlite. The only mutation path is a habit-square click, which the habit
 // view relays through the single `ContractGuard.runRecord` seam exactly as
-// before — unchanged. Deleting the app removes this board; `/gm` keeps
+// before — unchanged. The "Run now" button relays to EmailTriageWatcher which
+// owns the seam call. Deleting the app removes this board; `/gm` keeps
 // working. ContractLitmus greps this file too (blanket + explicit assertion).
 
 struct BoardPanelView: View {
@@ -33,6 +35,7 @@ struct BoardPanelView: View {
     let habits: HabitsWidgetStore
     let mood: MoodWidgetStore
     let moodSync: MoodIngestWatcher
+    let emailTriage: EmailTriageWatcher
     let store: StateStore
     let onClose: () -> Void
 
@@ -50,6 +53,8 @@ struct BoardPanelView: View {
                     MoodWidgetView(store: mood, sync: moodSync)
                     Divider()
                     HabitsWidgetView(store: habits)
+                    Divider()
+                    emailTriageSection
                     Divider()
                     WidgetHostView(host: host)
                     if let s = store.state.surface, !s.lines.isEmpty {
@@ -92,6 +97,69 @@ struct BoardPanelView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+    }
+
+    // MARK: email triage status section
+
+    private var emailTriageSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                sectionHeader("Mail")
+                Spacer()
+                Button {
+                    emailTriage.runNow()
+                } label: {
+                    Label("Run now", systemImage: "arrow.clockwise")
+                        .font(.caption2)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .disabled(emailTriage.lastStatus.map {
+                    $0.hasPrefix("email triage") && !$0.contains("ok")
+                        && !$0.contains("failed") } ?? false)
+                .help("Run email triage now (ignores the once-per-day marker)")
+            }
+
+            HStack(spacing: 6) {
+                Text("Last run:")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                if let r = emailTriage.lastRun {
+                    Text(r, style: .relative)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Text("·")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Text(r, style: .time)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("never")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if let status = emailTriage.lastStatus {
+                let ok = status.hasPrefix("email triage ok")
+                HStack(spacing: 4) {
+                    Image(systemName: ok
+                          ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                        .font(.caption2)
+                        .foregroundStyle(ok ? Color.green : Color.orange)
+                    Text(status)
+                        .font(.caption2)
+                        .foregroundStyle(ok ? Color.green : Color.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.secondary.opacity(0.06)))
     }
 
     // MARK: proactive research — now a board WIDGET card (migrated off left)

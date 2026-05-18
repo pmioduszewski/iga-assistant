@@ -254,6 +254,7 @@ final class HabitsWidgetStore {
     /// notification — the engine already decided salience.
     private func maybeNudge(_ habits: [HabitEntry]) {
         guard nudgePrimed else { nudgePrimed = true; return }
+        guard NotificationPrefs.enabled(.habit) else { return }
         let today = Self.systemTodayISO()
         let d = UserDefaults.standard
         guard d.string(forKey: nudgeDayKey) != today,

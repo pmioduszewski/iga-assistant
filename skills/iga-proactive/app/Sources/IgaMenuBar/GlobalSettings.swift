@@ -21,6 +21,11 @@ struct GlobalSettingsView: View {
     @State private var notifStatus = "checking…"
     @State private var notifResult = ""
     @State private var notifTesting = false
+    // Per-source notification toggles (backed by NotificationPrefs)
+    @State private var notifProactive = NotificationPrefs.enabled(.proactive)
+    @State private var notifHabit     = NotificationPrefs.enabled(.habit)
+    @State private var notifMood      = NotificationPrefs.enabled(.mood)
+    @State private var notifEmail     = NotificationPrefs.enabled(.emailTriage)
     private var busy: Bool { habits.managePending }
 
     var body: some View {
@@ -89,6 +94,23 @@ struct GlobalSettingsView: View {
                      + "machine.")
                     .font(.caption2).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+
+                Divider().padding(.vertical, 2)
+                subhead("Sources")
+                Toggle("Proactive engine events", isOn: $notifProactive)
+                    .onChange(of: notifProactive) { _, v in
+                        NotificationPrefs.set(.proactive, v) }
+                Toggle("Habit accountability nudge", isOn: $notifHabit)
+                    .onChange(of: notifHabit) { _, v in
+                        NotificationPrefs.set(.habit, v) }
+                Toggle("Mood check-in nudge", isOn: $notifMood)
+                    .onChange(of: notifMood) { _, v in
+                        NotificationPrefs.set(.mood, v) }
+                Toggle("Email triage result", isOn: $notifEmail)
+                    .onChange(of: notifEmail) { _, v in
+                        NotificationPrefs.set(.emailTriage, v) }
+
+                Divider().padding(.vertical, 2)
                 HStack(spacing: 8) {
                     Button {
                         notifTesting = true
@@ -138,7 +160,7 @@ struct GlobalSettingsView: View {
             Spacer(minLength: 0)
         }
         .padding(20)
-        .frame(width: 420, height: 560)
+        .frame(width: 420, height: 640)
     }
 
     private func subhead(_ t: String) -> some View {

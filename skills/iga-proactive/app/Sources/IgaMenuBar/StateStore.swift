@@ -177,15 +177,18 @@ final class StateStore {
         // (a) new WORKER_REQUEST appears (unseen idempotency key)
         for r in new.queue where !seenWorkerKeys.contains(r.idempotencyKey) {
             seenWorkerKeys.insert(r.idempotencyKey)
-            notifier.notify(
-                id: "worker-\(r.idempotencyKey)",
-                title: "New proactive job queued",
-                body: "\(r.jobId) — \(r.shortKey)")
+            if NotificationPrefs.enabled(.proactive) {
+                notifier.notify(
+                    id: "worker-\(r.idempotencyKey)",
+                    title: "New proactive job queued",
+                    body: "\(r.jobId) — \(r.shortKey)")
+            }
         }
 
         // (b) governor circuit-breaker trips (edge: false → true)
         let tripped = new.governor.breakerTripped
-        if tripped && !lastBreakerTripped {
+        if tripped && !lastBreakerTripped
+            && NotificationPrefs.enabled(.proactive) {
             notifier.notify(
                 id: "breaker-\(Int(Date().timeIntervalSince1970))",
                 title: "Budget circuit-breaker tripped",
@@ -196,11 +199,13 @@ final class StateStore {
         // (c) counts.done increments
         if let prevDone = lastDoneCount, new.counts.done > prevDone {
             let delta = new.counts.done - prevDone
-            notifier.notify(
-                id: "done-\(new.counts.done)",
-                title: "Proactive work completed",
-                body: "\(delta) job\(delta == 1 ? "" : "s") finished "
-                    + "(\(new.counts.done) done total).")
+            if NotificationPrefs.enabled(.proactive) {
+                notifier.notify(
+                    id: "done-\(new.counts.done)",
+                    title: "Proactive work completed",
+                    body: "\(delta) job\(delta == 1 ? "" : "s") finished "
+                        + "(\(new.counts.done) done total).")
+            }
         }
         lastDoneCount = new.counts.done
     }

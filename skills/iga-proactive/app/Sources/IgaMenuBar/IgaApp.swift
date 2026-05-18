@@ -92,7 +92,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             host: wh,
             habits: hw,
             mood: mw,
-            moodSync: miw)
+            moodSync: miw,
+            emailTriage: etw)
 
         let p = panel
         ticker = HabitTickerStatusItem(

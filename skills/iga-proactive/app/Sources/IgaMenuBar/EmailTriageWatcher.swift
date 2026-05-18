@@ -89,6 +89,13 @@ final class EmailTriageWatcher {
         // Claim the day BEFORE running so a crash/timeout can't cause a
         // same-day retry storm (matches the launchd "fire once" intent).
         UserDefaults.standard.set(today, forKey: lastDayKey)
+        run()
+    }
+
+    /// Shared execution path used by both the automatic daily trigger and the
+    /// manual "Run now" button. Assumes `inFlight` has already been set to
+    /// `true` by the caller (so the guard above or the button handler owns it).
+    private func run() {
         Task.detached(priority: .utility) {
             let outcome = ContractGuard.runEmailTriage()
             await MainActor.run { [weak self] in
@@ -104,5 +111,14 @@ final class EmailTriageWatcher {
                             .prefix(160)
             }
         }
+    }
+
+    /// Manual run triggered by the user via the "Run now" button. Ignores the
+    /// once-per-day marker — an explicit user action always runs. Relays only
+    /// through the sanctioned `ContractGuard.runEmailTriage()` seam.
+    func runNow() {
+        guard !inFlight else { return }
+        inFlight = true
+        run()
     }
 }

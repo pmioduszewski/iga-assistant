@@ -135,7 +135,34 @@ final class MoodWidgetStore {
     @ObservationIgnored
     private var timer: Timer?
 
-    init() {
+    /// Notifier for the daily mood check-in nudge. Injected for tests.
+    @ObservationIgnored
+    private let notifier: Notifier
+    /// UserDefaults key holding the civil day we last sent the mood nudge.
+    @ObservationIgnored
+    private let nudgeDayKey = "iga.mood.lastNudgeDay"
+    /// Skip the very first poll (prime) so a cold launch never fires a
+    /// backlog nudge before the user has even looked at the app.
+    @ObservationIgnored
+    private var nudgePrimed = false
+
+    /// UTC civil-date formatter (matches HabitsWidgetStore convention).
+    @ObservationIgnored
+    nonisolated private static let utcDayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .iso8601)
+        f.timeZone = TimeZone(identifier: "UTC")
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    nonisolated static func systemTodayISO() -> String {
+        utcDayFormatter.string(from: Date())
+    }
+
+    init(notifier: Notifier = Notifier.shared) {
+        self.notifier = notifier
         if let env = ProcessInfo.processInfo
             .environment["IGA_WIDGET_POLL_SECONDS"],
            let v = TimeInterval(env), v >= 2 {
@@ -194,8 +221,56 @@ final class MoodWidgetStore {
             waitingReason = decoded.cells.contains(where: { $0.count > 0 })
                 ? nil
                 : "No moods yet — log one in chat, then it appears here."
+            maybeMoodNudge(decoded)
         } else {
             waitingReason = "mood-tracker: unreadable data file"
         }
+    }
+
+    /// Fire the mood check-in nudge AT MOST once per civil day, never on the
+    /// very first poll (prime guard). Rule (simple + deterministic):
+    ///   • if no mood logged today AND local hour ≥ 18 → evening prompt
+    ///   • else if the most recent log is > 24 h old → gentle check-in
+    /// Uses only data already decoded in `MoodWidgetData`; no engine calls.
+    private func maybeMoodNudge(_ decoded: MoodWidgetData) {
+        guard nudgePrimed else { nudgePrimed = true; return }
+        guard NotificationPrefs.enabled(.mood) else { return }
+
+        let today = Self.systemTodayISO()
+        let d = UserDefaults.standard
+        guard d.string(forKey: nudgeDayKey) != today else { return }
+
+        let now = Date()
+        let localHour = Calendar.current.component(.hour, from: now)
+
+        // Check if any cell for today has at least one log
+        let loggedToday = decoded.cells.first(where: { $0.date == today })
+            .map { $0.count > 0 } ?? false
+
+        let shouldNudge: Bool
+        let title: String
+        let body: String
+
+        if !loggedToday && localHour >= 18 {
+            // Evening: no mood logged yet today
+            shouldNudge = true
+            title = "Iga · mood"
+            body = "How are you feeling today? Tell Iga in chat to log your mood."
+        } else if let latest = decoded.recent.first,
+                  let ts = ISO8601DateFormatter().date(from: latest.ts),
+                  now.timeIntervalSince(ts) > 86400 {
+            // Most recent log is stale (> 24 h)
+            shouldNudge = true
+            title = "Iga · mood"
+            body = "It's been a while — how are you feeling? Tell Iga in chat to log your mood."
+        } else {
+            shouldNudge = false
+            title = ""
+            body = ""
+        }
+
+        guard shouldNudge else { return }
+        d.set(today, forKey: nudgeDayKey)
+        notifier.notify(id: "mood-nudge-\(today)", title: title, body: body)
     }
 }

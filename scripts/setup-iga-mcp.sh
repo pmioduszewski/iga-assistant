@@ -59,57 +59,89 @@ if [ "$DRY" = 0 ] && [ ! -x "$BIN" ]; then
 fi
 say "IgaMCP entrypoint: $BIN"
 
-# --- 2. Claude Code (user scope) -------------------------------------------
-if command -v claude >/dev/null 2>&1; then
-  if claude mcp list 2>/dev/null | grep -q '^iga:'; then
-    say "Claude Code: 'iga' already registered — skipping"
-  elif ask "Register 'iga' with Claude Code at USER scope (all sessions)?"; then
-    run "claude mcp remove iga >/dev/null 2>&1 || true"
-    run "claude mcp add -s user iga '$BIN'"
-    say "Claude Code: registered (restart sessions to connect)"
-  fi
+# --- IgaMemory detection (the warm memory server — a SEPARATE process by
+#     design; see iga_mcp/README.md "topology"). Path derived from IGA_HOME
+#     (default ~/Gaia) — never hardcoded; skipped cleanly if absent. ------------
+IGA_HOME_DIR="${IGA_HOME:-$HOME/Gaia}"
+MEM_BIN=""
+for cand in "$IGA_HOME_DIR/mempalace/.venv/bin/mempalace-mcp" \
+            "$REPO_ROOT/mempalace/.venv/bin/mempalace-mcp"; do
+  [ -x "$cand" ] && { MEM_BIN="$cand"; break; }
+done
+if [ -n "$MEM_BIN" ]; then
+  MEM_PALACE="$(dirname "$(dirname "$(dirname "$MEM_BIN")")")/.mempalace/palace"
+  say "MemPalace detected: $MEM_BIN"
 else
-  say "Claude Code CLI not found — skipping (install it, then re-run)"
+  say "MemPalace not found under \$IGA_HOME — IgaMemory steps skipped"
 fi
 
+# --- 2. Claude Code (user scope): register iga, and IgaMemory if present ----
+reg_claude() { # name, then command + args
+  local id="$1"; shift
+  if ! command -v claude >/dev/null 2>&1; then
+    say "Claude Code CLI not found — skipping '$id'"; return 0
+  fi
+  if claude mcp list 2>/dev/null | grep -q "^$id:"; then
+    say "Claude Code: '$id' already registered — skipping"; return 0
+  fi
+  ask "Register '$id' with Claude Code at USER scope (all sessions)?" \
+    || { say "Claude Code: '$id' skipped"; return 0; }
+  run "claude mcp remove $id >/dev/null 2>&1 || true"
+  run "claude mcp add -s user $id $*"
+  say "Claude Code: '$id' registered (restart sessions to connect)"
+}
+reg_claude iga "'$BIN'"
+[ -n "$MEM_BIN" ] && reg_claude IgaMemory "'$MEM_BIN' -- --palace '$MEM_PALACE'"
+
 # --- 3. VS Code / Cursor (user-level mcp.json) -----------------------------
-# Merge-only writer: adds/updates ONLY the "iga" server, preserves the rest.
+# Merge-only writer: adds/updates ONLY the named server, preserves the rest.
 patch_client() {
-  local name="$1" base="$2"
-  [ -d "$base" ] || { return 0; }
-  # active profile mcp.json, else the top-level User/mcp.json
+  local name="$1" base="$2" id="$3" cmd="$4" palace="${5:-}"
+  [ -d "$base" ] || return 0
   local cfg
   cfg="$(/bin/ls -t "$base"/profiles/*/mcp.json "$base"/mcp.json 2>/dev/null | head -1 || true)"
   [ -z "$cfg" ] && cfg="$base/mcp.json"
-  say "$name detected — config: $cfg"
-  ask "Add/refresh user-level 'iga' MCP for $name?" || { say "$name: skipped"; return 0; }
-  if [ "$DRY" = 1 ]; then echo "  [dry-run] merge iga -> $cfg"; return 0; fi
-  BIN="$BIN" CFG="$cfg" python3 - <<'PY'
+  if [ "$id" = "IgaMemory" ]; then
+    say "$name: '$id' is your PERSONAL memory — only add it to coding clients you actually want it in."
+    ask "Add user-level 'IgaMemory' to $name? (default: no)" || { say "$name: IgaMemory skipped"; return 0; }
+  else
+    say "$name detected — config: $cfg"
+    ask "Add/refresh user-level '$id' MCP for $name?" || { say "$name: $id skipped"; return 0; }
+  fi
+  if [ "$DRY" = 1 ]; then echo "  [dry-run] merge $id -> $cfg"; return 0; fi
+  ID="$id" CMD="$cmd" PALACE="$palace" CFG="$cfg" python3 - <<'PY'
 import json, os, pathlib
-cfg = pathlib.Path(os.environ["CFG"]); bin_ = os.environ["BIN"]
+cfg = pathlib.Path(os.environ["CFG"]); _id = os.environ["ID"]
+cmd = os.environ["CMD"]; palace = os.environ.get("PALACE", "")
 cfg.parent.mkdir(parents=True, exist_ok=True)
 try:
     data = json.loads(cfg.read_text()) if cfg.exists() and cfg.read_text().strip() else {}
 except Exception:
-    print(f"  ! {cfg} is not clean JSON — not touching it; add 'iga' manually"); raise SystemExit(0)
-servers = data.setdefault("servers", {})
-servers["iga"] = {"type": "stdio", "command": bin_}
+    print(f"  ! {cfg} is not clean JSON — not touching it; add '{_id}' manually"); raise SystemExit(0)
+entry = {"type": "stdio", "command": cmd}
+if palace:
+    entry["args"] = ["--palace", palace]
+data.setdefault("servers", {})[_id] = entry
 cfg.write_text(json.dumps(data, indent=2) + "\n")
-print(f"  wrote 'iga' -> {cfg}")
+print(f"  wrote '{_id}' -> {cfg}")
 PY
-  say "$name: done (restart $name / 'MCP: Restart' to connect)"
+  say "$name: '$id' done (restart $name / 'MCP: Restart' to connect)"
 }
 
+wire_clients() { # base dir, display name
+  patch_client "$2" "$1" iga "$BIN"
+  [ -n "$MEM_BIN" ] && patch_client "$2" "$1" IgaMemory "$MEM_BIN" "$MEM_PALACE"
+}
 case "$(uname -s)" in
   Darwin)
-    patch_client "VS Code" "$HOME/Library/Application Support/Code/User"
-    patch_client "VS Code Insiders" "$HOME/Library/Application Support/Code - Insiders/User"
-    patch_client "Cursor" "$HOME/Library/Application Support/Cursor/User"
+    wire_clients "$HOME/Library/Application Support/Code/User" "VS Code"
+    wire_clients "$HOME/Library/Application Support/Code - Insiders/User" "VS Code Insiders"
+    wire_clients "$HOME/Library/Application Support/Cursor/User" "Cursor"
     ;;
   Linux)
-    patch_client "VS Code" "$HOME/.config/Code/User"
-    patch_client "Cursor" "$HOME/.config/Cursor/User"
+    wire_clients "$HOME/.config/Code/User" "VS Code"
+    wire_clients "$HOME/.config/Cursor/User" "Cursor"
     ;;
 esac
 
-say "Done. IgaMCP wired. Restart your MCP clients to connect."
+say "Done. iga + IgaMemory wired (two servers, by design). Restart your MCP clients to connect."

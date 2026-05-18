@@ -46,10 +46,21 @@ scripts/setup-iga-mcp.sh
 ```
 
 Creates the venv, editable-installs the package, registers `iga` with
-Claude Code at **user scope**, and **detects VS Code / Cursor** and offers
-to add a user-level entry (asks first; merge-only). Re-runnable. Flags:
+Claude Code at **user scope**, **also registers `IgaMemory`** (MemPalace)
+if found under `$IGA_HOME`, and **detects VS Code / Cursor** and offers
+user-level entries (asks first; merge-only; `IgaMemory` is opt-in per
+coding client — it's your personal memory). Re-runnable. Flags:
 `--dry-run`, `--yes`, `--venv DIR`. `/iga install iga-mcp` then lets
-`/iga status` detect a missing/broken `iga` MCP and re-run this for you.
+`/iga status` detect a missing/broken `iga` **or** `IgaMemory` server and
+re-run this for you.
+
+### Topology — two servers, by design
+
+`iga` (this package, stdlib-only, in-repo) and `IgaMemory` (MemPalace —
+heavy, warm, separate non-OSS subsystem) are **deliberately separate
+processes**: performance (memory stays a warm server), OSS cleanliness,
+and brain isolation. Unified by naming + one installer, not by merging.
+Decided 2026-05-18.
 
 The manual steps below are the same thing by hand.
 

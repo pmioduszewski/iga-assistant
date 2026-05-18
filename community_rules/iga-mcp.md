@@ -8,6 +8,11 @@ prerequisites:
     check: mcp(iga)
     guide: scripts/setup-iga-mcp.sh
     severity: warning
+  - name: iga-memory-server
+    description: The `IgaMemory` MCP server (MemPalace, warm) is registered — separate process by design (perf/isolation/OSS). The setup script registers it alongside `iga`.
+    check: mcp(IgaMemory)
+    guide: scripts/setup-iga-mcp.sh
+    severity: warning
 intent_triggers:
   - iga mcp
   - install mcp
@@ -44,12 +49,34 @@ never clobbers other servers). Re-runnable any time. Flags:
 `--dry-run`, `--yes`, `--venv DIR`. Full manual steps:
 [`iga_mcp/README.md`](../iga_mcp/README.md).
 
+## Topology — two servers, by design (decided 2026-05-18)
+
+`iga` and `IgaMemory` are **separate MCP servers on purpose** — not
+merged into one process:
+
+- **Performance** — `IgaMemory` (MemPalace) is fast because it's a *warm*
+  long-running server (ChromaDB + embeddings resident). Merging/proxying
+  would cold-spawn memory per call and reintroduce latency on recall.
+- **OSS cleanliness** — `iga_mcp` is stdlib-only and in this repo;
+  MemPalace is a heavy, separately-versioned, non-OSS subsystem. No dep
+  bloat / vendoring.
+- **Isolation** — memory is the brain; a skill-tool fault must not take
+  it down.
+
+The *experience* is unified instead: consistent `Iga*` naming + **one
+installer registers both**. `IgaMemory` is opt-in per coding client
+(it's your personal memory). MemPalace auto-save (Stop/PreCompact hooks)
+is independent of MCP topology either way. A thin typed proxy on `iga`
+(`iga_recall`/`iga_remember`) is deferred — revisit only on real
+cross-repo friction.
+
 ## Status detection
 
-This pack declares a `prerequisites:` check (`mcp(iga)`). After
-`/iga install iga-mcp`, `/iga status` reports if the `iga` MCP is
-missing/disconnected and offers to run the setup guide above. So a
-fresh clone has a real "is it wired? → fix it" path, not just prose.
+This pack declares `prerequisites:` checks (`mcp(iga)` and
+`mcp(IgaMemory)`). After `/iga install iga-mcp`, `/iga status` reports
+if either server is missing/disconnected and offers to run the setup
+guide above. So a fresh clone has a real "is it wired? → fix it" path
+for both servers, not just prose.
 
 ## Clients
 

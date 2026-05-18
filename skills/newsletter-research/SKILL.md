@@ -106,33 +106,59 @@ appears in a scan) but **spawns nothing unattended**:
   candidates → zero workers.** The empty room *is* the killswitch. This is
   the exact safety property `iga-proactive-research`'s
   `research-mempalace-queue` job relies on.
+- The **producer** (`engine/producer.py`, STEP 2) is the only thing that
+  fills the room, and it is itself gated: it only files a flag when a real
+  `rules/hooks/*.md` hook matches a real Gmail message, it is idempotent
+  (content-addressed drawer id + a per-message ledger claim), per-tick
+  capped, and it honours both env killswitches below. No hooks / no Gmail /
+  empty results → it files nothing → the room stays empty → the consumer
+  killswitch property is **unchanged**.
 - Belt-and-braces engine-wide: `IGA_PROACTIVE_SPAWN=0` (the documented
   detect-but-don't-mutate killswitch, shared with the research port) also
-  suppresses every spawn globally.
+  suppresses every spawn globally — for the producer it means "scan + log
+  what WOULD be filed, file nothing". `IGA_PROACTIVE_RESEARCH=0` is the hard
+  off for producer, consumer, and the unhooked detector alike.
 
 **How to turn it ON (when awake — do NOT do this unattended):**
 
 1. Author a hook spec in `rules/hooks/<name>.md` (personal, gitignored).
    See `skills/newsletter-research/docs/hook-spec.md` for the schema.
-2. Pick a labeled email that matches your hook's trigger.
-3. File a MemPalace flag drawer:
+2. Either let the **producer** scan the hook's `trigger` query and file
+   flags automatically (it runs gated, idempotent, capped), **or** hand-file
+   one flag drawer for a specific email using the **real** MCP tool
+   signature (there is NO `metadata=` param — the fields go in `content` as
+   structured lines; see `docs/hook-spec.md` → "Canonical flag-drawer
+   schema"):
 
    ```python
    mempalace_add_drawer(
-     wing="...", room="newsletter-research-queue",
-     metadata={
-       "title": "<email subject>",
-       "target_date": "YYYY-MM-DD",
-       "hook_name": "<your-hook-slug>",  # matches rules/hooks/<slug>.md
-     },
-     content="message-id: <id>; label <Gmail-label>"
+     wing="iga/newsletter-research",
+     room="newsletter-research-queue",
+     content=(
+       "NEWSLETTER-RESEARCH-QUEUE FLAG\n"
+       "hook_name: <your-hook-slug>\n"   # matches rules/hooks/<slug>.md
+       "title: <email subject>\n"
+       "target_date: YYYY-MM-DD\n"
+       "message-id: <gmail-message-id>\n"
+       "triggered: false"
+     ),
    )
    ```
 
-4. Next `/gm` or `/back` scan → the engine fires exactly **one** gated
+3. Next `/gm` or `/back` scan → the engine fires exactly **one** gated
    worker for it (`cooldown: 72h` ledger guard = no duplicate).
-5. To pause: stop filing flag drawers (or set `IGA_PROACTIVE_SPAWN=0`).
-   Deleting all `newsletter-research-queue` drawers returns it to dormant.
+4. To pause: stop the producer (remove/ pause the hook, or
+   `IGA_PROACTIVE_SPAWN=0`). Deleting all `newsletter-research-queue`
+   drawers returns it to dormant.
+
+### Unhooked-cluster offer (STEP 2)
+
+`engine/unhooked.py` counts high-value newsletter streams in labeled mail
+that **no** `rules/hooks/*.md` covers and, past a threshold, parks exactly
+ONE `surface_next_brief` offer ("5-min brief + set up a hook?") in a
+gitignored state file for the next `/gm`/`/back`. Cluster identities are
+salted-SHA1 hashed — **no PII** ever reaches disk or the surfaced text. Same
+two killswitches apply. See `docs/hook-spec.md` for the schema.
 
 No code edit is needed to flip it either way — the gate is data.
 

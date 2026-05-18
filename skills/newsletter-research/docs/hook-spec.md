@@ -85,6 +85,85 @@ message — the engine surfaces this as a job-load error (same path as
 
 ---
 
+## Canonical flag-drawer schema (RESOLVED — read this before editing producers/triggers)
+
+A *flag drawer* is the unit the producer files into the
+`newsletter-research-queue` MemPalace room; the generic engine's
+`mempalace(room:newsletter-research-queue)` trigger consumes it and the
+runner processes one email per flag.
+
+### The contract discrepancy (and how it is resolved)
+
+STEP-1 `SKILL.md` documented filing the flag via
+`mempalace_add_drawer(..., metadata={title, target_date, hook_name}, content=...)`.
+**That signature does not exist.** The real MCP tool is:
+
+```
+mempalace_add_drawer(wing, room, content, source_file=None, added_by="mcp")
+```
+
+There is **no `metadata=` parameter**, and `mempalace_list_drawers` (what the
+trigger reads through) returns each drawer as
+`{drawer_id, wing, room, content_preview}` — **no `metadata`, no full
+`content`** (the preview is the first ~200 chars of the body).
+
+**Resolution (canonical, binding):** the structured fields are encoded as
+`key: value` lines **inside `content`**. The producer
+(`engine/producer.py` → `ProducedFlag.content()`) writes exactly this body;
+the trigger (`skills/iga-proactive/engine/triggers.py` →
+`parse_flag_content` + `eval_mempalace`) reads the same fields back out of
+`content`/`content_preview`. Producer-write and trigger-read are one shape
+end to end. Legacy `drawer.metadata.<field>` still **wins when present**
+(backward compatible with the old scanner / test fakes), with the
+content-parsed value as the fallback that makes it work against the live MCP.
+
+### Canonical `content` body
+
+```
+NEWSLETTER-RESEARCH-QUEUE FLAG
+hook_name: <slug matching rules/hooks/<slug>.md>
+title: <human label, e.g. "Newsletter/Dev: Weekly digest">
+target_date: <YYYY-MM-DD>
+message-id: <Gmail message id>
+triggered: false
+label: <Gmail label>            # optional
+gmail_query: <the query that matched>   # optional
+```
+
+| Field | Required | Read by trigger as | Notes |
+|---|---|---|---|
+| `NEWSLETTER-RESEARCH-QUEUE FLAG` | Yes | (banner, ignored) | First line; human/debug marker |
+| `hook_name` | Yes | `drawer.hook_name` | Worker loads `rules/hooks/<hook_name>.md` |
+| `title` | Yes | `drawer.title` / candidate title | |
+| `target_date` | Yes | `drawer.target_date` | Part of the idempotency key |
+| `message-id` | Yes | `drawer.message_id` | The email the worker fetches |
+| `triggered` | No (`false`) | skip-if-`true` marker | Lets a consumed flag be tombstoned |
+| `label` / `gmail_query` | No | `drawer.context` | Provenance for the worker |
+
+- **Filing wing:** `iga/newsletter-research` (bookkeeping only — the trigger
+  is room-scoped, so the wing just keeps the content-addressed drawer id
+  stable). Room: **`newsletter-research-queue`** (binding — this is the
+  trigger room and the killswitch surface).
+- **Idempotency:** the drawer id is `sha256(wing+room+content)`; an identical
+  re-file is a server-side no-op. The producer *also* holds a ledger claim
+  keyed `nl-produce::<hook>::<message-id>` so it does not re-hit the MCP every
+  tick. The consumer separately dedups via its own 72h cooldown on
+  `newsletter::{{drawer.id}}::{{drawer.target_date}}`.
+- **Killswitch unchanged:** an empty `newsletter-research-queue` room still
+  spawns nothing. The producer only ever *adds* flags when a real hook
+  matches a real message; it never alters the empty-room semantics.
+
+### Unhooked-cluster offer
+
+`engine/unhooked.py` is a sibling detector: it counts high-value newsletter
+streams in labeled mail **not covered by any `rules/hooks/*.md`** and, when a
+threshold is crossed, writes exactly ONE `surface_next_brief` offer to the
+gitignored `~/Gaia/scratch/newsletter-unhooked-offer.json` (override:
+`$IGA_NL_UNHOOKED_OFFER`). Cluster identities are **salted-SHA1 hashed** —
+no sender/domain/subject ever reaches disk or the surfaced text (PII
+contract). Honours `IGA_PROACTIVE_RESEARCH=0` / `IGA_PROACTIVE_SPAWN=0`
+exactly like the producer/consumer.
+
 ## Three-layer separation
 
 | Layer | Where | Committed? |

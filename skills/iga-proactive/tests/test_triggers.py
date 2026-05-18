@@ -211,6 +211,93 @@ def test_eval_mempalace_error_dict_graceful_empty():
     assert evaluate(t, now=NOW, mempalace_mod=mod) == []
 
 
+# ---------- contract reconciliation: real-MCP shape + content fallback --
+# The real mempalace_add_drawer has NO metadata= param and
+# tool_list_drawers returns drawer_id/content_preview (no metadata, no full
+# content). eval_mempalace must read flag fields from structured content
+# lines, while metadata still wins when present (legacy / test fakes).
+def test_parse_flag_content_extracts_canonical_fields():
+    from triggers import parse_flag_content  # noqa: E402
+
+    body = (
+        "NEWSLETTER-RESEARCH-QUEUE FLAG\n"
+        "hook_name: dev-libs\n"
+        "title: Newsletter/Dev: Weekly\n"
+        "target_date: 2026-05-18\n"
+        "message-id: <abc@mail>\n"
+        "triggered: false\n"
+        "free text that is not a field\n"
+    )
+    p = parse_flag_content(body)
+    assert p == {
+        "hook_name": "dev-libs",
+        "title": "Newsletter/Dev: Weekly",
+        "target_date": "2026-05-18",
+        "message-id": "<abc@mail>",
+        "triggered": "false",
+    }
+
+
+def test_eval_mempalace_reads_real_mcp_shape_from_content_preview():
+    """Real tool_list_drawers: drawer_id + content_preview, NO metadata."""
+    drawers = [
+        {
+            "drawer_id": "drawer_iga_x_abc",
+            "wing": "iga/newsletter-research",
+            "room": "newsletter-research-queue",
+            "content_preview": (
+                "NEWSLETTER-RESEARCH-QUEUE FLAG\n"
+                "hook_name: dev-libs\n"
+                "title: Newsletter/Dev: Weekly\n"
+                "target_date: 2026-05-18\n"
+                "message-id: <m1@mail>\n"
+                "triggered: false"
+            ),
+        }
+    ]
+    t = Trigger.parse("mempalace(room:newsletter-research-queue)")
+    out = evaluate(t, now=NOW, mempalace_mod=_fake_mempalace(drawers))
+    assert len(out) == 1
+    c = out[0]
+    assert c.source_id == "drawer_iga_x_abc"
+    assert c.context["drawer.title"] == "Newsletter/Dev: Weekly"
+    assert c.context["drawer.target_date"] == "2026-05-18"
+    assert c.context["drawer.hook_name"] == "dev-libs"
+    assert c.context["drawer.message_id"] == "<m1@mail>"
+
+
+def test_eval_mempalace_content_triggered_marker_skips():
+    drawers = [
+        {
+            "drawer_id": "d-skip",
+            "content_preview": (
+                "NEWSLETTER-RESEARCH-QUEUE FLAG\n"
+                "hook_name: dev-libs\ntitle: done\ntriggered: true"
+            ),
+        }
+    ]
+    t = Trigger.parse("mempalace(room:newsletter-research-queue)")
+    assert evaluate(t, now=NOW, mempalace_mod=_fake_mempalace(drawers)) == []
+
+
+def test_eval_mempalace_metadata_still_wins_over_content():
+    """Backward compat: when metadata IS present it takes precedence."""
+    drawers = [
+        {
+            "id": "d1",
+            "content": "hook_name: from-content\ntitle: from-content",
+            "metadata": {"title": "from-meta", "target_date": "2026-05-20"},
+        }
+    ]
+    t = Trigger.parse("mempalace(room:research-queue)")
+    out = evaluate(t, now=NOW, mempalace_mod=_fake_mempalace(drawers))
+    assert len(out) == 1
+    assert out[0].context["drawer.title"] == "from-meta"
+    assert out[0].context["drawer.target_date"] == "2026-05-20"
+    # hook_name only in content → still surfaced as fallback.
+    assert out[0].context["drawer.hook_name"] == "from-content"
+
+
 # ---------- manual trigger ---------------------------------------------
 def test_eval_manual_always_one_candidate():
     t = Trigger.parse("manual")

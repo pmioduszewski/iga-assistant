@@ -31,7 +31,14 @@ testpaths = [
 pythonpath = [
   "skills/iga-proactive-research/engine",
 ]
-addopts = "-ra"
+# importlib import-mode: the repo has multiple `tests/` packages (one per
+# skill bundle) with identical names. Under pytest's default "prepend"
+# import-mode, collecting two of them in one invocation (e.g.
+# `pytest skills/iga-proactive/tests skills/newsletter-research/tests`)
+# raises an import-file-mismatch on the duplicate package name. importlib
+# mode isolates each test module and is pytest's recommended modern default.
+# No test logic changes; per-skill conftest sys.path shims still apply.
+addopts = "-ra --import-mode=importlib"
 
 [tool.uv]
 # MemPalace runs in its own isolated venv at mempalace/.venv — do NOT manage it here.

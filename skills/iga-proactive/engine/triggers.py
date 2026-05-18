@@ -363,6 +363,67 @@ def eval_todoist(
     return out
 
 
+_FLAG_FIELD_RE = re.compile(r"^([A-Za-z][A-Za-z0-9 _-]*?)\s*:\s*(.*)$")
+
+# Canonical structured-content keys a flag drawer encodes (see
+# skills/newsletter-research/docs/hook-spec.md "Canonical flag-drawer
+# schema"). The real `mempalace_add_drawer` MCP tool exposes ONLY
+# wing/room/content/added_by/source_file — there is NO `metadata=` param and
+# `tool_list_drawers` returns `drawer_id`/`content_preview` (no `metadata`,
+# no full `content`). So producers MUST encode these as `key: value` lines
+# inside `content`; this parser is the read side of that contract.
+_FLAG_CONTENT_KEYS = {
+    "hook_name",
+    "title",
+    "target_date",
+    "triggered",
+    "message-id",
+    "message_id",
+}
+
+
+def parse_flag_content(content: str) -> dict[str, str]:
+    """Parse the structured ``key: value`` lines a flag drawer encodes in its
+    ``content`` (the only place they can live — the MCP add_drawer tool has no
+    ``metadata=`` param).
+
+    Tolerant: a leading non-key banner line (e.g.
+    ``NEWSLETTER-RESEARCH-QUEUE FLAG``) is ignored; only recognised keys are
+    extracted; unknown ``k: v`` lines are skipped so free-text context never
+    pollutes the namespace. ``message_id`` is normalised to ``message-id``.
+    Pure / side-effect-free.
+    """
+    out: dict[str, str] = {}
+    for raw_line in (content or "").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        m = _FLAG_FIELD_RE.match(line)
+        if not m:
+            continue
+        key = m.group(1).strip().lower()
+        if key not in _FLAG_CONTENT_KEYS:
+            continue
+        if key == "message_id":
+            key = "message-id"
+        out[key] = m.group(2).strip()
+    return out
+
+
+def _drawer_field(d: dict, *names: str) -> str:
+    """First non-empty value among ``names`` in a drawer dict.
+
+    The real ``tool_list_drawers`` returns ``drawer_id`` + ``content_preview``;
+    the test fakes (and the old scanner's contract) use ``id`` + ``content``.
+    Read both so the trigger works against the live MCP AND the unit fakes.
+    """
+    for n in names:
+        v = d.get(n)
+        if v not in (None, ""):
+            return str(v)
+    return ""
+
+
 def eval_mempalace(
     trigger: Trigger,
     *,
@@ -372,9 +433,25 @@ def eval_mempalace(
     """``mempalace(room:X, ...)`` → one candidate per non-triggered drawer.
 
     Uses ``mempalace_mod.tool_list_drawers(room=..., limit=...)`` — the exact
-    invocation the old scanner used. Drawers whose ``metadata.triggered`` is
+    invocation the old scanner used. Drawers whose ``triggered`` marker is
     truthy are skipped (already consumed). If the module can't be imported or
     the call fails, returns ``[]`` (graceful — no raise).
+
+    Field resolution is contract-reconciled (see
+    ``skills/newsletter-research/docs/hook-spec.md``): the real
+    ``mempalace_add_drawer`` MCP tool has **no** ``metadata=`` param and
+    ``tool_list_drawers`` returns ``drawer_id``/``content_preview`` (no
+    ``metadata``, no full ``content``). So per drawer we resolve each field
+    with this precedence:
+
+      1. ``drawer.metadata.<field>`` (legacy / test-fake shape — wins if present)
+      2. structured ``<field>: value`` line parsed out of the drawer body
+         (``content`` or ``content_preview``) — the real-MCP path
+
+    ``drawer.id`` falls back to ``drawer_id``; the body falls back to
+    ``content_preview``. ``hook_name`` (when present) is exported as
+    ``drawer.hook_name`` so the worker/runner can load the right hook spec
+    without re-parsing the body.
     """
     args = parse_kv_args(trigger.args)
     room = args.get("room")
@@ -404,22 +481,45 @@ def eval_mempalace(
     out: list[Candidate] = []
     for d in drawers:
         meta = d.get("metadata") or {}
-        if str(meta.get("triggered", "false")).lower() == "true":
+        # Body is `content` (test-fake / get_drawer) or `content_preview`
+        # (real tool_list_drawers). Parse structured flag fields out of it.
+        body = _drawer_field(d, "content", "content_preview")
+        parsed = parse_flag_content(body)
+
+        def _field(name: str, default: str = "") -> str:
+            # metadata wins (legacy / test fakes), else parsed-from-content.
+            mv = meta.get(name)
+            if mv not in (None, ""):
+                return str(mv)
+            return parsed.get(name, default)
+
+        if _field("triggered", "false").lower() == "true":
             continue
-        title = (meta.get("title") or (d.get("content", "") or "")[:80]).strip()
-        if not title:
-            continue
-        did = str(d.get("id", ""))
+
+        did = _drawer_field(d, "id", "drawer_id")
         if not did:
             continue
-        target = meta.get("target_date") or now.astimezone(timezone.utc).date().isoformat()
+
+        title = (_field("title") or body[:80]).strip()
+        if not title:
+            continue
+
+        target = _field("target_date") or now.astimezone(
+            timezone.utc
+        ).date().isoformat()
+        hook_name = _field("hook_name")
+        message_id = _field("message-id")
         ctx = {
             "drawer.id": did,
             "drawer.title": title,
             "drawer.room": room,
             "drawer.target_date": str(target),
-            "drawer.context": (d.get("content", "") or "")[:600],
+            "drawer.context": body[:600],
         }
+        if hook_name:
+            ctx["drawer.hook_name"] = hook_name
+        if message_id:
+            ctx["drawer.message_id"] = message_id
         out.append(
             Candidate(
                 trigger_kind="mempalace",

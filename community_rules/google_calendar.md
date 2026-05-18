@@ -25,7 +25,7 @@ Define your own color scheme here. Example:
 - Color 7 (Peacock) = Side project
 - Color 3 (Grape) = Family
 
-Edit the colors above to match your workflow. Gaia will apply them when creating events.
+Edit the colors above to match your workflow. Iga will apply them when creating events.
 
 ## Recurring events
 

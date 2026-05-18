@@ -211,7 +211,7 @@ def fit_score(
 
     name_norm = normalize_text(project.name)
     # Token/phrase match — NOT a bare substring (a short project name like
-    # "A" or "Gaia" must not spuriously "hit" inside "alpha"/"abigail").
+    # "A" or "Iga" must not spuriously "hit" inside "alpha"/"abigail").
     if not name_norm:
         name_hit = False
     elif " " in name_norm:

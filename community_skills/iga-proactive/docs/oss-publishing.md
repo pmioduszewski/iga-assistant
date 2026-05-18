@@ -9,7 +9,7 @@ rationale, not an oversight.
 
 Per `CLAUDE.md` ("Generic vs personalized layer", `community_skills/`):
 
-| Layer | Where | Owned by | `gaia update` touches it? |
+| Layer | Where | Owned by | `iga update` touches it? |
 |---|---|---|---|
 | Generic skill (the OSS template) | `community_skills/<pack>/` → copied to `skills/<pack>/` on install | upstream maintainer | yes (three-way merge) |
 | User overrides | `skills/<pack>/SKILL.local.md` | the user | **never** (gitignored) |

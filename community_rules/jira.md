@@ -15,9 +15,9 @@ Never create Jira issues directly. Always draft the issue in chat first — show
 
 ## Watermark
 
-When Gaia creates or updates a Jira issue, add a small attribution at the bottom of the description:
+When Iga creates or updates a Jira issue, add a small attribution at the bottom of the description:
 
-> ###### *Created with Gaia — Personal AI Assistant*
+> ###### *Created with Iga — Personal AI Assistant*
 
 ## Status transitions
 

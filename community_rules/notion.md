@@ -11,13 +11,13 @@ Notion and MemPalace serve different roles. Pick one based on **how the data is 
 - Examples: finances, project dashboards, reading lists, habit trackers (if reviewed visually)
 
 ### Write to MemPalace when:
-- Reference-only, Gaia is the primary reader
+- Reference-only, Iga is the primary reader
 - Needs semantic recall (cross-cutting context, "what did X say about Y")
 - Facts about people, decisions, corrections, preferences, behavioral patterns
 - Examples: meeting notes, call transcripts, session summaries, behavioral rules, daily diary
 
 ### Never duplicate
-The same fact should live in **one** place. Duplicates drift. If something is in MemPalace `gaia/rules`, do not also write it to a Notion "Rules" page.
+The same fact should live in **one** place. Duplicates drift. If something is in MemPalace `iga/rules`, do not also write it to a Notion "Rules" page.
 
 ## Specific routing for meeting / call / transcript content
 
@@ -68,4 +68,4 @@ Notion fetches are expensive (5–10K tokens per page). To minimize cost:
 
 - Pages older than 90 days that haven't been read or updated → suggest archiving to a `Log & Archive` subpage
 - Research docs whose decisions are made → archive once decisions are codified elsewhere (MemPalace, repo, or another stable home)
-- Behavioral rules and corrections live in MemPalace `gaia/rules`. Any Notion "rules" page is duplicate state and should be deprecated.
+- Behavioral rules and corrections live in MemPalace `iga/rules`. Any Notion "rules" page is duplicate state and should be deprecated.

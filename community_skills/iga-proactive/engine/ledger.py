@@ -68,7 +68,7 @@ def default_db_path() -> Path:
     env = os.environ.get("IGA_PROACTIVE_DB")
     if env:
         return Path(env).expanduser()
-    return Path.home() / "Gaia" / "state" / "proactive.db"
+    return Path.home() / "Iga" / "state" / "proactive.db"
 
 
 class Ledger:

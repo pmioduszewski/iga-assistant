@@ -35,7 +35,7 @@ The metadata dict, written at `add_drawer` time (mcp_server.py:838),
 contains:
 
 ```
-wing            str   normalized wing slug (e.g. "gaia")
+wing            str   normalized wing slug (e.g. "iga")
 room            str   room slug within the wing
 source_file     str   provenance path (may be "")
 chunk_index     int   0 for MCP-added drawers; >0 for chunked mines
@@ -291,7 +291,7 @@ Today:
 1. Email triage filed a drawer in `iga/email/...` describing the
    <old-domain> renewal reminder.
 2. The rebrand decision sits in
-   `gaia/decisions/<id>` as a current drawer.
+   `iga/decisions/<id>` as a current drawer.
 3. Iga's brief asks `mempalace_search("<old-brand> domain renewal")`.
 4. The renewal drawer scores high; the rebrand drawer doesn't share
    enough surface tokens to clear the threshold. Brief surfaces "renew
@@ -436,7 +436,7 @@ produced.
 
 Highest-signal sources, in order:
 
-1. **`gaia/rules/corrections` and `gaia/rules` wing in general.**
+1. **`iga/rules/corrections` and `iga/rules` wing in general.**
    the user files explicit "I was wrong about X, the truth is Y" drawers
    here. Heuristic: any drawer whose text contains an explicit
    correction marker (`corrects:`, `supersedes:`, `update to:`, "no
@@ -629,7 +629,7 @@ the `brand-rebrand-suppressed` scenario.
   state on every call.
 - applied-llms.org — factual drift; "remove, don't down-rank" the
   signal for currency.
-- MemPalace research drawer: `gaia/architecture/68ecca8703c2f1078434d7ce`
+- MemPalace research drawer: `iga/architecture/68ecca8703c2f1078434d7ce`
   (filed 2026-05-15) — SOTA framing.
 - MemPalace source paths referenced in this doc (read-only at design
   time):

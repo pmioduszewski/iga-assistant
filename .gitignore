@@ -26,11 +26,11 @@ mempalace/.venv/
 mempalace/.mempalace/
 
 # =============================================================================
-# gaia_mcp — separate project (VSCode/Copilot→Iga MCP bridge) with its own
+# iga_mcp — separate project (VSCode/Copilot→Iga MCP bridge) with its own
 # provenance. Relocated into this tree for ops convenience; the iga-assistant
 # repo must NOT absorb it. Never track or ship.
 # =============================================================================
-gaia_mcp/
+iga_mcp/
 
 # =============================================================================
 # Skills CLI (`npx skills`) install artifacts — externally-managed, NOT
@@ -54,7 +54,7 @@ rules/*.local.md
 skills/*/SKILL.local.md
 
 # The installed-rules layer is user-personalized; OSS contributors install
-# from community_rules/ via `/gaia install <pack>`. We ship community_rules/,
+# from community_rules/ via `/iga install <pack>`. We ship community_rules/,
 # we do NOT ship rules/.
 rules/
 !rules/.gitkeep
@@ -107,7 +107,7 @@ evals/calibration/contested-cases.jsonl
 # =============================================================================
 # Session / runtime state
 # =============================================================================
-.gaia-session-id
+.iga-session-id
 
 # =============================================================================
 # skills/email/ — contains PII in test fixtures (user emails + real names).

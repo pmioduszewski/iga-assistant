@@ -28,7 +28,7 @@ prerequisites:
     severity: info
   - name: mempalace-server
     description: The mempalace() trigger and research-output surfacing query MemPalace. Not required for engine correctness, ledger, or governor.
-    check: mcp(GaiaMemory)
+    check: mcp(IgaMemory)
     severity: info
   - name: swift-toolchain
     description: Building the optional macOS menu-bar companion app requires the Swift toolchain (Xcode / Swift 5.9+). The engine itself never needs Swift; deleting the app leaves /gm working.
@@ -38,7 +38,7 @@ triggers:
   - kind: cli
     spec: "`uv run python -m engine scan [--dry-run] [--json] [--db PATH] [--state PATH]` — one scan tick. Honours IGA_PROACTIVE_* env. No daemon; the inline path is /gm shelling out, the optional menu-bar app schedules the same one command."
 mempalace_wings:
-  - gaia/tooling/iga-proactive
+  - iga/tooling/iga-proactive
 mcp_dependencies: []
 status: stable
 ---

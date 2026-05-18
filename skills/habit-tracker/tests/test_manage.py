@@ -340,7 +340,7 @@ def test_cli_export_writes_file(tmp_path, monkeypatch):
 def test_manage_never_touches_real_state(tmp_path, monkeypatch):
     """The real ~/Gaia/state substrate + widget JSONs must be byte/mtime
     unchanged across rename + delete + set-goal under an isolated root."""
-    real = Path.home() / "Gaia" / "state"
+    real = Path.home() / "Iga" / "state"
     watched = [
         real / "substrates" / "habit-tracker.json",
         real / "widgets" / "habit-tracker-habits.json",

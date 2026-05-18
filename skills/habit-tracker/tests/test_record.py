@@ -267,7 +267,7 @@ def test_seam_authored_day_roundtrips_as_fixpoint():
 # 4. isolation + privacy guard (synthetic only; real state untouched)
 # --------------------------------------------------------------------------- #
 def _real_state_root() -> Path:
-    return Path.home() / "Gaia" / "state"
+    return Path.home() / "Iga" / "state"
 
 
 def test_record_refuses_without_state_dir():

@@ -20,7 +20,7 @@ import Observation
 // anchored to the NSStatusItem button's screen frame (iStat-Menus style),
 // never cursor-anchored.
 //
-// CONTRACT NOTE (frozen invariant, MemPalace gaia/decisions/3542bae6):
+// CONTRACT NOTE (frozen invariant, MemPalace iga/decisions/3542bae6):
 // This controller is pure UI plumbing. It RENDERS two SwiftUI columns and
 // RELAYS dismissal OS events. It constructs NO Process, writes NO file,
 // encodes NO JSON, opens NO sqlite handle. It cannot violate the

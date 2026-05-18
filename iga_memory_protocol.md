@@ -1,6 +1,6 @@
 # iga_memory_protocol
 
-Full reference for Gaia's memory system. Referenced from CLAUDE.md.
+Full reference for Iga's memory system. Referenced from CLAUDE.md.
 
 ## MemPalace Structure
 
@@ -14,21 +14,21 @@ MemPalace organizes knowledge in a spatial hierarchy:
 
 ## Wing Structure
 
-Wings are **semantic categories**, not specific names. Any Gaia instance must be able to predict where to search without prior knowledge.
+Wings are **semantic categories**, not specific names. Any Iga instance must be able to predict where to search without prior knowledge.
 
 | Wing | Purpose | Example rooms |
 |------|---------|---------------|
 | `user` | Everything about the user | identity, schedule, habits, health, finance |
 | `people` | All people and relationships | family, work-team, business-contacts |
 | `projects` | All projects, one room per project | project-name-1, project-name-2 |
-| `gaia` | Assistant self-knowledge | rules, corrections, patterns |
+| `iga` | Assistant self-knowledge | rules, corrections, patterns |
 | `decisions` | Timestamped choices with reasoning | architecture, business, personal |
 
 **Rules:**
 - Wing names are always generic categories, never specific names (use `user` not a person's name, use `projects` not a project name)
 - Room names within `projects` wing use the project name as the room
 - Room names within `people` wing group by relationship type
-- A new Gaia chat should be able to find anything by searching obvious wing/room combinations
+- A new Iga chat should be able to find anything by searching obvious wing/room combinations
 
 ## Room Naming
 - Lowercase, hyphenated slugs: `identity`, `work-team`, `decisions`

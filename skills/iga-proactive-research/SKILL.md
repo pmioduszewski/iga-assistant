@@ -9,7 +9,7 @@ prerequisites:
     severity: warning
   - name: mempalace-server
     description: Required for filing research drawers and reading flag triggers.
-    check: mcp(GaiaMemory)
+    check: mcp(IgaMemory)
     severity: error
   - name: launchd-agent-loaded
     description: Phase 2 — twice-daily auto-fire requires the LaunchAgent com.iga.research-scanner to be loaded.
@@ -35,10 +35,10 @@ triggers:
     spec: launchd LaunchAgent com.iga.research-scanner — 07:00 + 19:00 Europe/Warsaw, spawns headless `claude -p` workers via daemon mode
 mempalace_wings:
   - projects/*/research
-  - gaia/tooling/iga-research-meter
+  - iga/tooling/iga-research-meter
   - "*/research-queue"
 mcp_dependencies:
-  - GaiaMemory
+  - IgaMemory
   - claude_ai_Todoist
 status: shipped
 ---
@@ -61,7 +61,7 @@ Three layers, decoupled:
 
 **When:** triggered inline at the start of `/gm` and `/back`. The scanner runs synchronously to compute the candidate queue (~1–2 sec), then **spawns workers asynchronously as background subagents**. The /gm or /back response continues immediately; worker outputs land over the next 0–10 minutes.
 
-Phase 2 (optional, not required for v1): a launchd LaunchAgent (Mac) or systemd timer (Linux) can fire the same scanner script at fixed times even when Claude Code isn't open. Same scanner script, different entrypoint. Installer ships as a Gaia skill subcommand (`/gaia install proactive-research`).
+Phase 2 (optional, not required for v1): a launchd LaunchAgent (Mac) or systemd timer (Linux) can fire the same scanner script at fixed times even when Claude Code isn't open. Same scanner script, different entrypoint. Installer ships as a Iga skill subcommand (`/iga install proactive-research`).
 
 **Triggers (any fires a candidate):**
 
@@ -133,7 +133,7 @@ Phase 2 (optional, not required for v1): a launchd LaunchAgent (Mac) or systemd 
 
 1. **Before** any other heavy work, fire the scanner (Layer 1). It returns the candidate queue and emits worker spawn requests.
 2. /gm or /back dispatches the spawns as **background subagents** and continues immediately — no waiting.
-3. **After** all other steps (calendar, Todoist, email, etc.), the surfacing step reads MemPalace `wing: projects/*, room: research` drawers created since the last diary entry (`mempalace_diary_read agent_name=gaia last_n=1`).
+3. **After** all other steps (calendar, Todoist, email, etc.), the surfacing step reads MemPalace `wing: projects/*, room: research` drawers created since the last diary entry (`mempalace_diary_read agent_name=iga last_n=1`).
 4. For each: show one line: `📑 <project>: <TL;DR>` + drawer ID. Silent if 0. If > 3 → top 3 by `target_date` ascending, mention "+N more".
 5. If worker spawns from step 1 are still running, surface section says `📑 Iga prepared: <N done> + <K running>` — the user will see the rest at next /back or /gm.
 
@@ -161,13 +161,13 @@ Tunables live in this file (not hardcoded):
 
 ## Cost guardrails
 
-- Track `worker_invocations_per_week` in MemPalace `gaia/tooling/iga-research-meter` (one drawer per ISO week, append timestamps)
+- Track `worker_invocations_per_week` in MemPalace `iga/tooling/iga-research-meter` (one drawer per ISO week, append timestamps)
 - If > 20 invocations in a week without the user `/gm`-acknowledging at least 5 outputs → auto-pause, surface alert next /gm
 - Reset acknowledgment counter each /gm where the user doesn't immediately archive the research section
 
 ## Prerequisites
 
-Declared in this file's frontmatter and picked up by `/gaia status` generic prereq scan. See `CLAUDE.md` → `/gaia status` for the schema. Summary:
+Declared in this file's frontmatter and picked up by `/iga status` generic prereq scan. See `CLAUDE.md` → `/iga status` for the schema. Summary:
 
 - **`todoist-api-token`** (severity: warning) — Todoist-triggered research won't fire without it; MemPalace-flag triggers continue working. Guide: [`docs/setup-todoist-token.md`](docs/setup-todoist-token.md).
 
@@ -175,7 +175,7 @@ Declared in this file's frontmatter and picked up by `/gaia status` generic prer
 
 **v1 (default):** nothing to install. Iga's `rules/commands.md` already includes the scanner-fire step. First /gm or /back after rules sync activates the system. If `~/.config/todoist/token` isn't set, the scanner exits cleanly (no error spam) and only MemPalace-flag triggers fire — Todoist triggers wake up the moment a token is provided.
 
-**Phase 2 (optional, Mac/Linux) — `/gaia install proactive-research`:** writes the platform-appropriate scheduler. Follows the launchd/systemd contract from `skills/create-iga-skill/SKILL.md` § "Scheduled / background skills".
+**Phase 2 (optional, Mac/Linux) — `/iga install proactive-research`:** writes the platform-appropriate scheduler. Follows the launchd/systemd contract from `skills/create-iga-skill/SKILL.md` § "Scheduled / background skills".
 
 Mac layout (when Phase 2 ships):
 ```
@@ -206,7 +206,7 @@ Implications for this skill:
 Candidate workarounds being investigated:
 
 1. `pmset repeat wakeorpoweron` on M2 Apple Silicon — unreliable per community reports, needs 2–3 overnight test attempts
-2. Smart plug + `pmset -a autorestart 1` (already set per current `/gaia status`) — needs power-cut test
+2. Smart plug + `pmset -a autorestart 1` (already set per current `/iga status`) — needs power-cut test
 3. macOS Shortcuts triggered at login — depends on auto-login
 4. **LaunchAgent with `RunAtLoad=true` + dated lock file** — fires the moment Mac powers on, lock file prevents double-fire within the same target window. Independent of when power-on actually happens.
 
@@ -221,7 +221,7 @@ See Todoist label `iga-research-impl`:
 | Scanner script `engine/scanner.py` (calendar dropped, IGA_RUN_MODE switching, WORKER_REQUEST stdout) | ✅ shipped 2026-05-14, 18/18 tests green |
 | Worker prompt `engine/worker.prompt.md` | ✅ shipped 2026-05-14 |
 | `/gm` + `/back` scanner-fire + surfacing wiring (`rules/commands.md` step 1a + step 8/5) | ✅ shipped 2026-05-14 |
-| Todoist token setup guide `docs/setup-todoist-token.md` + `/gaia status` prereq scan | ✅ shipped 2026-05-14 |
+| Todoist token setup guide `docs/setup-todoist-token.md` + `/iga status` prereq scan | ✅ shipped 2026-05-14 |
 | Migration to `skills/<name>/` layout (from `rules/` + `scripts/` + `tests/`) | ✅ shipped 2026-05-14 |
 | **E2E test: tag a real task with `iga-research`, run /gm, verify drawer + comment** | ⏳ pending — first live trigger validation |
 | **Phase 2 launchd installer** | ⏳ blocked on wake-from-off research |

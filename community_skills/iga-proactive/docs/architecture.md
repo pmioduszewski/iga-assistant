@@ -193,4 +193,4 @@ which fails the build if the app README stops documenting it): deleting
 `Iga.app` removes only the scheduler host + viewer + notifier. `/gm` calling
 the engine in-session continues to work with zero external infrastructure. The
 app is a convenience front-end, never a dependency. Frozen decision:
-MemPalace `gaia/decisions/3542bae6`.
+MemPalace `iga/decisions/3542bae6`.

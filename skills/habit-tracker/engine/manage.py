@@ -6,7 +6,7 @@ WHY THIS EXISTS (Iga v3 Wave D)
 The menu-bar app's per-habit ``⋯`` menu lets the user RENAME a habit, DELETE
 it, change its GOAL/SCHEDULE, and IMPORT / EXPORT the whole tracker. Every one
 of those is a MUTATION (or, for export, a read of intimate data). The hard
-architectural contract (MemPalace gaia/decisions/3542bae6, extended to the
+architectural contract (MemPalace iga/decisions/3542bae6, extended to the
 substrate in Wave A/B and to the record click in Wave B) is unchanged here:
 
   * the **app holds zero habit logic and issues no writes** — it relays a

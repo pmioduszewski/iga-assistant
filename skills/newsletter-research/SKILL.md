@@ -9,7 +9,7 @@ intent_triggers:
 prerequisites:
   - name: mempalace-server
     description: Required for filing vault findings and reading the newsletter-research-queue flag trigger.
-    check: mcp(GaiaMemory)
+    check: mcp(IgaMemory)
     severity: error
   - name: gmail-mcp
     description: Worker reads the labeled message body via the Gmail/Workspace MCP. Absent → worker can't fetch the newsletter (job stays dormant, not an error).
@@ -28,7 +28,7 @@ mempalace_wings:
   - vault/*
   - "*/newsletter-research-queue"
 mcp_dependencies:
-  - GaiaMemory
+  - IgaMemory
   - iga-gmail
 widgets:
   - id: newsletter-findings
@@ -166,7 +166,7 @@ This section is intentionally minimal in the engine spec. User-specific lists of
 
 ## Adherence tracking
 
-- MemPalace `gaia/architecture/skills-inventory` drawer (canonical) tracks: status, last fired, count of findings filed
+- MemPalace `iga/architecture/skills-inventory` drawer (canonical) tracks: status, last fired, count of findings filed
 - Optional: monthly `/eow` Sunday flow reviews findings-filed vs findings-reviewed ratio. If reviewed < 20%, the hook's surfacing is too aggressive or the fit-threshold too loose.
 
 ## Open questions
@@ -179,7 +179,7 @@ This section is intentionally minimal in the engine spec. User-specific lists of
 - `skills/newsletter-research/` engine (forthcoming) — bundled inside `skills/email/`
 - `vault/*` MemPalace wings (Knowledge Vault)
 - `rules/email/taxonomy.md` (forthcoming — Newsletter sub-labels canonical)
-- MemPalace `gaia/architecture/skills-inventory`
+- MemPalace `iga/architecture/skills-inventory`
 - Agent SDK budget allocation rules
 
 ## OSS-clean separation

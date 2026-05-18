@@ -9,13 +9,13 @@ intent_triggers:
   - "make a skill"
   - "new skill"
   - "let's build an iga skill"
-  - "let's build a gaia skill"
+  - "let's build a iga skill"
   - "wouldn't it be cool if iga could"
-  - "wouldn't it be cool if gaia could"
+  - "wouldn't it be cool if iga could"
   - "can iga learn to"
-  - "can gaia learn to"
+  - "can iga learn to"
   - "iga should track"
-  - "gaia should track"
+  - "iga should track"
   - "/new-skill"
 triggers:
   - kind: auto
@@ -23,7 +23,7 @@ triggers:
   - kind: slash-command
     spec: "/new-skill <description>"
 mempalace_wings:
-  - gaia/architecture/skills-inventory
+  - iga/architecture/skills-inventory
 status: shipped
 ---
 
@@ -35,7 +35,7 @@ When the user says "I want a skill that does X" (or invokes `/new-skill <descrip
 
 By 2026-05-14 the user has 8+ skill ideas in flight (Knowledge Vault, Quote, Scripture, Personal Trainer, Proactive Research, Newsletter Sweep, Domain Inventory, Subscriptions Audit, Runaway Bill Monitor, etc.). Each one was designed ad-hoc. This meta-skill standardizes the pattern so:
 1. The user gets consistent scaffolding (no decision fatigue per skill)
-2. Skills become installable community packs (`gaia install <skill>`) for OSS reuse
+2. Skills become installable community packs (`iga install <skill>`) for OSS reuse
 3. Future Iga can identify which design choices matter vs which are aesthetic
 
 ## The 5-step template Iga follows
@@ -74,12 +74,12 @@ Concretely:
 2. **Init MemPalace wing** if new — file a seed drawer at `<wing>/<room>` explaining what the wing stores
 3. **Add Todoist build task** with full engine spec in description (so the future user + coding session can pick up without re-designing)
 4. **Optionally** create Notion DB template (when Knowledge Vault Notion infra is shipped)
-5. **Register skill** in MemPalace `gaia/architecture` skills-inventory drawer (one source of truth for which skills exist + status)
+5. **Register skill** in MemPalace `iga/architecture` skills-inventory drawer (one source of truth for which skills exist + status)
 6. **Tell the user:** "Scaffolding done. Build task `<id>` queued. Capture via `<slash command>` works now — Iga will file manually to MemPalace until engine ships."
 
 ### Step 4: `skills/<skill-name>/SKILL.md` template
 
-Use this as the file content scaffold. **The frontmatter is mandatory** — generic Gaia commands (e.g. `/gaia status`, future `/gaia list-triggers`, `/gaia doctor`) scan it. A skill without frontmatter is invisible to those commands.
+Use this as the file content scaffold. **The frontmatter is mandatory** — generic Iga commands (e.g. `/iga status`, future `/iga list-triggers`, `/iga doctor`) scan it. A skill without frontmatter is invisible to those commands.
 
 ````markdown
 ---
@@ -89,13 +89,13 @@ description: <one line, what this does>
 intent_triggers:                           # natural-language phrases that auto-invoke this skill (see CLAUDE.md Behavioral Hooks)
   - <phrase or pattern, case-insensitive substring match>
   - <e.g. "log my mood", "track my caffeine", "I want to remember">
-prerequisites:                             # picked up by /gaia status prereq scan
+prerequisites:                             # picked up by /iga status prereq scan
   - name: <prereq-slug>
     description: <one line, why needed>
-    check: <DSL clause — see CLAUDE.md /gaia status>
+    check: <DSL clause — see CLAUDE.md /iga status>
     guide: <path relative to the skill dir, e.g. docs/setup-X.md>
     severity: warning | error | info       # default: warning
-triggers:                                  # picked up by future /gaia list-triggers
+triggers:                                  # picked up by future /iga list-triggers
   - kind: slash-command | auto | hook | scheduled
     spec: <pattern, e.g. "/quote <text>" or "on /gm step N">
 mempalace_wings:                           # which wings this skill writes to
@@ -155,7 +155,7 @@ Critical: capture pattern works the day scaffolding is done. Iga manually:
 
 The engine code in `skills/<name>/engine/` ships later — it automates what Iga is already doing manually. But the user doesn't have to wait to start using the skill.
 
-## Skills inventory (lives in MemPalace `gaia/architecture/skills-inventory`)
+## Skills inventory (lives in MemPalace `iga/architecture/skills-inventory`)
 
 Each skill registered there has: name, status (scaffolded / building / shipped / community-packed), `skills/<name>/SKILL.md` path, Todoist build task ID, MemPalace wings used, last-updated date.
 
@@ -178,7 +178,7 @@ The user types e.g. `/new-skill track my caffeine intake and tell me when I've h
 
 ## ⚠️ BINDING — Generic command compatibility (the composability contract)
 
-**Iga must NEVER hardcode skill-specific names, prereqs, triggers, or config into generic commands** like `/gaia status`, `/gaia install`, `/gaia rules`, `/gm`, `/back`, etc. Generic commands are thin layers that scan frontmatter and config files; specifics live IN the skill's own files.
+**Iga must NEVER hardcode skill-specific names, prereqs, triggers, or config into generic commands** like `/iga status`, `/iga install`, `/iga rules`, `/gm`, `/back`, etc. Generic commands are thin layers that scan frontmatter and config files; specifics live IN the skill's own files.
 
 **Concrete contract:**
 
@@ -194,7 +194,7 @@ The user types e.g. `/new-skill track my caffeine intake and tell me when I've h
 
 ```markdown
 # In CLAUDE.md
-/gaia status — ... step 5: check if iga-proactive-research has a Todoist token...
+/iga status — ... step 5: check if iga-proactive-research has a Todoist token...
 ```
 
 That couples a generic command to a specific skill. Next time the skill renames, or a new skill needs the same check, the generic command rots. **It also defeats OSS reuse** — community installers of one skill shouldn't carry references to skills they don't have.
@@ -203,7 +203,7 @@ That couples a generic command to a specific skill. Next time the skill renames,
 
 ```markdown
 # In CLAUDE.md
-/gaia status — ... step 5: read every rules/*.md and skills/*/SKILL.md frontmatter; for each prerequisites: entry, evaluate the check: clause and surface unsatisfied ones.
+/iga status — ... step 5: read every rules/*.md and skills/*/SKILL.md frontmatter; for each prerequisites: entry, evaluate the check: clause and surface unsatisfied ones.
 
 # In skills/iga-proactive-research/SKILL.md frontmatter
 prerequisites:
@@ -214,15 +214,15 @@ prerequisites:
 
 Generic command has zero pack-specific knowledge. Adding a new skill with prereqs requires editing nothing outside that skill.
 
-**Past incident (2026-05-14):** Iga drafted `/gaia status` with a hard-coded `Prereq registry` block naming `iga-proactive-research → Todoist token`. The user caught it: *"/gaia status should be generic thin layer that guide to check skills / rules and pick things from there since Gaia / Iga should be composable & generic. Did you just hardcoded proactive research things into this generic command?"* — Yes. Fixed by moving the prereq declaration into the skill's own frontmatter and rewriting `/gaia status` to walk frontmatter generically. **This rule exists so future Iga doesn't repeat the mistake.**
+**Past incident (2026-05-14):** Iga drafted `/iga status` with a hard-coded `Prereq registry` block naming `iga-proactive-research → Todoist token`. The user caught it: *"/iga status should be generic thin layer that guide to check skills / rules and pick things from there since Iga / Iga should be composable & generic. Did you just hardcoded proactive research things into this generic command?"* — Yes. Fixed by moving the prereq declaration into the skill's own frontmatter and rewriting `/iga status` to walk frontmatter generically. **This rule exists so future Iga doesn't repeat the mistake.**
 
 ## How to verify a skill is composability-compliant
 
 Before marking a skill `shipped`, run this self-check:
 
 1. Does the rule file have all the relevant frontmatter fields? (`name`, `description`, plus any optional ones that apply)
-2. Are all of this skill's prereqs declared in `prerequisites:`? (i.e., `/gaia status` would catch them without needing edits elsewhere)
-3. Are this skill's triggers declared in `triggers:`? (so a future `/gaia list-triggers` would find them)
+2. Are all of this skill's prereqs declared in `prerequisites:`? (i.e., `/iga status` would catch them without needing edits elsewhere)
+3. Are this skill's triggers declared in `triggers:`? (so a future `/iga list-triggers` would find them)
 4. If this skill should auto-fire on natural-language intent, are the phrases declared in `intent_triggers:`? ( the user shouldn't need to remember the skill's name to invoke it)
 5. Is `mempalace_wings:` populated for any wings this skill writes to?
 6. Does CLAUDE.md or any other generic file mention this skill by name? **If yes, that's a coupling smell — investigate whether it should move into frontmatter.**
@@ -245,7 +245,7 @@ A skill goes through these stages as it matures:
 |---|---|---|
 | **Scaffolded (private)** | `skills/<skill>/SKILL.md` only | New skill from this meta-skill. Lives in user's local tree. May contain user-personal bits mixed with engine logic. |
 | **Engine extracted** | `skills/<skill>/SKILL.md` (engine only) + `skills/<skill>/SKILL.local.md` (personal) | Personal config moved out — names, lists, emails, tonality preferences, etc. |
-| **Community-packed** | `community_skills/<skill>/SKILL.md` (generic engine, ships to GitHub) + `skills/<skill>/SKILL.md` (installed copy w/ provenance) + `skills/<skill>/SKILL.local.md` (personal) | Ready for OSS reuse. Other users can `gaia install <skill>` and add their own `SKILL.local.md`. |
+| **Community-packed** | `community_skills/<skill>/SKILL.md` (generic engine, ships to GitHub) + `skills/<skill>/SKILL.md` (installed copy w/ provenance) + `skills/<skill>/SKILL.local.md` (personal) | Ready for OSS reuse. Other users can `iga install <skill>` and add their own `SKILL.local.md`. |
 
 **When extracting personal bits from a scaffolded skill, ask:**
 
@@ -273,7 +273,7 @@ Body of `.local.md` can be free-form. Iga reads the engine rule first, then the 
 - ❌ Referring to OTHER skills by their `name:` slug (couples packs together) — describe the integration in prose so users with different skill choices aren't broken
 - ✅ Use placeholders like `<your email>` or document override surface in a `## Override` section pointing at `.local.md`
 
-This contract is **what makes iga-assistant a real OSS project** — without it, `gaia update` would be unsafe to ever run.
+This contract is **what makes iga-assistant a real OSS project** — without it, `iga update` would be unsafe to ever run.
 
 ## Scheduled / background skills (launchd, cron, systemd)
 
@@ -461,9 +461,9 @@ tail -50 ~/Library/Logs/iga/<name>.err.log
 
 If errors mention missing binaries (`pnpm: command not found`, `node: command not found`), the PATH inside the LaunchAgent isn't right — fix via `EnvironmentVariables` or fully-qualified paths in `ProgramArguments`.
 
-### Frontmatter declaration (so /gaia status catches install drift)
+### Frontmatter declaration (so /iga status catches install drift)
 
-Scheduled skills declare the trigger so `/gaia list-triggers` (future) can show them:
+Scheduled skills declare the trigger so `/iga list-triggers` (future) can show them:
 
 ```yaml
 triggers:
@@ -471,7 +471,7 @@ triggers:
     spec: "launchd LaunchAgent com.iga.<name> — daily 06:00 Europe/Warsaw (see engine/launchd/)"
 ```
 
-And declare prerequisites so `/gaia status` warns and guides the user when the schedule isn't fully wired. Three prereqs cover the canonical install:
+And declare prerequisites so `/iga status` warns and guides the user when the schedule isn't fully wired. Three prereqs cover the canonical install:
 
 ```yaml
 prerequisites:
@@ -499,7 +499,7 @@ Severity meanings for scheduled-skill prereqs:
 - `launchd-wrapper-executable` → **warning**: install.sh might not have run; trivial fix
 - `pmset-wake-scheduled` → **info**: doesn't matter on always-on machines (Mac mini, plugged-in iMac); matters for laptops that sleep
 
-`/gaia status` walks frontmatter from every `rules/*.md` and `skills/*/SKILL.md`, evaluates `check:` clauses (the DSL is interpretive — `cmd()`, `file()`, `env()`, `mcp()`, or natural-language clauses Iga resolves at runtime), and surfaces unsatisfied prereqs with the `guide:` path. If any are missing, `/gaia status` offers to walk the user through `docs/setup-launchd.md` interactively, doing the safe steps automatically and confirming the sudo ones.
+`/iga status` walks frontmatter from every `rules/*.md` and `skills/*/SKILL.md`, evaluates `check:` clauses (the DSL is interpretive — `cmd()`, `file()`, `env()`, `mcp()`, or natural-language clauses Iga resolves at runtime), and surfaces unsatisfied prereqs with the `guide:` path. If any are missing, `/iga status` offers to walk the user through `docs/setup-launchd.md` interactively, doing the safe steps automatically and confirming the sudo ones.
 
 ### Guide doc structure (`docs/setup-launchd.md`)
 
@@ -513,7 +513,7 @@ Section headers Iga can deep-link to via `guide: docs/setup-launchd.md#<anchor>`
 - `## Uninstall` — clean removal
 - `## Constraints recap` — power/lid/login-session matrix
 
-Each section should be self-contained — `/gaia status` may guide the user through just one (e.g. pmset wake when the agent is loaded but wake isn't scheduled).
+Each section should be self-contained — `/iga status` may guide the user through just one (e.g. pmset wake when the agent is loaded but wake isn't scheduled).
 
 ### When to NOT make a skill scheduled
 
@@ -525,8 +525,8 @@ Default: ship a skill as on-demand first. Add launchd only when there's evidence
 
 ## Connects to
 
-- CLAUDE.md `community_rules/` + `community_skills/` system (`gaia install <pack>`)
-- MemPalace `gaia/architecture/skills-inventory` (canonical skill list)
+- CLAUDE.md `community_rules/` + `community_skills/` system (`iga install <pack>`)
+- MemPalace `iga/architecture/skills-inventory` (canonical skill list)
 - All existing skill tasks (Quote, Scripture, Trainer, Proactive Research, Knowledge Vault, etc.)
 - `community_skills/` + `community_rules/` future contributions
 

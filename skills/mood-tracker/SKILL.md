@@ -25,7 +25,7 @@ substrate:
     derived:
       - widget:mood-grid
 mempalace_wings:
-  - gaia/tooling/mood-tracker
+  - iga/tooling/mood-tracker
 mcp_dependencies: []
 status: beta
 ---

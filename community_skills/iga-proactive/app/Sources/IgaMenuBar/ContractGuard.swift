@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - The hard contract, encoded
 //
-// INVARIANT (frozen, MemPalace decision gaia/decisions/3542bae6):
+// INVARIANT (frozen, MemPalace decision iga/decisions/3542bae6):
 //
 //   The engine decides. The app only (a) renders engine state, (b) relays OS
 //   events, (c) triggers the engine. ZERO job/admission/idempotency/budget

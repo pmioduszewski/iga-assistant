@@ -81,8 +81,8 @@ def test_fit_score_two_keywords_is_3():
 
 
 def test_fit_score_name_plus_keyword_is_3():
-    p = Project("Gaia", ("mempalace",))
-    assert fit_score("Gaia mempalace recall tuning", p) == 3
+    p = Project("Iga", ("mempalace",))
+    assert fit_score("Iga mempalace recall tuning", p) == 3
 
 
 def test_fit_score_single_keyword_is_2():
@@ -91,8 +91,8 @@ def test_fit_score_single_keyword_is_2():
 
 
 def test_fit_score_bare_name_is_1():
-    p = Project("Gaia", ("mempalace",))
-    assert fit_score("Gaia got a new logo", p) == 1
+    p = Project("Iga", ("mempalace",))
+    assert fit_score("Iga got a new logo", p) == 1
 
 
 def test_fit_score_no_signal_is_0():

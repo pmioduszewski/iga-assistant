@@ -7,7 +7,7 @@ notifier** — the planned launchd thin-daemon, replaced by a menu-bar app.
 - Product: `IgaMenuBar` · Bundle id: `com.iga.menubar` · App: `Iga.app`
 - Menu-bar-only (`LSUIElement=true`): no Dock icon, no window.
 
-## Hard contract (frozen — MemPalace `gaia/decisions/3542bae6`)
+## Hard contract (frozen — MemPalace `iga/decisions/3542bae6`)
 
 **The engine decides. The app only renders state, relays OS events, and
 triggers the engine. ZERO job/admission/idempotency/budget logic in Swift.**

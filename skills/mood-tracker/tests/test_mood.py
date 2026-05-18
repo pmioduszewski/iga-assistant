@@ -234,7 +234,7 @@ def test_state_dir_is_mandatory_via_cli(tmp_path):
 
 
 def test_pipeline_never_touches_real_state(tmp_path, monkeypatch):
-    real = Path.home() / "Gaia" / "state"
+    real = Path.home() / "Iga" / "state"
     watched = [
         real / "substrates" / "mood-tracker.json",
         real / "widgets" / "mood-tracker-mood.json",
@@ -333,7 +333,7 @@ def test_record_reproject_is_non_mutating(tmp_path):
 
 
 def test_record_never_touches_real_state(tmp_path):
-    real = Path.home() / "Gaia" / "state"
+    real = Path.home() / "Iga" / "state"
     watched = [
         real / "substrates" / "mood-tracker.json",
         real / "widgets" / "mood-tracker-mood.json",
@@ -392,7 +392,7 @@ def test_ingest_state_dir_is_mandatory_via_cli():
 
 
 def test_ingest_never_touches_real_state(tmp_path):
-    real = Path.home() / "Gaia" / "state"
+    real = Path.home() / "Iga" / "state"
     watched = [
         real / "substrates" / "mood-tracker.json",
         real / "widgets" / "mood-tracker-mood.json",

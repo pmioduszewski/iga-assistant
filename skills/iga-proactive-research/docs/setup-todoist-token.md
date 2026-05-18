@@ -109,7 +109,7 @@ If you ever suspect the token leaked:
 
 ## OSS / fresh install path (future Phase 2)
 
-Once the launchd/systemd installer ships (Todoist task `6gfJXF9xwH8PMF66`), running `/gaia install proactive-research` will:
+Once the launchd/systemd installer ships (Todoist task `6gfJXF9xwH8PMF66`), running `/iga install proactive-research` will:
 
 1. Prompt for the Todoist token interactively.
 2. Write it to `~/.config/todoist/token` with `0600`.

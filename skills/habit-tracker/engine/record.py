@@ -4,7 +4,7 @@ WHY THIS EXISTS (Iga v3 Wave B)
 -------------------------------
 The menu-bar widget lets the user *click a square* to add / remove / set a
 day's completion. That click is a MUTATION. The hard architectural contract
-(MemPalace gaia/decisions/3542bae6, extended to the substrate in Wave A/B) is
+(MemPalace iga/decisions/3542bae6, extended to the substrate in Wave A/B) is
 that the **app holds zero habit logic and issues no writes** except by relaying
 to exactly one engine seam — analogous to the existing engine-scan seam the
 app already uses for the proactive engine.

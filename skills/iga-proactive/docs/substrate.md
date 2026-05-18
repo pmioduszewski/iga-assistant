@@ -67,7 +67,7 @@ A substrate document on disk:
 4. **`$IGA_STATE_DIR` isolation (privacy / data-loss guard)** — the substrate
    store **reuses the producer's `state_root()` resolver verbatim**. It does
    not re-implement path resolution. Precedence is unchanged:
-   `$IGA_STATE_DIR` > `$GAIA_HOME/state` > `~/Gaia/state`. When
+   `$IGA_STATE_DIR` > `$IGA_HOME/state` > `~/Gaia/state`. When
    `$IGA_STATE_DIR` is set, nothing under the real `~/Gaia/state` is read or
    written. This is the same guard that protects the user's live widget data;
    it is shared, never duplicated.
@@ -118,7 +118,7 @@ A projection never writes back into the substrate.
 
 A skill declares the substrate(s) it owns in its `SKILL.md` frontmatter,
 analogous to the `proactive:` and `widgets:` blocks. It is **discovery
-metadata** — generic Iga / `/gaia status` can enumerate every skill's owned
+metadata** — generic Iga / `/iga status` can enumerate every skill's owned
 data stores without hard-coding any skill:
 
 ```yaml
@@ -147,7 +147,7 @@ Field reference:
 
 Like `proactive:`/`widgets:`, the block is **declarative discovery only** —
 no scanner is required for the substrate to function; the store works
-standalone. The declaration lets future generic tooling (`/gaia status`, a
+standalone. The declaration lets future generic tooling (`/iga status`, a
 data-export command) enumerate and act on every skill's owned stores
 uniformly.
 

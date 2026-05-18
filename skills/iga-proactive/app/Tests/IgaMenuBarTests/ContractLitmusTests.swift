@@ -3,7 +3,7 @@ import XCTest
 
 // MARK: - The hard-contract litmus
 //
-// Frozen invariant (MemPalace gaia/decisions/3542bae6):
+// Frozen invariant (MemPalace iga/decisions/3542bae6):
 //   The app renders + relays + triggers ONLY. Zero job logic in Swift. It
 //   issues NO writes to the engine state JSON or the sqlite ledger, and the
 //   ONLY engine side effect it may cause is exec'ing the documented scan

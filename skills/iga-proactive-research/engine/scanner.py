@@ -364,7 +364,7 @@ def spawn_worker(
         "--model",
         model,
         "--tools",
-        "WebSearch,WebFetch,Bash,Read,Write,mcp__GaiaMemory__mempalace_status,mcp__GaiaMemory__mempalace_search,mcp__GaiaMemory__mempalace_list_drawers,mcp__GaiaMemory__mempalace_add_drawer,mcp__GaiaMemory__mempalace_get_drawer",
+        "WebSearch,WebFetch,Bash,Read,Write,mcp__IgaMemory__mempalace_status,mcp__IgaMemory__mempalace_search,mcp__IgaMemory__mempalace_list_drawers,mcp__IgaMemory__mempalace_add_drawer,mcp__IgaMemory__mempalace_get_drawer",
         "--dangerously-skip-permissions",
         "--no-session-persistence",
         "--session-id",
@@ -400,7 +400,7 @@ def bump_invocation_meter(mempalace_mod, *, when: datetime, count: int) -> None:
     )
     try:
         mempalace_mod.tool_add_drawer(
-            wing="gaia/tooling",
+            wing="iga/tooling",
             room="iga-research-meter",
             content=body,
         )

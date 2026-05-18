@@ -38,7 +38,7 @@ substrate:
     derived:
       - widget:habit-grid
 mempalace_wings:
-  - gaia/tooling/habit-tracker
+  - iga/tooling/habit-tracker
 mcp_dependencies: []
 proactive: see ./proactive.yaml (the generic engine discovers skills/*/proactive.yaml; the safety gate + job contract live there and in § Proactive / Killswitch below)
 status: stable
@@ -116,7 +116,7 @@ IGA_STATE_DIR=/tmp/sandbox python3 skills/habit-tracker/engine/producer.py
 # writes /tmp/sandbox/widgets/habit-tracker-habit-grid.json
 ```
 
-Precedence: `$IGA_STATE_DIR` (explicit state root) > `$GAIA_HOME`/state
+Precedence: `$IGA_STATE_DIR` (explicit state root) > `$IGA_HOME`/state
 (repo-root override) > `~/Gaia/state` (default — live data, unchanged).
 When `$IGA_STATE_DIR` is set, **nothing** under the real `~/Gaia/state`
 is read or written. Every producer/habit test and the Swift

@@ -9,7 +9,7 @@
   "drawers": [
     {
       "id": "drw_corr_001",
-      "wing": "gaia",
+      "wing": "iga",
       "room": "rules",
       "title": "Correction — Steamcraft Engineering is NOT a customer",
       "content": "CORRECTION (filed 2026-03-08 after Iga misclassified): Steamcraft Engineering is NOT a Solera customer. They are the INCUMBENT ERP VENDOR at a prospect account (Mercia Industrial) whose contract Solera is replacing. When you see 'Steamcraft' in emails or calendar invites, the context is competitive displacement, not account management. Do NOT generate 'follow up with Steamcraft' tasks.",

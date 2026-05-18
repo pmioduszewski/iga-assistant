@@ -27,7 +27,7 @@ dir and the widget output) somewhere safe (e.g. a pytest ``tmp_path``):
     IGA_STATE_DIR=/some/tmp/state  →  log:    /some/tmp/state/habits/<name>.log
                                       widget: /some/tmp/state/widgets/...
 
-Precedence: ``$IGA_STATE_DIR`` (explicit state root) > ``$GAIA_HOME``/state
+Precedence: ``$IGA_STATE_DIR`` (explicit state root) > ``$IGA_HOME``/state
 (repo-root override) > ``~/Gaia/state`` (default — live data, unchanged).
 When ``$IGA_STATE_DIR`` is set, NOTHING under the real ``~/Gaia/state`` is
 read or written.
@@ -80,12 +80,12 @@ INTENSITY_WINDOW = 7
 # --------------------------------------------------------------------------- #
 # Paths
 # --------------------------------------------------------------------------- #
-def _gaia_root() -> Path:
-    """Repo / state root. ``$GAIA_HOME`` overrides; else ``~/Gaia``."""
-    env = os.environ.get("GAIA_HOME")
+def _iga_root() -> Path:
+    """Repo / state root. ``$IGA_HOME`` overrides; else ``~/Gaia``."""
+    env = os.environ.get("IGA_HOME")
     if env:
         return Path(env).expanduser()
-    return Path.home() / "Gaia"
+    return Path.home() / "Iga"
 
 
 def state_root() -> Path:
@@ -94,7 +94,7 @@ def state_root() -> Path:
     Precedence (data-loss guard — see module docstring):
       1. ``$IGA_STATE_DIR``  — explicit state-root override (tests/sandbox).
          Used verbatim; the ``state/`` segment is the override itself.
-      2. ``$GAIA_HOME``/state — repo-root override.
+      2. ``$IGA_HOME``/state — repo-root override.
       3. ``~/Gaia/state``    — default; the user's LIVE data, unchanged.
 
     When (1) is set, nothing under the real ``~/Gaia/state`` is touched.
@@ -102,7 +102,7 @@ def state_root() -> Path:
     env = os.environ.get("IGA_STATE_DIR")
     if env:
         return Path(env).expanduser()
-    return _gaia_root() / "state"
+    return _iga_root() / "state"
 
 
 def habits_log_path(name: str) -> Path:

@@ -1,6 +1,6 @@
 # Daily Commands Pack
 
-Defines daily workflow commands accessible via `/gaia <command>`.
+Defines daily workflow commands accessible via `/iga <command>`.
 Add this to `rules/commands.md` after installing, or use as-is.
 
 ## /gm
@@ -8,7 +8,7 @@ Add this to `rules/commands.md` after installing, or use as-is.
 Good Morning — daily wake-up briefing.
 
 1. `mempalace_status` — wake up
-2. `mempalace_diary_read("gaia", last_n=3)` — load recent context
+2. `mempalace_diary_read("iga", last_n=3)` — load recent context
 3. `mempalace_search` for user identity
 4. Check calendar for today's events
 5. Check tasks for today, highlight overdue
@@ -20,7 +20,7 @@ Good Morning — daily wake-up briefing.
 Welcome Back — mid-day re-entry briefing.
 
 1. `mempalace_status` — wake up
-2. `mempalace_diary_read("gaia", last_n=1)` — load most recent session
+2. `mempalace_diary_read("iga", last_n=1)` — load most recent session
 3. Check calendar for remaining events today
 4. Check tasks for remaining work today
 5. Start the response with "🔄 [Day], [Month] [Date] — Welcome Back"
@@ -32,7 +32,7 @@ End of Day — session wrap-up and diary write.
 1. Review this session for any facts not yet persisted to MemPalace — store them now
 2. Update tasks — mark completed, review remaining
 3. `mempalace_diary_write` — write session summary in AAAK format
-4. Flag anything important for tomorrow's `/gaia gm`
+4. Flag anything important for tomorrow's `/iga gm`
 
 ## /hi
 
@@ -45,7 +45,7 @@ verbatim. Explicit `/gm` `/back` `/eod` still work and win if typed.
 1. Get the LIVE local time — run `date "+%Y-%m-%d %H:%M %A %Z"`. NEVER
    infer time-of-day from any statically injected date (that's date-only,
    no clock).
-2. `mempalace_status` + `mempalace_diary_read("gaia", last_n=3)` — find
+2. `mempalace_status` + `mempalace_diary_read("iga", last_n=3)` — find
    the most recent diary entry's date and kind (morning vs eod vs weekly).
 3. Dispatch:
    - No diary entry dated today (last entry is a prior day, typically an
@@ -70,7 +70,7 @@ three-layer loading order — generic baseline first, `.local` wins).
 ## /focus
 
 Focus on a project — load context from MemPalace and connected tools.
-Usage: `/gaia focus <project-name>`
+Usage: `/iga focus <project-name>`
 
 1. `mempalace_search` in `projects/<project-name>` for project context
 2. Search MemPalace for recent decisions related to this project

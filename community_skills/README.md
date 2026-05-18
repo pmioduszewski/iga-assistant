@@ -26,10 +26,10 @@ community_skills/<name>/
 ## Installing
 
 ```bash
-/gaia install <skill-name>
+/iga install <skill-name>
 ```
 
-The installer copies `community_skills/<name>/` to `skills/<name>/` and stamps provenance frontmatter (`source`, `source_commit`, `installed_at`) so `/gaia update <skill-name>` can three-way-merge upstream improvements while preserving the user's `SKILL.local.md` customizations.
+The installer copies `community_skills/<name>/` to `skills/<name>/` and stamps provenance frontmatter (`source`, `source_commit`, `installed_at`) so `/iga update <skill-name>` can three-way-merge upstream improvements while preserving the user's `SKILL.local.md` customizations.
 
 ## Status
 

@@ -31,7 +31,7 @@ _REAL_EXPORT = str(Path.home() / "Downloads" / "habitkit_export.json")
 
 def _real_state_root() -> Path:
     """The genuine ~/Gaia/state, ignoring ALL env overrides on purpose."""
-    return Path.home() / "Gaia" / "state"
+    return Path.home() / "Iga" / "state"
 
 
 def _real_widget_json() -> Path:

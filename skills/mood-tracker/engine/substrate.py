@@ -31,22 +31,22 @@ SUBSTRATE_KIND = "mood-tracker"
 SUBSTRATE_VERSION = 1
 
 
-def _gaia_root() -> Path:
-    env = os.environ.get("GAIA_HOME")
+def _iga_root() -> Path:
+    env = os.environ.get("IGA_HOME")
     if env:
         return Path(env).expanduser()
-    return Path.home() / "Gaia"
+    return Path.home() / "Iga"
 
 
 def state_root() -> Path:
     """Isolation-aware state root (identical resolver order to the
-    habit-tracker producer): ``$IGA_STATE_DIR`` > ``$GAIA_HOME``/state >
+    habit-tracker producer): ``$IGA_STATE_DIR`` > ``$IGA_HOME``/state >
     ``~/Gaia/state``. Tests/sandbox set ``$IGA_STATE_DIR`` so the user's
     live data is never touched."""
     env = os.environ.get("IGA_STATE_DIR")
     if env:
         return Path(env).expanduser()
-    return _gaia_root() / "state"
+    return _iga_root() / "state"
 
 
 def substrate_path(kind: str = SUBSTRATE_KIND) -> Path:

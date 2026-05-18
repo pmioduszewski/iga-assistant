@@ -112,7 +112,7 @@ and are picked up on the next `/gm` or `/back`.
 
 ### Phase 2 (not yet installed)
 
-A future `gaia install proactive-research` skill will write a launchd plist
+A future `iga install proactive-research` skill will write a launchd plist
 (Mac) or systemd timer (Linux) that fires the scanner in `daemon` mode at
 fixed times even when Claude Code is closed. Not wired yet.
 

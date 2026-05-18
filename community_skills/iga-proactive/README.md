@@ -5,7 +5,7 @@
 
   This is the generic, PII-free upstream copy. The live install target is
   skills/iga-proactive/ (a non-breaking sibling; this mirror does NOT relocate
-  or repath it). `/gaia install iga-proactive` copies this directory tree to
+  or repath it). `/iga install iga-proactive` copies this directory tree to
   skills/iga-proactive/ and stamps provenance frontmatter (source,
   source_commit, installed_at) onto the INSTALLED SKILL.md — community_*/
   upstream copies deliberately carry NO provenance (it is stamped at install

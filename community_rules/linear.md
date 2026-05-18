@@ -21,7 +21,7 @@ Draft issues in chat before creating them in Linear. Show: title, description, t
 
 ## Labels and projects
 
-Ask the user about their label and project conventions on first use. Store preferences in MemPalace `gaia/rules` wing for future reference.
+Ask the user about their label and project conventions on first use. Store preferences in MemPalace `iga/rules` wing for future reference.
 
 ## Cycle awareness
 

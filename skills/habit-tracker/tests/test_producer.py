@@ -261,15 +261,15 @@ def test_produce_via_main_cli_is_isolated(tmp_path, monkeypatch):
 
 
 def test_state_root_precedence(tmp_path, monkeypatch):
-    # IGA_STATE_DIR wins over GAIA_HOME; GAIA_HOME/state is the fallback;
+    # IGA_STATE_DIR wins over IGA_HOME; IGA_HOME/state is the fallback;
     # default (neither set) is the real ~/Gaia/state — unchanged behaviour.
-    monkeypatch.setenv("GAIA_HOME", str(tmp_path / "gaia"))
+    monkeypatch.setenv("IGA_HOME", str(tmp_path / "iga"))
     monkeypatch.setenv("IGA_STATE_DIR", str(tmp_path / "explicit"))
     assert producer.state_root() == tmp_path / "explicit"
     monkeypatch.delenv("IGA_STATE_DIR")
-    assert producer.state_root() == tmp_path / "gaia" / "state"
-    monkeypatch.delenv("GAIA_HOME")
-    assert producer.state_root() == Path.home() / "Gaia" / "state"
+    assert producer.state_root() == tmp_path / "iga" / "state"
+    monkeypatch.delenv("IGA_HOME")
+    assert producer.state_root() == Path.home() / "Iga" / "state"
 
 
 # --------------------------------------------------------------------------- #
@@ -278,12 +278,12 @@ def test_state_root_precedence(tmp_path, monkeypatch):
 def _real_state_widget_json() -> Path:
     """Resolve the user's REAL live widget JSON with NO env overrides.
 
-    Deliberately ignores IGA_STATE_DIR / GAIA_HOME so we always point at
+    Deliberately ignores IGA_STATE_DIR / IGA_HOME so we always point at
     the genuine ~/Gaia/state path the live widget reads.
     """
     return (
         Path.home()
-        / "Gaia"
+        / "Iga"
         / "state"
         / "widgets"
         / "habit-tracker-habit-grid.json"
@@ -343,7 +343,7 @@ def test_isolation_guard_env_actually_redirects(tmp_path, monkeypatch):
     """Belt-and-braces: with IGA_STATE_DIR set, EVERY resolved producer
     path is under the isolation root and none under the real state dir."""
     monkeypatch.setenv("IGA_STATE_DIR", str(tmp_path))
-    real_root = Path.home() / "Gaia" / "state"
+    real_root = Path.home() / "Iga" / "state"
     for p in (
         producer.state_root(),
         producer.habits_log_path("example"),

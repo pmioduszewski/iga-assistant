@@ -4,9 +4,9 @@ A personal AI assistant that runs **inside [Claude Code](https://claude.com/clau
 
 > Status: **early, single-maintainer, pre-1.0.** Public so the architecture and the `iga-assistant` namespace are out in the open. Expect sharp edges; APIs and pack layouts can still move.
 
-### Naming & status (read this before you judge the `gaia` you'll see)
+### Naming & status (read this before you judge the `iga` you'll see)
 
-The assistant was originally **Gaia** and is being renamed to **Iga**. The rename is **deliberately staged, not finished**: the brand, repo, skills, docs and the macOS app are already `Iga`, but the internal command namespace is still `/gaia …`, the memory MCP is still `GaiaMemory`, and some engine identifiers/env vars still read `gaia`. That's tracked, coordinated work — `/gaia` is the *current, working* command and is treated as a legacy alias until the sweep lands. If you see `gaia` in code/commands, it's mid-migration, not abandoned.
+The assistant was originally **Iga** and is being renamed to **Iga**. The rename is **deliberately staged, not finished**: the brand, repo, skills, docs and the macOS app are already `Iga`, but the internal command namespace is still `/iga …`, the memory MCP is still `IgaMemory`, and some engine identifiers/env vars still read `iga`. That's tracked, coordinated work — `/iga` is the *current, working* command and is treated as a legacy alias until the sweep lands. If you see `iga` in code/commands, it's mid-migration, not abandoned.
 
 ## What it actually is
 
@@ -15,7 +15,7 @@ Most "personal AI" projects ship a monolithic desktop app. Iga is the opposite b
 - **Skills** (`skills/<name>/`) — capabilities Iga *does*: a workflow + optional engine code (Python/Swift). E.g. `mood-tracker`, `habit-tracker`, `iga-proactive`.
 - **Rules** (`rules/<name>.md`, gitignored) — preferences for *how* Iga uses a tool. Generic baseline ships in `community_rules/`; personal overrides in `*.local.md` and never leave your machine.
 - **MemPalace** — the memory layer: AAAK diary, knowledge graph, semantic recall. Iga without it is just a chatbot.
-- **Composability contract** — `community_*` (upstream, MIT) → installed copy (provenance-stamped) → `*.local.md` (yours, gitignored). `/gaia update` does a three-way merge so you can pull upstream improvements without losing personalizations.
+- **Composability contract** — `community_*` (upstream, MIT) → installed copy (provenance-stamped) → `*.local.md` (yours, gitignored). `/iga update` does a three-way merge so you can pull upstream improvements without losing personalizations.
 
 See [`CLAUDE.md`](CLAUDE.md) for the full operating contract and [`iga_memory_protocol.md`](iga_memory_protocol.md) for the memory model.
 
@@ -48,17 +48,17 @@ brew install ggshield        # or your platform's package manager
 claude
 
 # 3. In-session, check health and see what's installed
-#    (/gaia is the current command namespace — legacy, rename to /iga in progress)
-/gaia status
-/gaia rules
+#    (/iga is the current command namespace — legacy, rename to /iga in progress)
+/iga status
+/iga rules
 ```
 
 Install a community pack:
 
 ```
-/gaia install <pack>      # rule pack or skill bundle, shows contents first
-/gaia check-updates       # which installed packs have upstream changes
-/gaia update <pack>       # three-way merge, preserves your *.local.md
+/iga install <pack>      # rule pack or skill bundle, shows contents first
+/iga check-updates       # which installed packs have upstream changes
+/iga update <pack>       # three-way merge, preserves your *.local.md
 ```
 
 ## Security & privacy
@@ -70,7 +70,7 @@ Install a community pack:
 ## Roadmap (honest — these are *intentions*, not shipped)
 
 - **Harness-agnostic / more headless.** Today conversational Iga is coupled to Claude Code. Anthropic's 2026-06-15 billing split makes programmatic `claude -p`/Agent-SDK paths metered, which is hostile to autonomous OSS use. The plan: a small **provider-abstraction seam** over the headless paths so backends are swappable (Claude API, **Codex / GPT**, **Gemini**, local). Conversational use stays on whatever harness is cheapest. *Status: analysis done, direction not yet locked, seam not built.*
-- Finishing the `gaia → iga` identifier/command/MCP sweep (see Naming & status).
+- Finishing the `iga → iga` identifier/command/MCP sweep (see Naming & status).
 
 ## How it compares
 

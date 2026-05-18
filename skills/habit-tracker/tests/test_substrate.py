@@ -93,7 +93,7 @@ def test_substrate_path_honours_isolation(tmp_path, monkeypatch):
     monkeypatch.setenv("IGA_STATE_DIR", str(tmp_path))
     p = sub.substrate_path("habit-tracker")
     assert tmp_path in p.parents
-    real = Path.home() / "Gaia" / "state"
+    real = Path.home() / "Iga" / "state"
     assert real not in p.parents
 
 

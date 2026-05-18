@@ -14,7 +14,7 @@ prerequisites:
     severity: error
 triggers:
   - kind: cli
-    spec: "`engine/record.py --state-dir ~/Gaia/state --emotion <name> --at <YYYY-MM-DDTHH:MM> [--note .. --people .. --places .. --events ..]` is the sanctioned chat log seam (the live, one-place answer). `engine/widget_projection.py [--days N]` rebuilds the Mood grid. `engine/summary.py` is the read-only Iga digest. `engine/import_mood_csv.py --input <csv> --state-dir <dir>` imports a mood-app export. `engine/ingest.py --state-dir ~/Gaia/state` is the idempotent backfill (newest export in the configurable watch folder iff changed)."
+    spec: "PRIMARY conversational path = the `iga_mood_log` MCP tool (emotion `;`-joined primary-first for multi-feeling — ONE call per moment, never two). It wraps `engine/record.py --state-dir ~/Gaia/state --emotion <name[;name2]> --at <YYYY-MM-DDTHH:MM> [--note .. --people .. --places .. --events ..]`, the sanctioned chat log seam (bash fallback only if the MCP is down). `engine/widget_projection.py [--days N]` rebuilds the Mood grid. `engine/summary.py` is the read-only Iga digest. `engine/import_mood_csv.py --input <csv> --state-dir <dir>` imports a mood-app export. `engine/ingest.py --state-dir ~/Gaia/state` is the idempotent backfill (newest export in the configurable watch folder iff changed)."
 substrate:
   - kind: mood-tracker
     version: 1
@@ -112,22 +112,40 @@ about the demo", "felt great after the run with the kids"), Iga logs it
 for them via the sanctioned record seam — exactly analogous to the habit
 record seam. The grid/UI is render-only and **never** mutates.
 
+**Primary path = the `iga_mood_log` MCP tool** (the `iga` MCP wraps this
+seam). Iga MUST use the MCP tool when the `iga` MCP is connected — NOT a
+bash/`record.py` call:
+
+```
+iga_mood_log(emotion="Overwhelmed;Sad", at="2026-05-17T14:30",
+             note="before the demo", people="Boss", events="Deadline")
+```
+
+Fallback ONLY when the `iga` MCP is not connected (then the underlying
+seam directly):
+
 ```
 uv run python skills/mood-tracker/engine/record.py \
   --state-dir ~/Gaia/state \
-  --emotion "Anxious" --at 2026-05-17T14:30 \
+  --emotion "Overwhelmed;Sad" --at 2026-05-17T14:30 \
   --note "before the demo" --people "Boss" --events "Deadline"
 ```
 
 Behavioral contract for Iga:
 
 - When the user clearly states an emotion, **offer to log it** (or log it
-  if they've said to just track it); pick the closest single emotion word
-  for `--emotion` (`;`-separate if they name several). Quadrant/valence/
-  energy are derived deterministically by the engine — Iga never sets
-  them.
-- `--at` is the user's local civil timestamp **now** (Iga supplies it; the
-  engine reads no clock). `--state-dir` is ALWAYS `~/Gaia/state`.
+  if they've said to just track it). Prefer the `iga_mood_log` MCP tool;
+  bash/`record.py` only if the MCP is down.
+- **MULTI-FEELING = ONE call.** If the user names a primary + secondary
+  feeling (or several), pass them as a SINGLE `;`-joined `emotion`
+  string, **primary first** (e.g. `"Overwhelmed;Sad"`). NEVER make two
+  calls / two entries for one moment — that creates duplicate rows at the
+  same timestamp and renders as two bogus side-by-side feelings. One
+  moment = one entry. Quadrant/valence/energy are derived by the engine
+  from the primary token — Iga never sets them.
+- `at` is the user's local civil timestamp **now** (Iga supplies it; the
+  engine reads no clock). State dir is ALWAYS `~/Gaia/state` (the MCP
+  tool resolves it; never pass a different one).
 - Map context they mention into `--people/--places/--events` (comma
   lists); put the verbatim phrase in `--note` only if they'd want it kept.
 - It is idempotent (same emotion+note+minute = no-op) and re-emits the

@@ -1,0 +1,45 @@
+# Iga Proactive Research — declarative job #1 for the generic engine.
+#
+# This is the research capability expressed as a `proactive:` block consumed
+# by skills/iga-proactive/engine (runtime.scan_tick -> dispatcher). It REPLACES
+# the bespoke scanner.py orchestration with the generic engine's atomic ledger
+# + global governor, while reusing the proven worker.prompt.md verbatim.
+#
+# Parsed by engine.schema.parse_jobs (runtime wraps this file in a frontmatter
+# fence). Two jobs because a single Job.trigger holds exactly one trigger expr;
+# Todoist and MemPalace are two sources, so two jobs sharing one worker prompt.
+#
+# Idempotency keys are rendered by runtime.render_template from the candidate
+# context (see engine/triggers.py Candidate.render_context):
+#   - todoist  : task.id, task.due available
+#   - mempalace: drawer.id, drawer.target_date available
+# The ledger holds an exact 'claimed' row per rendered key for `cooldown`,
+# so the same task/drawer scanned twice within 48h yields exactly ONE
+# WORKER_REQUEST — the anti-duplicate guarantee, end to end.
+#
+# NOTE: this YAML is the upstream/generic layer. User-specific tuning (extra
+# labels, cooldown overrides) belongs in a .local override per the CLAUDE.md
+# composability contract — never edit this file for personalization.
+
+proactive:
+  - id: research-todoist
+    trigger: todoist(label:iga-research, due:<7d)
+    condition: not exists drawer for task
+    action: spawn_worker(prompt: engine/worker.prompt.md, depth: deep)
+    idempotency_key: research::{{task.id}}::{{task.due}}
+    budget:
+      model: claude-opus-4-7[1m]
+      wall_min: 30
+    deliver: surface_next_brief
+    cooldown: 48h
+
+  - id: research-mempalace-queue
+    trigger: mempalace(room:research-queue)
+    condition: not exists drawer for task
+    action: spawn_worker(prompt: engine/worker.prompt.md, depth: deep)
+    idempotency_key: research::{{drawer.id}}::{{drawer.target_date}}
+    budget:
+      model: claude-opus-4-7[1m]
+      wall_min: 30
+    deliver: surface_next_brief
+    cooldown: 48h

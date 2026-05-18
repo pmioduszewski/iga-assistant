@@ -69,6 +69,7 @@ Simple if/then rules. Follow them every time.
 - IF responding about a person → search MemPalace first, never guess
 - IF responding about a project → search MemPalace first, never guess
 - IF responding about a past decision → search MemPalace first, never guess
+- IF the user expresses an emotional / feeling state in passing (e.g. "I'm fatigued", "so anxious about the demo", "feeling great today") — even without asking to track it — AND the `mood-tracker` skill is installed (`skills/mood-tracker/`) → reflect the emotion back to confirm you understood it, ask permission to log it, and ONLY on an explicit yes run the mood-tracker record seam per its `SKILL.md` ("Logging a mood from chat" contract). This is LLM-judged, NOT a substring trigger — the `intent_triggers:` auto-invoke only fires on the literal words mood/emotion/feeling, so a bare emotion word would otherwise be missed. Never log without confirmation; never infer a feeling the user did not actually express; if mood-tracker is not installed, do nothing.
 - IF unsure about any fact → say "let me check" and query the palace
 - IF facts change → `mempalace_kg_invalidate` old fact, `mempalace_kg_add` new one
 - IF creating calendar events → always list existing events first, check for duplicates
@@ -178,16 +179,22 @@ This contract makes `iga-assistant` a real OSS project — anyone can install it
 
 The repo includes ready-made rule packs in `community_rules/`. Users can install them:
 
-- `gaia install <pack>` — fetch `community_rules/<pack>.md` from the repo, show the user a summary of what it contains, ask for confirmation, then copy it to `rules/<pack>.md` with provenance frontmatter (source, source_commit, installed_at)
-- `gaia uninstall <pack>` — delete `rules/<pack>.md` after confirmation
-- `gaia rules` — list all installed rules (files in `rules/`) and available community packs (files in `community_rules/`)
-- `gaia check-updates` — for each installed pack with provenance, fetch upstream HEAD and report which packs have updates available
-- `gaia diff <pack>` — three-way diff: BASE (upstream at install time) vs LOCAL (your current, possibly customized) vs UPSTREAM (current HEAD). Highlights conflicts.
-- `gaia update <pack>` — interactive LLM-assisted merge that preserves user customizations while applying upstream improvements. Asks for confirmation before writing.
+**`<pack>` resolves to either a single-file rule pack (`community_rules/<pack>.md`) or a directory skill bundle (`community_skills/<pack>/`). The commands below handle both; resolution order is rule pack first, then skill bundle.**
 
-When installing: always show the user what the rule pack contains before writing anything. Never install silently.
+- `gaia install <pack>` — show the user a summary of what it contains, ask for confirmation, then install:
+  - **rule pack** (`community_rules/<pack>.md`): copy to `rules/<pack>.md`, stamping provenance frontmatter (source, source_path, source_commit, installed_at).
+  - **skill bundle** (`community_skills/<pack>/`): recursively copy the directory to `skills/<pack>/`, stamping the same provenance frontmatter into the installed `skills/<pack>/SKILL.md` **only** (not other files). Never overwrite an existing `skills/<pack>/SKILL.local.md`.
+- `gaia uninstall <pack>` — after confirmation:
+  - rule pack: delete `rules/<pack>.md`.
+  - skill bundle: `rm -rf skills/<pack>/`, but **preserve `skills/<pack>/SKILL.local.md`**, and warn the user that any optional companion artifact (e.g. a macOS app/login item/scheduler) must be uninstalled separately per that bundle's own docs — removing the directory does not unregister OS-level state.
+- `gaia rules` — list installed rule packs (`rules/`) and skill bundles (`skills/`), plus available community packs (`community_rules/`) and skill bundles (`community_skills/`)
+- `gaia check-updates` — for each installed pack or bundle with provenance, fetch upstream HEAD and report which have updates available
+- `gaia diff <pack>` — three-way diff: BASE (upstream at install time) vs LOCAL (your current, possibly customized) vs UPSTREAM (current HEAD). For a skill bundle, diff per-file across the directory tree. Highlights conflicts.
+- `gaia update <pack>` — interactive LLM-assisted merge that preserves user customizations while applying upstream improvements. For a skill bundle, the three-way merge operates **per-file across the bundle**, not on a single `.md`. Asks for confirmation before writing.
 
-If the user says `gaia install <pack>` and the pack doesn't exist in `community_rules/`, check the raw GitHub repo at `https://raw.githubusercontent.com/pmioduszewski/iga-assistant/main/community_rules/<pack>.md`. If found, download and install. If not found, tell the user.
+When installing: always show the user what the rule pack or skill bundle contains before writing anything. Never install silently.
+
+If the user says `gaia install <pack>` and the pack doesn't exist locally, check the raw GitHub repo: first `https://raw.githubusercontent.com/pmioduszewski/iga-assistant/main/community_rules/<pack>.md` (rule pack), then `community_skills/<pack>/SKILL.md` at the same upstream (skill bundle — fetch the whole directory tree if present). If found, download and install per the matching flow above. If not found, tell the user.
 
 After installing a community rule pack, the user can customize it — the copy in `rules/` is theirs to modify via conversation.
 

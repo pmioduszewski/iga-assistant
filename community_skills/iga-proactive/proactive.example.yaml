@@ -1,0 +1,65 @@
+# proactive.example.yaml — copy-paste TEMPLATE for adopters.
+#
+# This is NOT a live job. It is the documented starting point for declaring
+# background work against the generic iga-proactive engine. Copy it into YOUR
+# OWN skill (NOT into this engine skill) as either:
+#
+#   skills/<your-skill>/proactive.yaml          (a bare YAML doc, this shape)
+#   skills/<your-skill>/SKILL.md  frontmatter   (same `proactive:` list, inside
+#                                                the --- ... --- fence)
+#
+# The runtime discovers both. Parsed/validated by engine.schema.parse_jobs.
+# Full field reference + every trigger kind: docs/authoring-jobs.md.
+#
+# Personalization rule (CLAUDE.md composability contract): the shipped/upstream
+# copy stays generic. User-specific tuning (extra labels, cooldown overrides,
+# personal Todoist labels / MemPalace rooms) belongs in a `.local` override —
+# never edit the upstream-managed file for personalization.
+#
+# Every placeholder below is a TEMPLATE value. Replace:
+#   <your-skill>        your skill's directory name
+#   <your-label>        a Todoist label your tasks carry (no token => no work)
+#   <your-room>         a MemPalace room name (no MemPalace => no work)
+#   engine/worker.prompt.md   a prompt path that EXISTS relative to your skill
+
+proactive:
+  # Job 1: one candidate per open Todoist task carrying <your-label>, due in 7d.
+  - id: example-todoist
+    trigger: todoist(label:<your-label>, due:<7d)
+    condition: not exists drawer for task
+    action: spawn_worker(prompt: engine/worker.prompt.md, depth: deep)
+    # idempotency_key is the ledger PRIMARY KEY. Design it so two scans of the
+    # SAME real thing render the SAME string. task.id + task.due is the proven
+    # shape (a rescheduled task is correctly treated as new work).
+    idempotency_key: example::{{task.id}}::{{task.due}}
+    budget:
+      model: claude-opus-4-7[1m]
+      wall_min: 30
+    deliver: surface_next_brief
+    cooldown: 48h
+
+  # Job 2: one candidate per drawer in <your-room> not yet marked triggered.
+  # A Job.trigger holds exactly ONE trigger expr; use two jobs (sharing one
+  # worker prompt) when you have two sources.
+  - id: example-mempalace-queue
+    trigger: mempalace(room:<your-room>)
+    condition: not exists drawer for task
+    action: spawn_worker(prompt: engine/worker.prompt.md, depth: deep)
+    idempotency_key: example::{{drawer.id}}::{{drawer.target_date}}
+    budget:
+      model: claude-opus-4-7[1m]
+      wall_min: 30
+    deliver: surface_next_brief
+    cooldown: 48h
+
+  # Job 3 (optional): a pure cron schedule — no external data source needed.
+  # Fires one candidate iff the current tick matches the 5-field cron.
+  - id: example-weekly-schedule
+    trigger: schedule(0 8 * * 1)            # Mondays 08:00 UTC
+    action: spawn_worker(prompt: engine/weekly.prompt.md)
+    idempotency_key: example-weekly::{{schedule.tick}}
+    budget:
+      model: claude-opus-4-7[1m]
+      wall_min: 15
+    deliver: surface_next_brief
+    cooldown: 6d

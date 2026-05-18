@@ -1,8 +1,89 @@
+---
+name: newsletter-research
+description: Autonomous newsletter R&D — extracts libs/repos/tools/blog-posts from labeled Newsletter mail, fit-scores them against your projects, and files high-fit findings to the MemPalace Knowledge Vault for later surfacing.
+intent_triggers:
+  - newsletter research
+  - triage mail
+  - research newsletter
+  - newsletter findings
+prerequisites:
+  - name: mempalace-server
+    description: Required for filing vault findings and reading the newsletter-research-queue flag trigger.
+    check: mcp(GaiaMemory)
+    severity: error
+  - name: gmail-mcp
+    description: Worker reads the labeled message body via the Gmail/Workspace MCP. Absent → worker can't fetch the newsletter (job stays dormant, not an error).
+    check: mcp(iga-gmail)
+    severity: warning
+  - name: proactive-engine
+    description: This skill's proactive.yaml is discovered/gated by the generic skills/iga-proactive engine. Without it nothing runs.
+    check: file(~/Gaia/skills/iga-proactive/engine/runtime.py)
+    severity: warning
+triggers:
+  - kind: hook
+    spec: generic iga-proactive engine discovers skills/newsletter-research/proactive.yaml; the newsletter-research-queue MemPalace room is the deterministic, OFF-by-default trigger (empty room = nothing spawned)
+  - kind: manual
+    spec: "/triage-mail and /research-newsletter <message-id> — manual fire pre-automation"
+mempalace_wings:
+  - vault/*
+  - "*/newsletter-research-queue"
+mcp_dependencies:
+  - GaiaMemory
+  - iga-gmail
+widgets:
+  - id: newsletter-findings
+    type: message
+    title: Newsletter R&D
+    data_source: ~/Gaia/state/widgets/newsletter-research-findings.json
+    refresh: 300
+    coach:
+      tone: neutral
+      text_field: coach
+status: spec
+proactive: see ./proactive.yaml (the generic engine discovers skills/*/proactive.yaml; the safety gate + job contract live there and in § Killswitch below)
+---
+
 # Newsletter Research Hook
 
 Iga hook that triggers on labeled Newsletter mail, extracts artifacts, scores fit against the user's MemPalace projects, and files high-fit findings to a Knowledge Vault wing.
 
 Locked via `/new-skill` meta-template (`skills/create-iga-skill/SKILL.md`).
+
+Mirrors the proven `skills/iga-proactive-research` structure: a `proactive.yaml`
+the generic `skills/iga-proactive` engine discovers, a single-shot
+`engine/worker.prompt.md`, stdlib-only deterministic helpers
+(`engine/extract.py`), and unit tests. The engine never calls an LLM — it
+detects/dedups/gates and emits a worker request; the worker does the reading
+and judgement (identical division of labour to the research port).
+
+## Killswitch (BINDING — this skill is OFF by default)
+
+The generic engine **discovers** `proactive.yaml` (it parses, validates, and
+appears in a scan) but **spawns nothing unattended**:
+
+- **The trigger is a MemPalace room poll** (`newsletter-research-queue`),
+  not a live email-label poll. **The room is empty by default → zero
+  candidates → zero workers.** The empty room *is* the killswitch. This is
+  the exact safety property `iga-proactive-research`'s
+  `research-mempalace-queue` job relies on.
+- Belt-and-braces engine-wide: `IGA_PROACTIVE_SPAWN=0` (the documented
+  detect-but-don't-mutate killswitch, shared with the research port) also
+  suppresses every spawn globally.
+
+**How the user turns it ON (when awake — do NOT do this unattended tonight):**
+
+1. Pick a labeled `Newsletter/Dev` or `Newsletter/Business` message.
+2. File a MemPalace flag drawer: `mempalace_add_drawer` into room
+   `newsletter-research-queue` with metadata `title`, `target_date`, and
+   the Gmail message id in the content/context.
+3. Next `/gm` or `/back` scan → the engine fires exactly **one** gated
+   worker for it (`cooldown: 72h` ledger guard = no duplicate).
+4. To pause again: stop filing flag drawers (or set
+   `IGA_PROACTIVE_SPAWN=0`). Deleting all `newsletter-research-queue`
+   drawers returns it to fully dormant.
+
+No code edit is needed to flip it either way — the gate is data
+(presence/absence of flag drawers), exactly like the research port.
 
 ## Purpose
 

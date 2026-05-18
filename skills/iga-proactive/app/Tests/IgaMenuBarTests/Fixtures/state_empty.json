@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-16T07:32:55.550981+00:00",
+  "tick": {
+    "discovered_jobs": 2,
+    "fired_candidates": 1,
+    "condition_skipped": 0,
+    "claim_skipped": 1,
+    "governor_denied": 0,
+    "queue_alert": false,
+    "errors": [
+      "/Users/you/Gaia/skills/newsletter-research/SKILL.md: schema error: no YAML frontmatter block found (--- ... --- fence)",
+      "/Users/you/Gaia/skills/trainer/SKILL.md: schema error: no YAML frontmatter block found (--- ... --- fence)"
+    ]
+  },
+  "queue": [],
+  "counts": {
+    "queued": 0,
+    "running": 0,
+    "done": 0
+  },
+  "governor": {
+    "invocations_5h": 0,
+    "max_invocations_5h": 8,
+    "invocations_24h": 0,
+    "max_invocations_24h": 20,
+    "est_tokens_5h": 0,
+    "max_est_tokens_5h": 2000000
+  }
+}

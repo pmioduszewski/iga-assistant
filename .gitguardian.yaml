@@ -1,0 +1,31 @@
+# GitGuardian / ggshield configuration.
+#
+# This file is read by BOTH the local pre-commit/pre-push hook (.githooks/)
+# AND GitGuardian's server-side PR check, so a triaged false positive stays
+# silenced consistently in both places.
+#
+# Policy: we DO NOT disable the scanner or blanket-ignore detectors. Every
+# entry below is an individually triaged FALSE POSITIVE with a written
+# reason. Real secrets never live in this tree (they live in
+# ~/.config/<svc>, env vars, and gitignored ~/Gaia/state — see CLAUDE.md).
+version: 2
+
+secret:
+  # Fail the scan on any NEW finding; only the explicitly listed
+  # already-triaged matches below are tolerated.
+  ignored_matches:
+    - name: >-
+        governor.py `max_est_tokens_5h` — Python keyword-arg / attribute
+        NAME, not a credential. GitGuardian "Generic High Entropy Secret"
+        misreads the identifier shape max_<...>_5h as max_<apikey>_5h.
+        Verified 2026-05-18: it is `max_est_tokens_5h: int = ...`, a token
+        *budget* int, no value, no secret. Incident 32905147.
+      match: max_est_tokens_5h
+
+  # Synthetic-only by repo rule: every tests/ tree ships fabricated
+  # fixtures (e.g. finding_key="abc1234567890def", a 16-char hash-function
+  # assertion) — never real data, never real credentials. Scanning them
+  # only yields high-entropy-string false positives.
+  ignored_paths:
+    - "**/tests/**"
+    - "**/test_*.py"

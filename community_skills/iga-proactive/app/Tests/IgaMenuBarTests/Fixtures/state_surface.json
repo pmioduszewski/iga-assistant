@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-16T09:00:00+00:00",
+  "surface": {
+    "lines": [
+      "📑 acme: Pricing undercuts us 12% on mid-tier",
+      "📑 research: (no summary — ref drawer:abc123)"
+    ],
+    "shown": 2,
+    "total": 3,
+    "overflow": "+1 more"
+  },
+  "counts": {
+    "queued": 0,
+    "running": 0,
+    "done": 7
+  },
+  "governor": {}
+}

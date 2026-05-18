@@ -26,6 +26,22 @@ mempalace/.venv/
 mempalace/.mempalace/
 
 # =============================================================================
+# gaia_mcp — separate project (VSCode/Copilot→Iga MCP bridge) with its own
+# provenance. Relocated into this tree for ops convenience; the iga-assistant
+# repo must NOT absorb it. Never track or ship.
+# =============================================================================
+gaia_mcp/
+
+# =============================================================================
+# Skills CLI (`npx skills`) install artifacts — externally-managed, NOT
+# iga-assistant skills. Symlinked into agent dirs by the skills installer.
+# =============================================================================
+.agents/
+.claude/skills/
+skills-lock.json
+skills/find-skills
+
+# =============================================================================
 # Claude Code local config — per-user permissions, hooks, MCP paths
 # =============================================================================
 .claude/settings.local.json
@@ -65,6 +81,12 @@ load_rize.py
 scratch/
 *.original.md
 *.bak
+
+# =============================================================================
+# Runtime / engine + widget state — personal, never track or ship
+# (proactive ledger, engine state JSON, widget data files, habit logs)
+# =============================================================================
+state/
 
 # =============================================================================
 # Secrets
@@ -108,3 +130,6 @@ skills/trainer/
 *.swp
 *~
 *.log
+
+# ggshield local scan cache
+.cache_ggshield

@@ -1,0 +1,69 @@
+# Habit Tracker — declarative job for the generic proactive engine.
+#
+# This expresses the habit-tracker's PROACTIVE capability as a `proactive:`
+# block consumed by skills/iga-proactive/engine (runtime.scan_tick ->
+# dispatcher). It STRUCTURALLY MIRRORS skills/newsletter-research/
+# proactive.yaml and skills/iga-proactive-research/proactive.yaml: a job the
+# generic engine discovers (discover_job_sources picks up
+# `skills/*/proactive.yaml`), a deterministic MemPalace-queue trigger (NOT a
+# live clock/file poll — kept deterministic + testable), a spawn_worker
+# action pointing at engine/reflection.prompt.md, an idempotency_key rendered
+# from the candidate context, and a cooldown the frozen Wave-1 ledger
+# enforces.
+#
+# WHAT IT DOES (the "interesting use case" the engine now enables)
+# ──────────────────────────────────────────────────────────────────────────
+# The ALWAYS-ON path is deterministic and already shipped: `/gm` runs
+# `engine/summary.py` (the read digest) and the menu-bar app fires the daily
+# accountability notification. Neither calls an LLM.
+#
+# THIS job is the OPT-IN, deeper layer: when armed, a single-shot worker
+# reads that same deterministic digest + the queued drawer context and
+# writes ONE short, personalized habit-reflection drawer to MemPalace —
+# pattern-level coaching that ties the week's habit data to the user's
+# *why* / Atomic-Habits framing and names the single keystone to protect.
+# The engine did the deterministic detection/gating; the worker only adds
+# judgement. It surfaces in the next brief (deliver: surface_next_brief).
+#
+# Parsed by engine.schema.parse_jobs (runtime wraps this bare YAML in a
+# `--- ... ---` fence via runtime._wrap_yaml_as_frontmatter). Idempotency
+# key is rendered by runtime.render_template from the MemPalace candidate
+# context (drawer.id / drawer.target_date available); the ledger holds an
+# exact 'claimed' row per rendered key for `cooldown` → the same flag drawer
+# scanned twice within 72h yields exactly ONE WORKER_REQUEST.
+#
+# ──────────────────────────────────────────────────────────────────────────
+# SAFETY GATE (BINDING — this job is OFF by default; see SKILL.md § Killswitch)
+# ──────────────────────────────────────────────────────────────────────────
+# The engine DISCOVERS this job (parses, validates, shows in a scan) but
+# SPAWNS NOTHING unattended:
+#
+#   Deterministic trigger, EMPTY BY DEFAULT. The trigger is a MemPalace room
+#   poll (`habit-reflection-queue`). With no flag drawer filed there — the
+#   default — eval_mempalace yields ZERO candidates → zero worker requests.
+#   There is NO clock/file poll that could fire on its own. The empty room
+#   IS the killswitch — the exact safety property newsletter-research and
+#   the research port rely on. `IGA_PROACTIVE_SPAWN=0` is the engine-wide
+#   belt-and-braces, unchanged/shared.
+#
+# To ARM it (when you want a deeper weekly reflection): file a MemPalace
+# drawer in room `habit-reflection-queue` (metadata: `title`,
+# `target_date`, optional `triggered: false`). Next /gm or /back scan then
+# queues exactly one gated worker; the ledger cooldown guarantees no
+# duplicate within 72h.
+#
+# NOTE: this YAML is the upstream/generic layer. User-specific tuning
+# belongs in SKILL.local.md per the CLAUDE.md composability contract —
+# never edit this file for personalization.
+
+proactive:
+  - id: habit-reflection-queue
+    trigger: mempalace(room:habit-reflection-queue)
+    condition: not exists drawer for task
+    action: spawn_worker(prompt: engine/reflection.prompt.md, depth: shallow)
+    idempotency_key: habit-reflection::{{drawer.id}}::{{drawer.target_date}}
+    budget:
+      model: claude-opus-4-7[1m]
+      wall_min: 15
+    deliver: surface_next_brief
+    cooldown: 72h

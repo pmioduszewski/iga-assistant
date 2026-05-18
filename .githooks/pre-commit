@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Local secret guard — runs the SAME engine GitGuardian runs server-side,
+# but BEFORE the commit object is created, so nothing sensitive ever
+# reaches even your local history (let alone a push/PR).
+#
+# Triaged false positives are silenced via .gitguardian.yaml (reviewable,
+# per-entry reasons) — this hook does NOT weaken detection.
+#
+# Bypass for a known-safe emergency commit: `git commit --no-verify`
+# (use sparingly; the server-side PR check still runs regardless).
+set -euo pipefail
+
+if ! command -v ggshield >/dev/null 2>&1; then
+  echo "pre-commit: ggshield not installed — 'brew install ggshield'." >&2
+  echo "pre-commit: refusing to commit blind. --no-verify to override." >&2
+  exit 1
+fi
+
+# Scan only what is staged.
+if ! ggshield secret scan pre-commit; then
+  echo >&2
+  echo "pre-commit: secret detected in staged changes — commit blocked." >&2
+  echo "  • real secret  → remove it; put it in ~/.config or an env var." >&2
+  echo "  • false positive → triage it into .gitguardian.yaml with a reason." >&2
+  exit 1
+fi

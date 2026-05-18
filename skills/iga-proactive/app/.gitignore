@@ -1,0 +1,12 @@
+# SwiftPM / Xcode build artifacts — never tracked.
+.build/
+.swiftpm/
+DerivedData/
+*.xcodeproj
+*.xcworkspace
+
+# Assembled app bundle (reproducible via ./build.sh).
+Iga.app/
+
+# macOS cruft
+.DS_Store

@@ -1,0 +1,65 @@
+# Newsletter Research — declarative job for the generic proactive engine.
+#
+# This is the newsletter-research capability expressed as a `proactive:` block
+# consumed by skills/iga-proactive/engine (runtime.scan_tick -> dispatcher).
+# It STRUCTURALLY MIRRORS skills/iga-proactive-research/proactive.yaml: a job
+# the generic engine discovers (discover_job_sources picks up
+# `skills/*/proactive.yaml`), a deterministic MemPalace-queue trigger (NOT a
+# live email-label poll — kept deterministic/testable exactly like the
+# research port's `research-mempalace-queue`), a spawn_worker action pointing
+# at engine/worker.prompt.md, an idempotency_key rendered from the candidate
+# context, and a cooldown the frozen Wave-1 ledger enforces.
+#
+# Parsed by engine.schema.parse_jobs (runtime wraps this bare YAML in a
+# `--- ... ---` frontmatter fence via runtime._wrap_yaml_as_frontmatter).
+#
+# Idempotency key is rendered by runtime.render_template from the MemPalace
+# candidate context (engine/triggers.py eval_mempalace ->
+# Candidate.render_context): `drawer.id` and `drawer.target_date` are
+# available. The ledger holds an exact 'claimed' row per rendered key for
+# `cooldown`, so the same flag drawer scanned twice within 72h yields exactly
+# ONE WORKER_REQUEST — the anti-duplicate guarantee, end to end.
+#
+# ──────────────────────────────────────────────────────────────────────────
+# SAFETY GATE (BINDING — this job is OFF by default; see SKILL.md "Killswitch")
+# ──────────────────────────────────────────────────────────────────────────
+# The engine DISCOVERS this job (it parses, validates, and shows up in a
+# scan) but it SPAWNS NOTHING unattended:
+#
+#   Deterministic trigger, EMPTY BY DEFAULT. The trigger is a MemPalace room
+#   poll (`newsletter-research-queue`). With no flag drawer filed in that
+#   room — the default state — eval_mempalace yields ZERO candidates → zero
+#   worker requests. There is NO live email-label poll that could fire on
+#   its own. This is the SAME safety property the research port relies on
+#   for its `research-mempalace-queue` job: nothing is queued until a human
+#   explicitly files a flag drawer. The room being empty IS the killswitch.
+#
+# `condition: not exists drawer for task` mirrors the research port verbatim
+# (fail-open in eval_condition — the ledger + governor are the real guards).
+#
+# To ARM it (the user, when awake — see SKILL.md § Killswitch for the full
+# procedure): file a MemPalace drawer in room `newsletter-research-queue`
+# (metadata: `title`, `target_date`, optional `triggered: false`). The next
+# /gm or /back scan then queues exactly one worker for it, and the ledger
+# cooldown guarantees no duplicate within 72h.
+#
+# Engine-wide belt-and-braces: `IGA_PROACTIVE_SPAWN=0` (the CLI's documented
+# detect-but-don't-mutate killswitch) also suppresses every spawn globally —
+# unchanged, shared with the research port.
+#
+# NOTE: this YAML is the upstream/generic layer. User-specific tuning
+# (project list, include/exclude topics, cooldown overrides) belongs in
+# SKILL.local.md per the CLAUDE.md composability contract — never edit this
+# file for personalization.
+
+proactive:
+  - id: newsletter-research-queue
+    trigger: mempalace(room:newsletter-research-queue)
+    condition: not exists drawer for task
+    action: spawn_worker(prompt: engine/worker.prompt.md, depth: shallow)
+    idempotency_key: newsletter::{{drawer.id}}::{{drawer.target_date}}
+    budget:
+      model: claude-opus-4-7[1m]
+      wall_min: 20
+    deliver: surface_next_brief
+    cooldown: 72h

@@ -22,54 +22,63 @@ Match $ARGUMENTS against these first (case-insensitive):
   8. **Update check** — for each installed pack with `source_commit` frontmatter, do `gh api repos/<source>/commits?path=<source_path>&per_page=1` to fetch upstream HEAD. If HEAD `sha[:7]` ≠ `source_commit`, report `N packs have updates available (run /gaia check-updates for details)`. If `gh` is not on PATH, fall back to `git ls-remote` or `WebFetch` against `https://raw.githubusercontent.com/<source>/<branch>/<source_path>`. Do NOT skip this step unless an actual error occurs — name the error if so.
   9. **Other flags** — broken MCP, empty palace, missing hooks, anything else the scan surfaces.
 
-- **`rules`** — List all installed rules (`rules/` dir, excluding `.gaia.yml` and dotfiles) and available community packs (`community_rules/` dir). Show filename and first-line summary of each.
+- **`rules`** — List all installed rule packs (`rules/` dir, excluding `.gaia.yml` and dotfiles) and skill bundles (`skills/*/` dirs with `SKILL.md`), plus available community packs (`community_rules/`) and skill bundles (`community_skills/*/`). Show name and first-line/`description` summary of each.
 
-- **`install <pack>`** — Install a community rule pack:
+  **`<pack>` for the commands below resolves to either a single-file rule pack (`community_rules/<pack>.md` → `rules/<pack>.md`) or a directory skill bundle (`community_skills/<pack>/` → `skills/<pack>/`). Resolution order: rule pack first, then skill bundle. Each command handles both forms.**
+
+- **`install <pack>`** — Install a community rule pack or skill bundle:
   1. Resolve upstream from `rules/.gaia.yml` (key: `upstream`, default `pmioduszewski/iga-assistant`, branch from `upstream_branch` defaulting to `main`)
-  2. Look for `community_rules/<pack>.md` locally first
-  3. If not found locally, fetch from `https://raw.githubusercontent.com/<upstream>/<branch>/community_rules/<pack>.md`
+  2. Resolve `<pack>` locally: look for `community_rules/<pack>.md` (**rule pack**) first; else `community_skills/<pack>/` (**skill bundle**, a directory containing `SKILL.md`)
+  3. If not found locally, fetch from `https://raw.githubusercontent.com/<upstream>/<branch>/community_rules/<pack>.md`; if that 404s, try the skill bundle at `community_skills/<pack>/SKILL.md` (and fetch the whole directory tree if present)
   4. If found: show the user what it contains, ask for confirmation
-  5. On confirmation: copy to `rules/<pack>.md` AND **stamp frontmatter** with provenance:
+  5. On confirmation:
+     - **rule pack** → copy to `rules/<pack>.md`
+     - **skill bundle** → recursively copy the directory tree to `skills/<pack>/`
+     AND **stamp frontmatter** with provenance — into `rules/<pack>.md` for a rule pack, or into the installed `skills/<pack>/SKILL.md` **only** (never other bundle files) for a skill bundle:
      ```yaml
      ---
      source: <upstream>
-     source_path: community_rules/<pack>.md
-     source_commit: <short-sha-of-current-HEAD-for-that-file>
+     source_path: community_rules/<pack>.md   # or community_skills/<pack>/ for a bundle
+     source_commit: <short-sha-of-current-HEAD-for-that-path>
      installed_at: <today YYYY-MM-DD>
      ---
      ```
-     Get the commit SHA via `gh api repos/<upstream>/commits?path=community_rules/<pack>.md&per_page=1` (extract `sha[:7]`). If `gh` unavailable, fall back to `git ls-remote https://github.com/<upstream> <branch>` for branch HEAD (less precise, file-level not exact, but sufficient).
-     If the source pack already has frontmatter, prepend the provenance block above the existing one. If the pack is local-only (no upstream), set `source: local` and skip commit lookup.
+     Get the commit SHA via `gh api repos/<upstream>/commits?path=<source_path>&per_page=1` (extract `sha[:7]`). If `gh` unavailable, fall back to `git ls-remote https://github.com/<upstream> <branch>` for branch HEAD (less precise, file-level not exact, but sufficient).
+     If the source already has frontmatter, prepend the provenance block above the existing one. If local-only (no upstream), set `source: local` and skip commit lookup.
+     **Never overwrite an existing `skills/<pack>/SKILL.local.md`** — it is the user's private layer.
   6. If not found anywhere: tell the user
 
-- **`uninstall <pack>`** — Remove an installed rule pack:
-  1. Check if `rules/<pack>.md` exists
+- **`uninstall <pack>`** — Remove an installed rule pack or skill bundle:
+  1. Resolve: `rules/<pack>.md` (rule pack) or `skills/<pack>/` (skill bundle)
   2. Ask for confirmation
-  3. Delete on confirmation
+  3. On confirmation:
+     - rule pack → delete `rules/<pack>.md`
+     - skill bundle → `rm -rf skills/<pack>/`, but **preserve `skills/<pack>/SKILL.local.md`** (move it aside, delete the rest, restore it — or skip it from deletion). Then **warn the user**: any optional companion artifact (e.g. a macOS app, login item, scheduler) is NOT removed by this and must be uninstalled separately per that bundle's own docs (e.g. `skills/<pack>/app/README.md`) — deleting the directory does not unregister OS-level state.
 
-- **`check-updates`** — Detect which installed packs have upstream updates available:
-  1. Read all files in `rules/` (skip `.gaia.yml`, `commands.md`, anything without a frontmatter `source_commit`)
-  2. For each pack: extract `source`, `source_path`, `source_commit` from frontmatter
+- **`check-updates`** — Detect which installed packs/bundles have upstream updates available:
+  1. Read all provenance-bearing items: files in `rules/` (skip `.gaia.yml`, `commands.md`) AND `skills/*/SKILL.md`, skipping anything without a frontmatter `source_commit`
+  2. For each: extract `source`, `source_path`, `source_commit` from frontmatter
   3. Fetch upstream HEAD commit for that path: `gh api repos/<source>/commits?path=<source_path>&per_page=1`
   4. Compare: if HEAD `sha[:7]` ≠ `source_commit`, count commits between via `gh api repos/<source>/compare/<source_commit>...<head_sha>` and report
   5. Print a clean table:
      ```
-     pack            installed   upstream    status
-     notion.md       5799294     abc1234     3 commits behind
-     daily_commands  62a9dd9     62a9dd9     up to date
+     pack             installed   upstream    status
+     notion.md        5799294     abc1234     3 commits behind
+     daily_commands   62a9dd9     62a9dd9     up to date
+     iga-proactive/   0466f15     0466f15     up to date
      ```
   6. If any have updates, suggest `/gaia diff <pack>` and `/gaia update <pack>`
   7. Read-only — no file mutation
 
-- **`diff <pack>`** — Three-way diff for an installed pack:
+- **`diff <pack>`** — Three-way diff for an installed pack or bundle:
   > ⚠️ Before running, print this warning verbatim: "Note: For `/gaia update`, you should be running Opus 4.6 (medium effort) or stronger. Three-way merges of behavioral rules are non-trivial and weaker models may produce subtly wrong merges that silently break Gaia's behavior. `/gaia diff` is read-only and safe on any model, but the merge step is not."
-  1. Read `rules/<pack>.md` → call this **LOCAL** (user's current version, possibly customized)
-  2. Read its frontmatter `source_commit` → fetch upstream content **at that commit**: `https://raw.githubusercontent.com/<source>/<source_commit>/<source_path>` → call this **BASE**
-  3. Fetch upstream content at HEAD: `https://raw.githubusercontent.com/<source>/<branch>/<source_path>` → call this **UPSTREAM**
-  4. Show two diffs side-by-side or sequentially:
+  1. **LOCAL** = the user's current installed version (`rules/<pack>.md` for a rule pack; the `skills/<pack>/` tree for a skill bundle, possibly customized)
+  2. Read provenance `source_commit` → fetch upstream **at that commit**: `https://raw.githubusercontent.com/<source>/<source_commit>/<source_path>` → **BASE** (for a bundle, fetch the directory tree at that commit)
+  3. Fetch upstream at HEAD: `https://raw.githubusercontent.com/<source>/<branch>/<source_path>` → **UPSTREAM** (bundle: the tree at HEAD)
+  4. Show the diffs (for a skill bundle, **per-file across the directory tree**, including added/removed files):
      - **Your customizations** (BASE → LOCAL): what you changed since installing
      - **Upstream changes** (BASE → UPSTREAM): what maintainers added
-     - **Potential conflicts**: lines where BOTH sides changed the same region
+     - **Potential conflicts**: regions both sides changed
   5. End with: "Run `/gaia update <pack>` to merge upstream changes while preserving your customizations."
 
 - **`update <pack>`** — Interactive LLM-assisted merge:
@@ -81,16 +90,17 @@ Match $ARGUMENTS against these first (case-insensitive):
      - Keeps user's customizations from LOCAL (lines/sections changed in BASE→LOCAL but not BASE→UPSTREAM)
      - Applies upstream improvements from UPSTREAM (changed in BASE→UPSTREAM but not BASE→LOCAL)
      - Flags conflicts inline using `<<<<<<< local` / `======= upstream` markers when both sides changed the same region — let the user resolve those manually
+     - For a **skill bundle**, do this **per-file across the bundle** (not on a single `.md`): merge each file independently, carry over added files from UPSTREAM, and never touch `skills/<pack>/SKILL.local.md`
   3. Display the proposed merge to the user with a summary:
      - "Preserved N user customizations: [list]"
      - "Applied M upstream improvements: [list]"
      - "K conflicts requiring manual resolution: [list]"
-  4. Ask for confirmation. Do NOT write the file until user approves.
+  4. Ask for confirmation. Do NOT write until user approves.
   5. On approval:
-     - Write the merged content to `rules/<pack>.md`
-     - Update frontmatter `source_commit` to new HEAD sha and bump `installed_at`
-     - Confirm the path written
-  6. On rejection: discard, leave file untouched.
+     - Write the merged content to `rules/<pack>.md` (rule pack) or back across the `skills/<pack>/` tree (skill bundle)
+     - Update frontmatter `source_commit` to new HEAD sha and bump `installed_at` (in `skills/<pack>/SKILL.md` for a bundle)
+     - Confirm the path(s) written
+  6. On rejection: discard, leave files untouched.
 
 ## Priority 2 — User-defined commands (fallback)
 

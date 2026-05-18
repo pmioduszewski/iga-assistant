@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-16T08:10:00.000000+00:00",
+  "tick": {
+    "discovered_jobs": 3,
+    "fired_candidates": 2,
+    "condition_skipped": 1,
+    "claim_skipped": 0,
+    "governor_denied": 1,
+    "queue_alert": true,
+    "errors": []
+  },
+  "queue": [
+    {
+      "job_id": "research-todoist",
+      "idempotency_key": "research::6gfGhpHQq888QWgm::2026-05-17T10:00:00",
+      "trigger_kind": "todoist",
+      "action": "spawn_worker(prompt: research.md, depth: deep)",
+      "action_name": "spawn_worker",
+      "prompt_path": "/Users/you/Gaia/skills/iga-proactive/research.md",
+      "model": "opus",
+      "est_tokens": 120000,
+      "deliver": "surface_next_brief",
+      "context": { "task": { "id": "6gfGhpHQq888QWgm" } }
+    },
+    {
+      "job_id": "prep-brief",
+      "idempotency_key": "brief::weekly::2026-W20",
+      "trigger_kind": "schedule",
+      "action": "spawn_worker(prompt: brief.md)",
+      "action_name": "spawn_worker",
+      "prompt_path": null,
+      "model": "sonnet",
+      "est_tokens": 40000,
+      "deliver": "slack_dm",
+      "context": {}
+    }
+  ],
+  "counts": {
+    "queued": 2,
+    "running": 1,
+    "done": 5
+  },
+  "governor": {
+    "invocations_5h": 8,
+    "max_invocations_5h": 8,
+    "invocations_24h": 12,
+    "max_invocations_24h": 20,
+    "est_tokens_5h": 900000,
+    "max_est_tokens_5h": 2000000
+  }
+}

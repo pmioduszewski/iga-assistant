@@ -1,4 +1,4 @@
-# gaia_memory_protocol
+# iga_memory_protocol
 
 Full reference for Gaia's memory system. Referenced from CLAUDE.md.
 

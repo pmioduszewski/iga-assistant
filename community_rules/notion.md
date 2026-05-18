@@ -28,7 +28,7 @@ These are reference-only by nature, semantic-search-shaped, and burn tokens disp
 Store under:
 - `sessions/meetings` for meetings
 - `people/<name>` rooms for 1:1s and call notes about a person
-- Use AAAK format for compression — see `gaia_memory_protocol.md`
+- Use AAAK format for compression — see `iga_memory_protocol.md`
 
 When user shares a transcript or meeting recap mid-conversation:
 1. `mempalace_add_drawer` immediately to the right wing/room

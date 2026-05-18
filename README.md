@@ -63,7 +63,7 @@ Install a community pack:
 
 ## Security & privacy
 
-- **No secrets in the tree.** Credentials live in `~/.config/<svc>`, env vars, and gitignored `~/Gaia/state`. The repo ships **synthetic data only**.
+- **No secrets in the tree.** Credentials live in `~/.config/<svc>`, env vars, and the gitignored state dir (`$IGA_HOME/state`, default `~/Gaia/state` — the home dir keeps its legacy name until the staged cutover; see *Naming & status*). The repo ships **synthetic data only**.
 - `.githooks/{pre-commit,pre-push}` run `ggshield` (same engine as the server-side GitGuardian check) **before** a commit object exists. Triaged false positives are documented per-entry in `.gitguardian.yaml` — the scanner is never disabled.
 - `*.local.md` (personal rule overrides) and `state/` are gitignored and never published upstream.
 

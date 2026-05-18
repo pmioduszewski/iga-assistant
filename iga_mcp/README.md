@@ -39,6 +39,20 @@ with the state directory resolved server-side — no SKILL.md reading, no guessi
 
 ## Installation
 
+### Quick path (recommended) — one idempotent command
+
+```bash
+scripts/setup-iga-mcp.sh
+```
+
+Creates the venv, editable-installs the package, registers `iga` with
+Claude Code at **user scope**, and **detects VS Code / Cursor** and offers
+to add a user-level entry (asks first; merge-only). Re-runnable. Flags:
+`--dry-run`, `--yes`, `--venv DIR`. `/iga install iga-mcp` then lets
+`/iga status` detect a missing/broken `iga` MCP and re-run this for you.
+
+The manual steps below are the same thing by hand.
+
 ### 1. Create a venv and install dependencies
 
 ```bash

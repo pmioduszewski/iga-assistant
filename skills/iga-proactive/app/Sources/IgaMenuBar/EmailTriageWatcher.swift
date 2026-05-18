@@ -26,6 +26,12 @@ final class EmailTriageWatcher {
     /// The seam's last result (diagnostics only — the app never parses
     /// or acts on it; the email skill decides everything).
     private(set) var lastStatus: String?
+    /// Wall-clock duration of the last triage (finishedAt − startedAt).
+    private(set) var lastDurationSec: Double?
+    /// Compact human summary read from the engine's OWN emitted report
+    /// (~/Library/Logs/iga/email-triage-<date>.json). Pure presentation
+    /// of the engine's numbers — the app computes no email logic.
+    private(set) var lastSummary: String?
 
     /// Earliest local hour the daily triage may fire (matches the
     /// retired LaunchAgent's StartCalendarInterval Hour = 6).
@@ -52,6 +58,10 @@ final class EmailTriageWatcher {
     private let lastRunKey = "iga.emailTriage.lastRunTs"
     @ObservationIgnored
     private let lastStatusKey = "iga.emailTriage.lastStatus"
+    @ObservationIgnored
+    private let lastDurationKey = "iga.emailTriage.lastDurationSec"
+    @ObservationIgnored
+    private let lastSummaryKey = "iga.emailTriage.lastSummary"
 
     private static let dayFmt: DateFormatter = {
         let f = DateFormatter()
@@ -72,6 +82,42 @@ final class EmailTriageWatcher {
         let ts = d.double(forKey: lastRunKey)
         if ts > 0 { lastRun = Date(timeIntervalSince1970: ts) }
         lastStatus = d.string(forKey: lastStatusKey)
+        let dur = d.double(forKey: lastDurationKey)
+        if dur > 0 { lastDurationSec = dur }
+        lastSummary = d.string(forKey: lastSummaryKey)
+    }
+
+    /// Read the engine's OWN report (~/Library/Logs/iga/
+    /// email-triage-<yyyy-MM-dd>.json) and fold it into one compact
+    /// line. Best-effort + defensive: a missing/half-written file just
+    /// yields nil (status/duration still show). NOT email logic — it
+    /// only restates the numbers the engine already wrote.
+    private func readSummary(for day: String) -> String? {
+        let path = FileManager.default
+            .homeDirectoryForCurrentUser
+            .appendingPathComponent(
+                "Library/Logs/iga/email-triage-\(day).json")
+        guard let data = try? Data(contentsOf: path),
+              let obj = try? JSONSerialization
+                .jsonObject(with: data) as? [String: Any]
+        else { return nil }
+        func i(_ k: String) -> Int { (obj[k] as? Int) ?? 0 }
+        let decisions = obj["decisions"] as? [[String: Any]] ?? []
+        let archived = decisions.filter {
+            ($0["archive"] as? Bool) == true }.count
+        var byIntent: [String: Int] = [:]
+        for dcn in decisions {
+            let intent = (dcn["intent"] as? String) ?? "—"
+            byIntent[intent, default: 0] += 1
+        }
+        let top = byIntent.sorted {
+            $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key
+        }.prefix(3).map { "\($0.key) \($0.value)" }.joined(separator: " · ")
+        let head = "\(i("messagesScanned")) scanned · "
+            + "\(i("accountsScanned")) acct · "
+            + "\(i("preFilterHits")) pre-filter · "
+            + "\(i("llmClassified")) LLM · \(archived) archived"
+        return top.isEmpty ? head : head + "\nTop: " + top
     }
 
     func start() {
@@ -123,11 +169,24 @@ final class EmailTriageWatcher {
                             .trimmingCharacters(
                                 in: .whitespacesAndNewlines)
                             .prefix(160))
+                let dur = outcome.finishedAt
+                    .timeIntervalSince(outcome.startedAt)
+                let summary = outcome.ok
+                    ? self.readSummary(for: Self.dayFmt.string(from: now))
+                    : nil
                 self.lastRun = now
                 self.lastStatus = status
+                self.lastDurationSec = dur
+                self.lastSummary = summary
                 let d = UserDefaults.standard
                 d.set(now.timeIntervalSince1970, forKey: self.lastRunKey)
                 d.set(status, forKey: self.lastStatusKey)
+                d.set(dur, forKey: self.lastDurationKey)
+                if let summary {
+                    d.set(summary, forKey: self.lastSummaryKey)
+                } else {
+                    d.removeObject(forKey: self.lastSummaryKey)
+                }
             }
         }
     }

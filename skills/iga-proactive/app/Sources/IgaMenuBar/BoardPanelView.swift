@@ -156,7 +156,20 @@ struct BoardPanelView: View {
                         .font(.caption2)
                         .foregroundStyle(ok ? Color.green : Color.orange)
                         .fixedSize(horizontal: false, vertical: true)
+                    if let d = emailTriage.lastDurationSec {
+                        Text("· \(Self.durationText(d))")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 }
+            }
+
+            if let summary = emailTriage.lastSummary {
+                Text(summary)
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
             }
         }
         .padding(10)
@@ -224,5 +237,13 @@ struct BoardPanelView: View {
             .fontWeight(.semibold)
             .tracking(0.6)
             .foregroundStyle(.secondary)
+    }
+
+    /// Compact human duration: "0.8s" / "12s" / "1m 05s".
+    static func durationText(_ s: Double) -> String {
+        if s < 1 { return String(format: "%.1fs", s) }
+        if s < 60 { return "\(Int(s.rounded()))s" }
+        let m = Int(s) / 60, sec = Int(s) % 60
+        return String(format: "%dm %02ds", m, sec)
     }
 }

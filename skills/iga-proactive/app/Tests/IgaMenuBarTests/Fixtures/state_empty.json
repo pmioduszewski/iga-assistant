@@ -9,8 +9,8 @@
     "governor_denied": 0,
     "queue_alert": false,
     "errors": [
-      "/Users/you/Gaia/skills/newsletter-research/SKILL.md: schema error: no YAML frontmatter block found (--- ... --- fence)",
-      "/Users/you/Gaia/skills/trainer/SKILL.md: schema error: no YAML frontmatter block found (--- ... --- fence)"
+      "/Users/you/iga-assistant/skills/newsletter-research/SKILL.md: schema error: no YAML frontmatter block found (--- ... --- fence)",
+      "/Users/you/iga-assistant/skills/trainer/SKILL.md: schema error: no YAML frontmatter block found (--- ... --- fence)"
     ]
   },
   "queue": [],

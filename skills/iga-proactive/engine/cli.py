@@ -279,7 +279,7 @@ def build_parser() -> argparse.ArgumentParser:
             "result (tick stats + queue + state path)\n\n"
             "run from skills/iga-proactive/ (the repo's flat-import house "
             "style):\n"
-            "  cd /Users/you/Gaia/skills/iga-proactive && "
+            "  cd <iga-assistant>/skills/iga-proactive && "
             "PYTHONPATH=engine python -m engine scan\n"
         ),
     )

@@ -26,7 +26,7 @@ from _engine import widget_projection as wp
 from _synthetic import habitkit_export
 
 TODAY = date(2026, 5, 16)
-_REAL_EXPORT = "/Users/you/Downloads/habitkit_export.json"
+_REAL_EXPORT = str(Path.home() / "Downloads" / "habitkit_export.json")
 
 
 def _real_state_root() -> Path:

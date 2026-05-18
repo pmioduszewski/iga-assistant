@@ -74,8 +74,8 @@ the findings JSON atomically each run.
 ## Tests
 
 ```bash
-cd ~/Gaia/skills/newsletter-research
-/Users/you/Gaia/.venv/bin/python -m pytest tests/ -q
+cd <iga-assistant>/skills/newsletter-research
+python3 -m pytest tests/ -q
 ```
 
 `test_engine_discovery.py` imports the real `skills/iga-proactive` engine

@@ -18,6 +18,9 @@ struct GlobalSettingsView: View {
     let onChanged: () -> Void
 
     @State private var tickerOn = HabitTickerStatusItem.enabled
+    @State private var notifStatus = "checking…"
+    @State private var notifResult = ""
+    @State private var notifTesting = false
     private var busy: Bool { habits.managePending }
 
     var body: some View {
@@ -79,6 +82,44 @@ struct GlobalSettingsView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
+            section("Notifications") {
+                Text("This build is ad-hoc signed (no Apple Developer "
+                     + "Team). macOS may silently drop notifications for "
+                     + "such apps. Use Test to find out for sure on this "
+                     + "machine.")
+                    .font(.caption2).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 8) {
+                    Button {
+                        notifTesting = true
+                        Notifier.shared.sendTest { ok, msg in
+                            notifTesting = false
+                            notifResult = (ok ? "✅ " : "⚠️ ") + msg
+                        }
+                    } label: { Label("Send test notification",
+                                      systemImage: "bell.badge") }
+                        .disabled(notifTesting)
+                    if notifTesting {
+                        ProgressView().controlSize(.small)
+                    }
+                    Spacer()
+                }
+                Text("Status: \(notifStatus)")
+                    .font(.caption2).foregroundStyle(.secondary)
+                if !notifResult.isEmpty {
+                    Text(notifResult)
+                        .font(.caption2)
+                        .foregroundStyle(notifResult.hasPrefix("✅")
+                                         ? Color.green : Color.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .onAppear {
+                Notifier.shared.diagnose { d in
+                    notifStatus = "auth=\(d.authStatus) · \(d.summary)"
+                }
+            }
+
             section("App") {
                 HStack(spacing: 10) {
                     Button(role: .destructive) {
@@ -97,7 +138,7 @@ struct GlobalSettingsView: View {
             Spacer(minLength: 0)
         }
         .padding(20)
-        .frame(width: 420, height: 420)
+        .frame(width: 420, height: 560)
     }
 
     private func subhead(_ t: String) -> some View {

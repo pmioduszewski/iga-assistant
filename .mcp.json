@@ -1,13 +1,3 @@
 {
-  "mcpServers": {
-    "iga": {
-      "command": "<home>/.venvs/iga-mcp/bin/python",
-      "args": ["-m", "iga_mcp.server"],
-      "cwd": "<repo-root>",
-      "env": {
-        "PYTHONPATH": "<repo-root>/iga_mcp/src",
-        "IGA_HOME": "<repo-root>"
-      }
-    }
-  }
+  "mcpServers": {}
 }

@@ -360,6 +360,8 @@ def build_worker_context(
         "hook.scoring_context": spec["scoring_context"],
         "hook.fit_threshold": spec["fit_threshold"],
         "hook.output_wing": spec["output_wing"],
+        "hook.sinks": spec.get("sinks", [{"type": "sqlite"}]),
+        "hook.todoist_project": spec.get("todoist_project", ""),
         "hook.cadence": spec["cadence"],
         "hook.status": spec["status"],
         "hook.body": spec.get("body", ""),

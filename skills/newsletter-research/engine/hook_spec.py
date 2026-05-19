@@ -17,6 +17,11 @@ from __future__ import annotations
 import re
 from typing import Any
 
+try:  # repo house pattern: relative when packaged, flat under PYTHONPATH=engine
+    from .sinks import normalize_sinks
+except ImportError:  # pragma: no cover
+    from sinks import normalize_sinks  # type: ignore
+
 # ---------------------------------------------------------------------------
 # Public exception
 # ---------------------------------------------------------------------------
@@ -208,7 +213,10 @@ def parse_hook_spec(text: str) -> dict[str, Any]:
 
     Returns a typed dict with keys:
       name, description, trigger, interest_profile, scoring_context,
-      fit_threshold, output_wing, cadence, status, body
+      fit_threshold, output_wing, todoist_project, sinks, cadence,
+      status, body
+    (``sinks`` is the normalised finding-sink list; ``todoist_project``
+    is the per-sink config kept for back-compat.)
 
     Raises ``HookSpecError`` on any validation failure.
     """
@@ -286,6 +294,22 @@ def parse_hook_spec(text: str) -> dict[str, Any]:
             f"hook spec 'status' must be 'active' or 'paused', got: {status!r}"
         )
 
+    # --- delivery sinks (optional; generic finding-sink contract) ---
+    # `sinks:` is a flat list of sink type names (mempalace is always
+    # implied + canonical; sqlite is the zero-account local floor; todoist
+    # is an opt-in adapter configured via `todoist_project`). Per-sink
+    # config uses dedicated flat keys because the minimal YAML parser
+    # cannot represent list-of-maps. `todoist_project` is the personal-layer
+    # value, kept for back-compat. Both are normalised to an explicit list.
+    todoist_project = str(raw.get("todoist_project", "") or "").strip()
+    sinks_raw = raw.get("sinks")
+    try:
+        sinks = normalize_sinks(
+            {"sinks": sinks_raw, "todoist_project": todoist_project}
+        )
+    except ValueError as exc:
+        raise HookSpecError(f"hook spec 'sinks' invalid: {exc}") from exc
+
     return {
         "name": name,
         "description": description,
@@ -294,6 +318,8 @@ def parse_hook_spec(text: str) -> dict[str, Any]:
         "scoring_context": scoring_context,
         "fit_threshold": fit_threshold,
         "output_wing": output_wing,
+        "todoist_project": todoist_project,
+        "sinks": sinks,
         "cadence": cadence,
         "status": status,
         "body": body.strip(),

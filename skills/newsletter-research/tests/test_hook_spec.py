@@ -338,3 +338,66 @@ def test_paused_status_preserved_in_context():
     spec = parse_hook_spec(paused)
     ctx = build_worker_context(spec, {"drawer.id": "x"})
     assert ctx["hook.status"] == "paused"
+
+
+# ---------------------------------------------------------------------------
+# todoist_project (optional, personal-layer surfacing target)
+# ---------------------------------------------------------------------------
+def test_todoist_project_absent_defaults_empty_and_reaches_context():
+    spec = parse_hook_spec(_DEV_SPEC)
+    assert spec["todoist_project"] == ""
+    ctx = build_worker_context(spec, {})
+    assert ctx["hook.todoist_project"] == ""
+
+
+def test_todoist_project_parsed_and_threaded_to_worker_context():
+    spec_text = _DEV_SPEC.replace(
+        'output_wing: "vault/dev-tools"',
+        'output_wing: "vault/dev-tools"\ntodoist_project: "Iga Research"',
+    )
+    spec = parse_hook_spec(spec_text)
+    assert spec["todoist_project"] == "Iga Research"
+    ctx = build_worker_context(spec, {})
+    # Step 5b depends on this key being present in the worker context.
+    assert ctx["hook.todoist_project"] == "Iga Research"
+
+
+# ---------------------------------------------------------------------------
+# sinks (generic finding-sink contract)
+# ---------------------------------------------------------------------------
+def test_sinks_default_is_sqlite_floor_and_reaches_context():
+    spec = parse_hook_spec(_DEV_SPEC)
+    assert spec["sinks"] == [{"type": "sqlite"}]
+    ctx = build_worker_context(spec, {})
+    assert ctx["hook.sinks"] == [{"type": "sqlite"}]
+
+
+def test_sinks_legacy_todoist_project_folds_into_sinks():
+    spec_text = _DEV_SPEC.replace(
+        'output_wing: "vault/dev-tools"',
+        'output_wing: "vault/dev-tools"\ntodoist_project: "Iga Research"',
+    )
+    spec = parse_hook_spec(spec_text)
+    assert {"type": "todoist", "project": "Iga Research"} in spec["sinks"]
+    assert any(s["type"] == "sqlite" for s in spec["sinks"])  # floor
+
+
+def test_sinks_explicit_list_parsed_and_threaded():
+    spec_text = _DEV_SPEC.replace(
+        'output_wing: "vault/dev-tools"',
+        'output_wing: "vault/dev-tools"\nsinks:\n  - sqlite\n  - todoist\n'
+        'todoist_project: "P"',
+    )
+    spec = parse_hook_spec(spec_text)
+    ctx = build_worker_context(spec, {})
+    types = {s["type"] for s in ctx["hook.sinks"]}
+    assert types == {"sqlite", "todoist"}
+
+
+def test_sinks_unknown_type_raises_hookspecerror():
+    spec_text = _DEV_SPEC.replace(
+        'output_wing: "vault/dev-tools"',
+        'output_wing: "vault/dev-tools"\nsinks:\n  - smoke-signal',
+    )
+    with pytest.raises(HookSpecError):
+        parse_hook_spec(spec_text)

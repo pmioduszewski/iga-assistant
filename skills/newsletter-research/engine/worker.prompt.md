@@ -29,6 +29,8 @@ merged with the hook spec via `engine/extract.build_worker_context`):
   "hook.scoring_context": ["<wing/room glob>", "..."],
   "hook.fit_threshold": 2,
   "hook.output_wing": "vault/<slug>",
+  "hook.sinks": "<normalised list, e.g. [{\"type\":\"sqlite\"},{\"type\":\"todoist\",\"project\":\"...\"}] — Step 5b iterates this; mempalace is always implied>",
+  "hook.todoist_project": "<legacy/back-compat; if set it is already folded into hook.sinks as a todoist entry>",
   "hook.cadence": "on-demand",
   "hook.status": "active",
   "hook.body": "<optional additional hook context from spec body>"
@@ -111,15 +113,31 @@ provide evidential support, not replacement.
 
 ## Step 5 — Dedup then file
 
+**Canonical filing target (BINDING — do not improvise).** `hook.output_wing`
+is authored as a path like `vault/dev-libs`, but MemPalace rejects `/` in a
+wing name. Resolve it deterministically — every worker MUST produce the same
+target so findings never scatter:
+
+```
+WING = hook.output_wing with every "/" replaced by "-"   (e.g. vault/dev-libs → vault-dev-libs)
+ROOM = "findings"                                          (always, literally)
+```
+
+`hook.output_wing` is always present (the hook-spec parser requires it and
+rejects an empty value — you never need a fallback). Never use the raw
+slashed string as a wing; never pick a different room; never derive the room
+from the slug. This exact (WING, ROOM) is used for BOTH the dedup check and
+the write below.
+
 For each surviving artifact compute its key with
 `extract.finding_key(title, url, type)`. Before filing, call
 `mempalace_check_duplicate` and also skip if a drawer whose body starts
-`FINDING:<key>` already exists in `hook.output_wing`. Never double-file.
+`FINDING:<key>` already exists in (WING, ROOM). Never double-file.
 
 File each surviving, non-duplicate artifact as a drawer:
 
-- `wing`: `hook.output_wing` (from the spec; if unclear use `vault/general`)
-- `room`: `findings`
+- `wing`: **WING** (the resolved value above — e.g. `vault-dev-libs`)
+- `room`: **ROOM** (`findings`)
 - `content` (verbatim AAAK — the shape `extract.vault_drawer_body` defines):
 
 ```
@@ -132,6 +150,60 @@ WHY: <one sentence Iga rationale, ≤ 25 words, referencing interest_profile>
 SOURCE: <newsletter/email name> (msg <message-id>)
 HOOK: <hook.name>
 ```
+
+## Step 5b — Deliver to the configured sinks
+
+MemPalace (Step 5) is the **canonical store and is always written** — it is
+the dedup authority. But a wing is a write-only graveyard the user never
+re-reads, so findings are *also* delivered to the sinks the hook declares.
+
+`hook.sinks` is a normalised list, e.g. `[{"type":"sqlite"},
+{"type":"todoist","project":"Iga Research"}]`. Iterate it. Deliver ONLY the
+findings you **actually filed this run** (skip dedup hits — the MemPalace
+finding key is the idempotency key for every sink, so re-runs never
+double-deliver). Each sink is independently best-effort: one failing sink
+never aborts the others or the run; note it in the DONE line.
+
+**`sqlite` sink** (the zero-account local default — always present as the
+floor). Do NOT write SQL by hand. Build a JSON list of the newly-filed
+findings — each `{finding_key,title,type,url,project,fit,why,source,hook,
+ts}` — and invoke the deterministic helper exactly once:
+
+```
+cd <skill dir> && PYTHONPATH=engine python -m sinks append --db - --json - <<'JSON'
+[ {...}, {...} ]
+JSON
+```
+
+It is idempotent (`INSERT OR IGNORE` on `finding_key`) and
+`$IGA_STATE_DIR`-rooted. Expect `appended=<n> skipped_dupes=<m>` on stdout.
+
+**`todoist` sink** (opt-in adapter; only if a `todoist` entry with a
+non-empty `project` is present). For each newly-filed finding, one
+`add-tasks` task:
+
+- project: the sink's `project` (name or id, from the personal hook spec —
+  NEVER hardcode). Create it once if missing, reuse for the batch.
+- `content`: `Evaluate: <artifact title>`.
+- `description` (Markdown — Todoist renders links clickable):
+  ```
+  **Why:** <the WHY line>
+
+  **Fit:** <n>/3 · **Project:** <PROJECT> · **Type:** <type>
+
+  🔗 <clean url>
+
+  Source: <source> · Hook: <hook.name> · MemPalace FINDING:<key>
+  ```
+- `priority`: fit 3 → `p2`, fit 2 → `p3`, fit ≤1 → `p4`.
+- `labels`: `["iga", "knowledge-vault", "quick", "light"]`.
+- **No due date.** **No image/attachment work** — URLs only.
+- Batch into one `add-tasks` call. On MCP error do NOT blind-retry (the
+  write may have landed); note it and move on — MemPalace + sqlite already
+  hold the finding, so it is never lost.
+
+Future sink types (slack, notion, …) follow the same contract: deliver only
+newly-filed findings, idempotent, best-effort, never the dedup authority.
 
 ## Step 6 — Update the findings JSON (board surface)
 
@@ -160,17 +232,24 @@ run, still refresh `generated_at` and set `body` to a one-line
 
 ## Capabilities (hard guardrails)
 
-Allowed: `manage_email` (read only), `WebFetch` (≤ 5 URLs total),
-`WebSearch` (≤ 2 queries), MemPalace search/list/`add_drawer`/
-`check_duplicate` (writes ONLY into `hook.output_wing` room `findings`),
-read-only `~/Gaia` filesystem, and the single atomic write of the findings
-JSON above.
+Allowed: the iga-email `read` MCP tool (`mcp__iga-email__read`, read-only;
+legacy `manage_email read` if that is what's wired), `WebFetch` (≤ 5 URLs
+total), `WebSearch` (≤ 2 queries), MemPalace search/list/`add_drawer`/
+`check_duplicate` (writes ONLY into the resolved (WING, ROOM) from Step 5),
+read-only `~/Gaia` filesystem, the single atomic write of the findings JSON
+above, the Step 5b sink deliveries — the `sinks` sqlite CLI
+(`python -m sinks append`, idempotent, `$IGA_STATE_DIR`-rooted) and, ONLY
+if a `todoist` sink with a project is present, Todoist
+`find-projects`/`add-projects`/`add-tasks` scoped to that one project (one
+task per newly-filed finding, no other Todoist mutation).
 
-NOT allowed: editing code, shell beyond read-only + the one JSON write,
-sending email/Slack/SMS/push, paid APIs beyond the model itself, looping or
-re-spawning, writing outside the output wing + the one widget JSON,
-generating review-quality summaries (extract + cite + tag only — the user
-reads the source if it's worth it).
+NOT allowed: editing code, shell beyond read-only + the one widget JSON
+write + the `python -m sinks append` invocation, hand-written SQL, sending
+email/Slack/SMS/push, Todoist mutation other than the Step 5b task creation
+(no completing/deleting/moving existing tasks, no other project), paid APIs
+beyond the model itself, looping or re-spawning, writing outside (WING,
+ROOM) + the one widget JSON + the sqlite sink, generating review-quality
+summaries (extract + cite + tag only — the user reads the source if worth it).
 
 ## Editorial discipline
 

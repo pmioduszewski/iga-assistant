@@ -102,6 +102,80 @@ def default_state_path() -> Path:
     return Path(_DEFAULT_STATE_PATH).expanduser()
 
 
+_CANCEL_FILENAME = "proactive-cancel.json"
+
+
+def default_cancel_path() -> Path:
+    """User-cancel request file, sibling of the state file. The Iga menu-bar
+    app appends idempotency keys here when the user clicks Cancel; the engine
+    drains it at the start of each scan tick. ``$IGA_PROACTIVE_CANCEL``
+    overrides; else it is derived from ``default_state_path()``'s directory
+    so the "sibling of the state file" guarantee holds even when
+    ``$IGA_PROACTIVE_STATE`` points elsewhere."""
+    env = os.environ.get("IGA_PROACTIVE_CANCEL")
+    if env:
+        return Path(env).expanduser()
+    return default_state_path().parent / _CANCEL_FILENAME
+
+
+def drain_cancellations(
+    ledger: "Ledger", path: Path | str | None = None
+) -> list[str]:
+    """Apply queued user cancellations to the ledger, then clear them.
+
+    File shape: ``{"cancel": ["<idempotency_key>", ...]}``. For each key we
+    call :meth:`Ledger.cancel` (sticky terminal status). To stay safe against
+    the app appending a new key *during* the drain, we re-read the file just
+    before rewriting and persist only the keys we did NOT process — never
+    silently dropping a late append. Missing/empty/garbage file → no-op.
+    Returns the list of keys actually cancelled (for logging/tests).
+    """
+    p = Path(path).expanduser() if path else default_cancel_path()
+    try:
+        raw = p.read_text(encoding="utf-8")
+    except (FileNotFoundError, OSError):
+        return []
+    try:
+        keys = [str(k) for k in (json.loads(raw) or {}).get("cancel", []) if str(k).strip()]
+    except (json.JSONDecodeError, AttributeError, TypeError) as exc:
+        # A missing file is normal (handled above, silent). A file that
+        # EXISTS but won't parse is corruption/partial-write — user
+        # cancellations would be silently lost. Make it visible and keep a
+        # copy for debugging instead of clobbering it.
+        LOG.warning(
+            "drain_cancellations: cancel file %s exists but failed to parse "
+            "(%s) — cancellations NOT applied this tick; saved a copy to "
+            "%s.corrupt", p, exc, p,
+        )
+        try:
+            p.replace(p.with_suffix(p.suffix + ".corrupt"))
+        except OSError:
+            pass
+        return []
+    if not keys:
+        return []
+    processed: list[str] = []
+    for key in keys:
+        try:
+            ledger.cancel(key)
+            processed.append(key)
+        except Exception as exc:  # noqa: BLE001 — one bad key never aborts the tick
+            LOG.warning("drain_cancellations: failed to cancel %s: %s", key, exc)
+    # Re-read and keep only keys appended after our snapshot (set difference).
+    try:
+        latest = [
+            str(k)
+            for k in (json.loads(p.read_text(encoding="utf-8")) or {}).get("cancel", [])
+            if str(k).strip()
+        ]
+    except (FileNotFoundError, OSError, json.JSONDecodeError, AttributeError, TypeError):
+        latest = []
+    processed_set = set(processed)
+    remaining = [k for k in latest if k not in processed_set]
+    _atomic_write_json(p, {"cancel": remaining})
+    return processed
+
+
 # --------------------------------------------------------------------------- #
 # action-arg helpers — extract the prompt path from spawn_worker(prompt: x.md)
 # --------------------------------------------------------------------------- #
@@ -143,13 +217,21 @@ def to_worker_request(
     this is a pure data transform, no admission logic here.
     """
     job = qc.job
+    # An explicit ``prompt_base`` (tests / callers) wins. Otherwise resolve
+    # the job's relative ``prompt:`` against its OWN source directory — jobs
+    # from different skills live in different dirs, so a single global base
+    # would be wrong. Falls back to None (relative, unresolved) only if the
+    # job carries no source path.
+    base = prompt_base
+    if base is None and getattr(job, "source_path", None):
+        base = Path(job.source_path).parent
     return {
         "job_id": job.id,
         "idempotency_key": qc.idempotency_key,
         "trigger_kind": qc.candidate.trigger_kind,
         "action": job.action.raw,
         "action_name": job.action.name,
-        "prompt_path": extract_prompt_path(job.action.args, base=prompt_base),
+        "prompt_path": extract_prompt_path(job.action.args, base=base),
         "model": qc.model,
         "est_tokens": qc.est_tokens,
         "deliver": job.deliver,

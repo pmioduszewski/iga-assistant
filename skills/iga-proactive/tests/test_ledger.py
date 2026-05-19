@@ -116,3 +116,65 @@ def test_four_concurrent_claims_exactly_one_winner(db_path):
         f"(results={results})"
     )
     assert results.count(False) == N - 1
+
+
+# --------------------------------------------------------------------------- #
+# user-cancel (sticky terminal status) — Iga UI "Cancel" button
+# --------------------------------------------------------------------------- #
+def test_cancel_makes_should_skip_true_forever(db_path):
+    led = Ledger(db_path)
+    led.claim("c1", "job-a", cooldown_seconds=3600)
+    led.cancel("c1")
+    # Sticky regardless of cooldown elapsing.
+    assert led.should_skip("c1") is True
+
+
+def test_cancelled_key_is_never_reclaimed_even_after_cooldown(db_path):
+    led = Ledger(db_path)
+    # cooldown 0 → would normally be immediately re-claimable.
+    led.claim("c2", "job-a", cooldown_seconds=0)
+    led.cancel("c2")
+    assert led.claim("c2", "job-a", cooldown_seconds=0) is False
+    assert led.should_skip("c2") is True
+
+
+def test_cancel_works_without_prior_claim(db_path):
+    led = Ledger(db_path)
+    led.cancel("never-claimed")  # upsert, not mark — must not raise
+    assert led.should_skip("never-claimed") is True
+    assert led.claim("never-claimed", "job-a", cooldown_seconds=0) is False
+
+
+def test_cancel_is_idempotent(db_path):
+    led = Ledger(db_path)
+    led.claim("c3", "job-a", cooldown_seconds=10)
+    led.cancel("c3")
+    led.cancel("c3")  # no-op, must not raise
+    assert led.should_skip("c3") is True
+
+
+def test_legacy_db_without_cancelled_check_is_migrated(tmp_path):
+    """A DB created with the pre-'cancelled' CHECK must be transparently
+    migrated so cancel() doesn't hit a CHECK violation."""
+    import sqlite3
+
+    p = tmp_path / "legacy.db"
+    conn = sqlite3.connect(str(p))
+    conn.executescript(
+        "CREATE TABLE job_runs ("
+        " idempotency_key TEXT PRIMARY KEY,"
+        " job_id TEXT NOT NULL,"
+        " last_run_ts TEXT NOT NULL,"
+        " status TEXT NOT NULL CHECK(status IN"
+        "   ('claimed','running','done','failed','timeout')),"
+        " output_ref TEXT,"
+        " cooldown_until TEXT NOT NULL"
+        ");"
+    )
+    conn.commit()
+    conn.close()
+
+    led = Ledger(p)  # __init__ runs the idempotent migration
+    led.claim("legacy-k", "job-a", cooldown_seconds=10)
+    led.cancel("legacy-k")  # would raise IntegrityError pre-migration
+    assert led.should_skip("legacy-k") is True

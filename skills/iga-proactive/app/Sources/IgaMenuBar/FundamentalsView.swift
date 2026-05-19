@@ -327,6 +327,16 @@ struct FundamentalsView: View {
                         Text(r.model ?? "—")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
+                        Button {
+                            store.cancelQueued(r)
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Cancel this lined-up job — it will not run "
+                              + "(permanent for this item).")
                     }
                     .help(HelpText.queueRow)
                 }

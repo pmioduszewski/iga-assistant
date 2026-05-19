@@ -41,7 +41,34 @@ fit_threshold: 2                    # Optional. Integer 0–3. Default: 2.
                                     # Findings scoring < threshold are dropped.
 
 output_wing: "vault/dev-tools"      # Required. MemPalace wing where findings
-                                    # are filed (room: findings).
+                                    # are filed. Resolved deterministically:
+                                    # "/" → "-" gives the wing, room is always
+                                    # "findings" (vault/dev-tools →
+                                    # wing vault-dev-tools, room findings).
+
+sinks:                              # Optional. Generic delivery contract.
+  - sqlite                          # Flat list of sink TYPE names (the
+  - todoist                         # minimal parser can't do list-of-maps).
+                                    # mempalace is ALWAYS implied + canonical
+                                    # (dedup authority) — never list it.
+                                    # sqlite = zero-account local floor,
+                                    # always ensured even if omitted.
+                                    # todoist = opt-in adapter, needs the
+                                    # `todoist_project` key below.
+                                    # Omit `sinks:` entirely → default
+                                    # [sqlite] (+ implicit mempalace).
+                                    # Future: slack, notion (same contract).
+
+todoist_project: "Iga Research"     # Optional. Per-sink config for the
+                                    # todoist sink (the parser is flat, so
+                                    # config lives in dedicated keys, not
+                                    # nested under sinks). If set, each
+                                    # newly-filed finding becomes a Todoist
+                                    # task ("Evaluate: <title>", clickable
+                                    # URL, fit→priority). Personal-layer
+                                    # value — lives in rules/hooks/<name>.md,
+                                    # never upstream. A todoist sink with no
+                                    # project is dropped (sqlite floor holds).
 
 cadence: on-demand                  # Optional. "on-demand" (default) or "auto".
                                     # "auto" = arm via queue flag drawer;
@@ -75,7 +102,9 @@ context` section.
 | `interest_profile` | Yes | string | non-empty after strip |
 | `scoring_context` | Yes | list[str] | at least one entry |
 | `fit_threshold` | No | int | 0–3, default 2 |
-| `output_wing` | Yes | string | non-empty |
+| `output_wing` | Yes | string | non-empty; `/`→`-` = wing, room always `findings` |
+| `sinks` | No | list[str] | sink type names (`sqlite`/`todoist`); mempalace implied; default `[sqlite]`; unknown type → `HookSpecError` |
+| `todoist_project` | No | string | per-sink config for the todoist sink (personal-layer value) |
 | `cadence` | No | string | "on-demand" or "auto", default "on-demand" |
 | `status` | No | string | "active" or "paused", default "active" |
 

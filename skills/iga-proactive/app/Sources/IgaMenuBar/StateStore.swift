@@ -76,6 +76,69 @@ final class StateStore {
         return "\(home)/Gaia/scratch/proactive-state.json"
     }
 
+    /// `$IGA_PROACTIVE_CANCEL` or `~/Gaia/scratch/proactive-cancel.json`
+    /// (sibling of the state file). The engine drains this at the start of
+    /// every scan tick and marks each key sticky-cancelled in the ledger.
+    static func defaultCancelPath() -> String {
+        if let env = ProcessInfo.processInfo
+            .environment["IGA_PROACTIVE_CANCEL"], !env.isEmpty {
+            return (env as NSString).expandingTildeInPath
+        }
+        // Derive from the state file's directory so the "sibling of the
+        // state file" guarantee holds even when $IGA_PROACTIVE_STATE points
+        // elsewhere (matches engine dispatcher.default_cancel_path()).
+        let stateDir = (Self.defaultStatePath() as NSString)
+            .deletingLastPathComponent
+        return (stateDir as NSString)
+            .appendingPathComponent("proactive-cancel.json")
+    }
+
+    /// User clicked Cancel on a lined-up job. Append its idempotency key to
+    /// the cancel-request file (the engine turns it into a sticky-terminal
+    /// ledger row on the next scan) and optimistically drop it from the
+    /// visible queue so the UI reacts immediately, not at next reconcile.
+    /// Returns true iff the cancel request was durably written. The
+    /// optimistic UI removal happens ONLY on a confirmed write — otherwise
+    /// the row stays visible, because a silent removal would falsely tell
+    /// the user the job is cancelled while it would still run.
+    @discardableResult
+    func cancelQueued(_ request: WorkerRequest) -> Bool {
+        let key = request.idempotencyKey
+        guard !key.isEmpty, key != "?" else { return false }
+
+        let path = Self.defaultCancelPath()
+        let url = URL(fileURLWithPath: path)
+        var keys: [String] = []
+        if let data = try? Data(contentsOf: url),
+           let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let existing = obj["cancel"] as? [String] {
+            keys = existing
+        }
+        if !keys.contains(key) { keys.append(key) }
+
+        // Persist FIRST; only mutate the UI if the write provably succeeded.
+        do {
+            let out = try JSONSerialization.data(
+                withJSONObject: ["cancel": keys], options: [.prettyPrinted])
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true)
+            try out.write(to: url, options: .atomic)
+        } catch {
+            // Write failed → do NOT pretend it's cancelled. Leave the row;
+            // the user can retry. (No silent success.)
+            return false
+        }
+
+        // Confirmed persisted. Optimistic UI: remove now; the engine
+        // reconciles the ledger on the next /gm·/back scan. Re-adding is
+        // impossible (sticky cancel).
+        state.queue.removeAll { $0.idempotencyKey == key }
+        if state.counts.queued > 0 { state.counts.queued -= 1 }
+        seenWorkerKeys.insert(key)  // never re-notify a cancelled key
+        return true
+    }
+
     func start() {
         poll()
         let t = Timer(timeInterval: pollInterval, repeats: true) {

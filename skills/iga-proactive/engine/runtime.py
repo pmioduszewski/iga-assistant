@@ -198,6 +198,10 @@ def load_jobs(sources: list[Path]) -> tuple[list[Job], list[str], int]:
             # A `proactive:` block IS present but is malformed — a real error.
             errors.append(f"{src}: schema error: {exc}")
             continue
+        # Stamp each parsed job with its origin so the dispatcher can
+        # resolve a relative ``prompt:`` against this skill's directory.
+        for _job in parsed:
+            _job.source_path = str(src)
         jobs.extend(parsed)
     return jobs, errors, skipped_non_proactive
 
@@ -372,6 +376,21 @@ def scan_tick(
     base = Path(skills_dir).expanduser() if skills_dir else _SKILLS_DIR_DEFAULT
     ledger = ledger or Ledger(db_path)
     governor = governor or Governor(db_path)
+
+    # Drain user-cancellations from the Iga UI BEFORE scanning. Each key is
+    # marked sticky-terminal in the ledger, so should_skip()/claim() will
+    # refuse it for good and it is never re-emitted. Lazy import: dispatcher
+    # imports runtime, so a top-level import here would be circular.
+    try:
+        from . import dispatcher as _dispatcher
+    except ImportError:  # flat import — repo house pattern
+        import dispatcher as _dispatcher  # type: ignore
+    try:
+        _cancelled = _dispatcher.drain_cancellations(ledger)
+        if _cancelled:
+            LOG.info("Drained %d user-cancellation(s): %s", len(_cancelled), _cancelled)
+    except Exception as exc:  # noqa: BLE001 — cancel drain must never abort a tick
+        LOG.warning("cancel-drain failed (non-fatal): %s", exc)
 
     caps_spawn, caps_alert = _read_engine_caps(base.parent / "skills" if base.name != "skills" else base)
     if max_spawn_per_tick is None:

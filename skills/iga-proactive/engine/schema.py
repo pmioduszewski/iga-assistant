@@ -165,6 +165,11 @@ class Job:
     condition: str | None = None  # raw, not evaluated in Wave 1
     budget: dict[str, Any] = field(default_factory=dict)
     deliver: str = _DEFAULT_DELIVER
+    # Filesystem path of the source file this job was parsed from
+    # (``skills/<pack>/proactive.yaml`` or ``SKILL.md``). Set by
+    # ``runtime.load_jobs`` after parsing. Used to resolve a job's
+    # relative ``prompt:`` against its own skill directory.
+    source_path: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.id, str) or not self.id.strip():

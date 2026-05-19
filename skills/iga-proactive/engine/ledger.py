@@ -25,7 +25,12 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 _LIVE_STATUSES = ("claimed", "running")
-_VALID_STATUSES = ("claimed", "running", "done", "failed", "timeout")
+# 'cancelled' = a user explicitly killed a lined-up job from the Iga UI. It
+# is STICKY/terminal: should_skip stays True forever and claim() never
+# re-claims it (unlike 'failed'/'timeout' which re-open after cooldown), so a
+# cancel is honoured permanently for that exact idempotency_key.
+_VALID_STATUSES = ("claimed", "running", "done", "failed", "timeout", "cancelled")
+_STICKY_STATUSES = ("cancelled",)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS job_runs (
@@ -33,7 +38,7 @@ CREATE TABLE IF NOT EXISTS job_runs (
     job_id          TEXT NOT NULL,
     last_run_ts     TEXT NOT NULL,
     status          TEXT NOT NULL CHECK(status IN
-                        ('claimed','running','done','failed','timeout')),
+                        ('claimed','running','done','failed','timeout','cancelled')),
     output_ref      TEXT,
     cooldown_until  TEXT NOT NULL
 );
@@ -102,6 +107,32 @@ class Ledger:
         conn = self._connect()
         try:
             conn.executescript(_SCHEMA)
+            # Idempotent migration: DBs created before 'cancelled' carry a
+            # CHECK constraint that rejects it. SQLite enforces CHECK on
+            # write and has no ALTER-DROP-CONSTRAINT, so rebuild the table
+            # when the stored DDL lacks 'cancelled'. Guard is a substring
+            # test on sqlite_master — runs at most once per old DB.
+            row = conn.execute(
+                "SELECT sql FROM sqlite_master "
+                "WHERE type='table' AND name='job_runs';"
+            ).fetchone()
+            if row and row["sql"] and "'cancelled'" not in row["sql"]:
+                conn.executescript(
+                    "BEGIN IMMEDIATE;"
+                    "CREATE TABLE job_runs__mig ("
+                    " idempotency_key TEXT PRIMARY KEY,"
+                    " job_id          TEXT NOT NULL,"
+                    " last_run_ts     TEXT NOT NULL,"
+                    " status          TEXT NOT NULL CHECK(status IN"
+                    "   ('claimed','running','done','failed','timeout','cancelled')),"
+                    " output_ref      TEXT,"
+                    " cooldown_until  TEXT NOT NULL"
+                    ");"
+                    "INSERT INTO job_runs__mig SELECT * FROM job_runs;"
+                    "DROP TABLE job_runs;"
+                    "ALTER TABLE job_runs__mig RENAME TO job_runs;"
+                    "COMMIT;"
+                )
         finally:
             conn.close()
 
@@ -141,6 +172,11 @@ class Ledger:
             ).fetchone()
 
             if row is not None:
+                if row["status"] in _STICKY_STATUSES:
+                    # User-cancelled: never re-claim this exact key, even
+                    # after cooldown. The cancel is permanent.
+                    conn.execute("ROLLBACK;")
+                    return False
                 live = row["status"] in _LIVE_STATUSES
                 cooled = _parse_iso(row["cooldown_until"]) > now
                 if live or cooled:
@@ -219,9 +255,47 @@ class Ledger:
             ).fetchone()
             if row is None:
                 return False
+            if row["status"] in _STICKY_STATUSES:
+                return True  # cancelled — permanently skipped
             if row["status"] in _LIVE_STATUSES:
                 return True
             return _parse_iso(row["cooldown_until"]) > _utcnow()
+        finally:
+            conn.close()
+
+    def cancel(self, idempotency_key: str, job_id: str = "user-cancel") -> None:
+        """Permanently cancel a key from the Iga UI.
+
+        Upsert (not :meth:`mark`) so it works whether or not a ledger row
+        already exists for the key, and overrides any ``claimed`` row /
+        live cooldown. Idempotent — cancelling an already-cancelled key is
+        a no-op write. After this, :meth:`should_skip` is always True and
+        :meth:`claim` always refuses this exact key.
+        """
+        conn = self._connect()
+        try:
+            now = _iso(_utcnow())
+            conn.execute("BEGIN IMMEDIATE;")
+            conn.execute(
+                "INSERT INTO job_runs "
+                "(idempotency_key, job_id, last_run_ts, status, "
+                " output_ref, cooldown_until) "
+                "VALUES (?, ?, ?, 'cancelled', 'user-cancelled', ?) "
+                "ON CONFLICT(idempotency_key) DO UPDATE SET "
+                "  job_id=excluded.job_id, "
+                "  last_run_ts=excluded.last_run_ts, "
+                "  status='cancelled', "
+                "  output_ref='user-cancelled', "
+                "  cooldown_until=excluded.cooldown_until;",
+                (idempotency_key, job_id, now, now),
+            )
+            conn.execute("COMMIT;")
+        except Exception:
+            try:
+                conn.execute("ROLLBACK;")
+            except sqlite3.Error:
+                pass
+            raise
         finally:
             conn.close()
 

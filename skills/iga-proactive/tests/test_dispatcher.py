@@ -172,3 +172,115 @@ def test_state_path_env_override(monkeypatch, tmp_path):
 
 def test_read_state_missing_returns_empty(tmp_path):
     assert read_state(tmp_path / "nope.json") == {}
+
+
+# --------------------------------------------------------------------------- #
+# drain_cancellations — UI cancel-file → ledger sticky cancel
+# --------------------------------------------------------------------------- #
+def test_drain_cancellations_marks_keys_and_clears_file(tmp_path):
+    from ledger import Ledger
+
+    led = Ledger(tmp_path / "p.db")
+    led.claim("k-keep", "job", cooldown_seconds=3600)
+    led.claim("k-cancel", "job", cooldown_seconds=3600)
+
+    cf = tmp_path / "cancel.json"
+    cf.write_text(json.dumps({"cancel": ["k-cancel"]}), encoding="utf-8")
+
+    processed = disp.drain_cancellations(led, cf)
+
+    assert processed == ["k-cancel"]
+    assert led.should_skip("k-cancel") is True
+    assert led.claim("k-cancel", "job", cooldown_seconds=0) is False
+    # untouched key still behaves normally
+    assert led.should_skip("k-keep") is True  # still in cooldown
+    # file drained to empty
+    assert json.loads(cf.read_text())["cancel"] == []
+
+
+def test_drain_cancellations_missing_or_empty_file_is_noop(tmp_path):
+    from ledger import Ledger
+
+    led = Ledger(tmp_path / "p.db")
+    assert disp.drain_cancellations(led, tmp_path / "nope.json") == []
+    empty = tmp_path / "empty.json"
+    empty.write_text(json.dumps({"cancel": []}), encoding="utf-8")
+    assert disp.drain_cancellations(led, empty) == []
+
+
+def test_drain_preserves_keys_appended_during_drain(tmp_path):
+    """If the file gains a new key between snapshot and rewrite, the late
+    append must survive (not be silently dropped)."""
+    from ledger import Ledger
+
+    led = Ledger(tmp_path / "p.db")
+    cf = tmp_path / "cancel.json"
+    cf.write_text(json.dumps({"cancel": ["a"]}), encoding="utf-8")
+
+    real_cancel = led.cancel
+
+    def cancel_then_append(key, *args, **kwargs):
+        real_cancel(key, *args, **kwargs)
+        # Simulate the app appending a new cancel mid-drain.
+        cf.write_text(json.dumps({"cancel": ["a", "b"]}), encoding="utf-8")
+
+    led.cancel = cancel_then_append  # type: ignore[method-assign]
+    processed = disp.drain_cancellations(led, cf)
+
+    assert processed == ["a"]
+    assert json.loads(cf.read_text())["cancel"] == ["b"]  # late append kept
+
+
+# ---------- per-job prompt resolution (prompt_base=None) ----------------
+def test_prompt_base_none_resolves_each_job_against_its_own_skill_dir(tmp_path):
+    """Two skills with the same relative prompt: must resolve to DIFFERENT
+    absolute paths — each against its own source dir — when build_dispatch
+    is called WITHOUT an explicit prompt_base (the production path)."""
+    sd = tmp_path / "skills"
+    block_a = (
+        "proactive:\n"
+        "  - id: job-a\n"
+        "    trigger: todoist(label:iga-research, due:<7d)\n"
+        "    action: spawn_worker(prompt: engine/worker.prompt.md, depth: deep)\n"
+        "    idempotency_key: a::{{task.id}}\n"
+        "    cooldown: 48h\n"
+    )
+    block_b = (
+        "proactive:\n"
+        "  - id: job-b\n"
+        "    trigger: todoist(label:iga-research, due:<7d)\n"
+        "    action: spawn_worker(prompt: engine/worker.prompt.md, depth: deep)\n"
+        "    idempotency_key: b::{{task.id}}\n"
+        "    cooldown: 48h\n"
+    )
+    _make_skill(sd, "skill-a", block_a)
+    _make_skill(sd, "skill-b", block_b)
+
+    res = scan_tick(
+        now=NOW, skills_dir=sd, db_path=tmp_path / "p.db", token="fake",
+        todoist_fetcher=lambda *_: _one_task(),
+    )
+    # The production call site (cli._run_live → build_dispatch) passes NO
+    # prompt_base — exactly the path the prompt-resolution fix targets.
+    reqs, _ = build_dispatch(res, prompt_base=None, write_state=False)
+
+    by_job = {r["job_id"]: r["prompt_path"] for r in reqs}
+    assert set(by_job) == {"job-a", "job-b"}, by_job
+    assert by_job["job-a"] == str(
+        (sd / "skill-a" / "engine" / "worker.prompt.md").resolve())
+    assert by_job["job-b"] == str(
+        (sd / "skill-b" / "engine" / "worker.prompt.md").resolve())
+    assert by_job["job-a"] != by_job["job-b"]
+
+
+def test_drain_corrupt_file_warns_preserves_and_noops(tmp_path):
+    """A cancel file that exists but won't parse must NOT be a silent
+    no-op: it is preserved as .corrupt and the tick continues."""
+    from ledger import Ledger
+
+    led = Ledger(tmp_path / "p.db")
+    cf = tmp_path / "cancel.json"
+    cf.write_text("{ this is not json", encoding="utf-8")
+    assert disp.drain_cancellations(led, cf) == []
+    # original clobbered file moved aside for debugging
+    assert (tmp_path / "cancel.json.corrupt").exists()

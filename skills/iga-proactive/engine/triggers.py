@@ -464,7 +464,16 @@ def eval_mempalace(
         try:
             mod = _import_mempalace()
         except Exception as exc:  # noqa: BLE001 — graceful
-            LOG.info("mempalace module unavailable, no candidates: %s", exc)
+            # LOUD: a misconfigured runtime (wrong interpreter / mempalace
+            # not importable) is the #1 cause of a silent zero-candidate
+            # no-op. Warn, don't whisper at INFO.
+            LOG.warning(
+                "mempalace trigger DEGRADED (room=%s): cannot import the "
+                "mempalace package → 0 candidates. The scan must run with a "
+                "python that has `mempalace` importable. Underlying: %s",
+                room,
+                exc,
+            )
             return []
 
     try:

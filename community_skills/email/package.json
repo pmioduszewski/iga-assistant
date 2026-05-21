@@ -1,0 +1,33 @@
+{
+  "name": "@iga/email",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Iga email triage engine — pre-filter + Sonnet classifier + Gmail label applier + hook dispatcher",
+  "type": "module",
+  "bin": {
+    "iga-mail": "./bin/iga-mail.js",
+    "triage-mail": "./bin/triage-mail.js",
+    "iga-email-mcp": "./bin/iga-email-mcp"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "iga-mail": "tsx src/cli.ts",
+    "triage-mail": "tsx src/cli.ts",
+    "test": "node --test --import tsx test/*.test.ts",
+    "test:watch": "node --test --watch --import tsx test/*.test.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "google-auth-library": "^10.6.2",
+    "googleapis": "^171.4.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

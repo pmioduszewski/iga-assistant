@@ -1,0 +1,49 @@
+{
+  "work": [
+    { "id": "INBOX", "name": "INBOX" },
+    { "id": "STARRED", "name": "STARRED" },
+    { "id": "UNREAD", "name": "UNREAD" },
+    { "id": "Label_W_Action", "name": "Action" },
+    { "id": "Label_W_Wait", "name": "Wait" },
+    { "id": "Label_W_Family", "name": "Family" },
+    { "id": "Label_W_Security", "name": "Security" },
+    { "id": "Label_W_Receipt", "name": "Receipt" },
+    { "id": "Label_W_Accountant", "name": "Accountant" },
+    { "id": "Label_W_Status", "name": "Status" },
+    { "id": "Label_W_Order", "name": "Order" },
+    { "id": "Label_W_Reference", "name": "Reference" },
+    { "id": "Label_W_NewsletterDev", "name": "Newsletter/Dev" },
+    { "id": "Label_W_NewsletterDesign", "name": "Newsletter/Design" },
+    { "id": "Label_W_NewsletterNews", "name": "Newsletter/News" },
+    { "id": "Label_W_NewsletterBusiness", "name": "Newsletter/Business" },
+    { "id": "Label_W_Promo", "name": "Promo" },
+    { "id": "Label_W_Acme", "name": "Acme" }
+  ],
+  "personal": [
+    { "id": "INBOX", "name": "INBOX" },
+    { "id": "STARRED", "name": "STARRED" },
+    { "id": "UNREAD", "name": "UNREAD" },
+    { "id": "Label_P_Action", "name": "Action" },
+    { "id": "Label_P_Security", "name": "Security" },
+    { "id": "Label_P_Receipt", "name": "Receipt" },
+    { "id": "Label_P_NewsletterDev", "name": "Newsletter/Dev" },
+    { "id": "Label_P_NewsletterBusiness", "name": "Newsletter/Business" },
+    { "id": "Label_P_Promo", "name": "Promo" },
+    { "id": "Label_P_Reference", "name": "Reference" },
+    { "id": "Label_P_Personal", "name": "Personal" }
+  ],
+  "biz": [
+    { "id": "INBOX", "name": "INBOX" },
+    { "id": "STARRED", "name": "STARRED" },
+    { "id": "UNREAD", "name": "UNREAD" },
+    { "id": "Label_Bz_NewsletterDev", "name": "Newsletter/Dev" },
+    { "id": "Label_Bz_NewsletterBusiness", "name": "Newsletter/Business" },
+    { "id": "Label_Bz_Promo", "name": "Promo" },
+    { "id": "Label_Bz_Reference", "name": "Reference" }
+  ],
+  "umbrella": [
+    { "id": "INBOX", "name": "INBOX" },
+    { "id": "STARRED", "name": "STARRED" },
+    { "id": "UNREAD", "name": "UNREAD" }
+  ]
+}

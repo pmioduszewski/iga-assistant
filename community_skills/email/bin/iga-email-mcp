@@ -1,0 +1,14 @@
+#!/bin/zsh
+# iga-email MCP server entry point.
+# This is a zsh wrapper (not a node script) so:
+#   1. cwd is set correctly so `node_modules/tsx` resolves
+#   2. macOS Login Items shows a meaningful name, not "node" or "zsh"
+set -e
+
+SKILL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+export PATH="$HOME/.volta/bin:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
+cd "$SKILL_DIR"
+
+# Use the locally-installed tsx (preserves correct module resolution for src/).
+exec node_modules/.bin/tsx src/mcp-server.ts "$@"

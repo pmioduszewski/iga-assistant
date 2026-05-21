@@ -1,0 +1,21 @@
+#!/bin/zsh
+# iga-email-triage — daily Gmail triage launcher.
+# Named wrapper for the LaunchAgent so macOS Login Items shows a
+# meaningful name instead of "zsh".
+set -e
+
+SKILL_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+LOG_DIR="$HOME/Library/Logs/iga"
+
+export PATH="$HOME/.volta/bin:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
+mkdir -p "$LOG_DIR"
+
+cd "$SKILL_DIR"
+
+DATE=$(date +%Y-%m-%d)
+JSON_OUT="$LOG_DIR/email-triage-$DATE.json"
+
+# stdout (JSON report) → dated file
+# stderr (human summary + warnings) → rolling err.log via the plist
+exec pnpm tsx src/cli.ts triage --apply --json > "$JSON_OUT"

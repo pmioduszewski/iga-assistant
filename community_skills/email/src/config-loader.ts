@@ -63,7 +63,8 @@ async function readFileSafe(p: string): Promise<string | null> {
 /**
  * Extract markdown table rows. Returns array of cell arrays per row, with the
  * header row included as the first entry (separator rows are skipped).
- * Tolerant: ignores tables that don't have at least 2 separator rows.
+ * Tolerant: only treats a block as a table when a header line is immediately
+ * followed by a separator line (e.g. `|---|---|`); other lines are ignored.
  */
 function parseMarkdownTables(md: string): string[][][] {
   const tables: string[][][] = [];

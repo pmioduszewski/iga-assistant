@@ -1,5 +1,5 @@
 /**
- * LLM classifier — batched Sonnet 4.5 calls via `claude -p` (headless mode).
+ * LLM classifier — batched Sonnet 4.6 calls via `claude -p` (headless mode).
  *
  * Why headless `claude -p` instead of direct API: the user is on a Claude MAX
  * subscription, so `claude -p` calls hit his subscription quota with zero

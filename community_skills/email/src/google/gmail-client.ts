@@ -121,32 +121,43 @@ export class GmailClient {
     const labels = res.data.labels ?? [];
     // The list endpoint omits color; we must fetch per-label to know it.
     // Only user labels can have user-set colors — system labels never do.
-    const summaries: GmailLabelSummary[] = await Promise.all(
-      labels.map(async (l): Promise<GmailLabelSummary> => {
+    // Bound concurrency (GET_CONCURRENCY) so accounts with many labels don't
+    // fire an unbounded burst of users.labels.get calls (rate-limit risk).
+    const summaries: GmailLabelSummary[] = new Array(labels.length);
+    const gmail = this.gmail;
+    let cursor = 0;
+    const worker = async (): Promise<void> => {
+      while (true) {
+        const idx = cursor++;
+        if (idx >= labels.length) return;
+        const l = labels[idx]!;
         const base: GmailLabelSummary = {
           id: l.id ?? "",
           name: l.name ?? "",
           type: l.type ?? "user",
         };
-        if ((l.type ?? "user") !== "user") return base;
-        try {
-          const full = await this.gmail.users.labels.get({
-            userId: "me",
-            id: base.id,
-          });
-          const c = full.data.color;
-          if (c?.textColor && c.backgroundColor) {
-            base.color = {
-              textColor: c.textColor,
-              backgroundColor: c.backgroundColor,
-            };
+        if ((l.type ?? "user") === "user") {
+          try {
+            const full = await gmail.users.labels.get({ userId: "me", id: base.id });
+            const c = full.data.color;
+            if (c?.textColor && c.backgroundColor) {
+              base.color = {
+                textColor: c.textColor,
+                backgroundColor: c.backgroundColor,
+              };
+            }
+          } catch {
+            // tolerate per-label fetch failures — return what we have
           }
-        } catch {
-          // tolerate per-label fetch failures — return what we have
         }
-        return base;
-      }),
-    );
+        summaries[idx] = base;
+      }
+    };
+    const workers: Promise<void>[] = [];
+    for (let i = 0; i < Math.min(GET_CONCURRENCY, labels.length); i++) {
+      workers.push(worker());
+    }
+    await Promise.all(workers);
     return summaries;
   }
 

@@ -1,7 +1,7 @@
 # @iga/email — Email Triage Engine
 
 Engine that labels Gmail inboxes using a deterministic pre-filter + a batched
-Sonnet 4.5 classifier, then optionally dispatches per-label hooks.
+Sonnet 4.6 classifier, then optionally dispatches per-label hooks.
 
 The engine is OSS-clean — all per-user config (account aliases, label
 preferences, per-sender rules) lives in `rules/email/` and `rules/hooks/`.
@@ -13,13 +13,13 @@ unread → pre-filter (rules table) ──► matched? → decision
                                           │
                                           └─► no
                                                 ▼
-                                          LLM classifier (batched Sonnet 4.5)
+                                          LLM classifier (batched Sonnet 4.6)
                                                 │
                                                 ▼
                                           label-resolver (name → id per account)
                                                 │
                                                 ▼
-                                          Gmail.applyLabels (via iga-gmail MCP)
+                                          Gmail.applyLabels (direct googleapis)
                                                 │
                                                 ▼ (if --run-hooks)
                                           hook-runner → newsletter-research / …
@@ -73,8 +73,8 @@ triage-mail [options]
 - `src/cli.ts` — entry point
 - `src/triage.ts` — orchestrator
 - `src/pre-filter.ts` — deterministic rule table (first-match-wins)
-- `src/classifier.ts` — batched Sonnet 4.5 via `claude -p`
-- `src/gmail.ts` — `iga-gmail` MCP wrapper (v1 stubs + mock)
+- `src/classifier.ts` — batched Sonnet 4.6 via `claude -p`
+- `src/gmail.ts` — Gmail facade over direct googleapis (`src/google/gmail-client.ts`) + mock mode
 - `src/label-resolver.ts` — name → id cache per account
 - `src/hook-runner.ts` — parse `rules/hooks/*.md`, dispatch matching hooks
 - `src/hooks/newsletter-research.ts` — first hook (v1: emits digest JSON)
@@ -105,7 +105,6 @@ A future `community_rules/email-*.md` will ship redacted installable templates.
 
 ## Not in v1
 
-- Live `iga-gmail` MCP client (currently stubbed; `IGA_EMAIL_MOCK=1` for tests)
 - Auto-archive logic beyond day-1
 - Snooze handling
 - Notion mirror (Vault DB not built)

@@ -72,7 +72,7 @@ triggers:
   - kind: scheduled
     spec: "launchd LaunchAgent — see engine/launchd/com.iga.email-triage.plist (Phase 2)"
   - kind: auto
-    spec: "matches any intent_triggers pattern in a user message → Iga calls mcp__iga_email__triage"
+    spec: "matches any intent_triggers pattern in a user message → Iga calls mcp__iga-email__triage"
 mempalace_wings:
   - projects/iga
 mcp_dependencies: []
@@ -107,7 +107,7 @@ listUnread (googleapis)             pre-filter rules
 | How | Example |
 |---|---|
 | CLI subcommands | `iga-mail triage --account work --apply --json` |
-| MCP tools | `mcp__iga_email__triage({account:["work"], dryRun:false})` |
+| MCP tools | `mcp__iga-email__triage({account:["work"], dryRun:false})` |
 | Natural-language auto-invoke | "Iga, triage my personal inbox" → calls MCP tool |
 | Scheduled (Phase 2) | launchd fires `iga-mail triage --apply --account all` daily |
 
@@ -120,12 +120,12 @@ listUnread (googleapis)             pre-filter rules
 
 Triage output is intentionally NOT persisted to MemPalace per session. Gmail labels are the source of truth. The engine emits a JSON report to stdout/stderr for the caller (CLI or MCP) to consume; nothing is filed automatically.
 
-The newsletter-research hook (separate skill: `skills/newsletter-research/`) is the exception — when fired, it WRITES to MemPalace with research output for labeled newsletters.
+The newsletter-research hook (separate skill: `skills/newsletter-research/`) is related — when fired, its handler emits a research-digest payload (URLs, body preview, message id) to stdout for the caller/conversational layer to act on; it does NOT itself write to MemPalace.
 
 ## Surfacing rules
 
 - **Default mode:** silent. the user invokes; engine runs; report goes back to the caller.
-- **Auto-invoke:** when the user's message matches `intent_triggers`, call `mcp__iga_email__triage` with sensible defaults (`dryRun: false` only if his phrasing is unambiguous about applying; otherwise `dryRun: true` and show preview).
+- **Auto-invoke:** when the user's message matches `intent_triggers`, call `mcp__iga-email__triage` with sensible defaults (`dryRun: false` only if his phrasing is unambiguous about applying; otherwise `dryRun: true` and show preview).
 - **Scheduled mode (Phase 2):** runs autonomously. Output logs to `~/Library/Logs/iga/email-triage-<date>.json`. Summary surfaced in next `/gm`.
 
 ## Configuration sources (the OSS-clean separation)
@@ -160,7 +160,7 @@ Safety defaults: `triage.dryRun = true`. Destructive ops require `confirm: true`
 ## How a typical session goes
 
 1. the user: "Iga, triage my personal inbox."
-2. Iga: calls `mcp__iga_email__triage({account: ["personal"], dryRun: true, maxResults: 25})`
+2. Iga: calls `mcp__iga-email__triage({account: ["personal"], dryRun: true, maxResults: 25})`
 3. Iga: shows compressed summary table of decisions; asks via AskUserQuestion if he wants to apply
 4. On confirm: same call with `dryRun: false`
 5. Reports labels applied + any `missingLabels` (suggests `labels_ensure` if any)

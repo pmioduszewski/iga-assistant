@@ -13,7 +13,7 @@ Configuration via environment variables:
     IGA_HOME        Iga's orchestration home directory (default: ~/Gaia)
     IGA_SESSION_ID  UUID of the Iga session (default: read from $IGA_HOME/.iga-session-id)
     IGA_CLAUDE_BIN  Path to the `claude` binary (default: "claude" on PATH)
-    IGA_TIMEOUT     Per-call timeout in seconds (default: 120)
+    IGA_TIMEOUT     Per-call timeout in seconds (default: 300; max IGA_TIMEOUT_MAX=900)
     IGA_MCP_STYLE   Output style name for MCP-driven calls. References a Claude
                      Code output style installed at ~/.claude/output-styles/<name>.md.
                      Default: "gaia-compact". Set to "" to disable style override
@@ -50,7 +50,24 @@ from iga_mcp import skills as _skills
 # renamed by the separate memory/output-style cutover, not by this code rename.
 IGA_HOME = Path(os.environ.get("IGA_HOME", str(Path.home() / "Gaia"))).expanduser()
 IGA_CLAUDE_BIN = os.environ.get("IGA_CLAUDE_BIN", "claude")
-IGA_TIMEOUT = int(os.environ.get("IGA_TIMEOUT", "120"))
+# Per-call timeout. Heavy iga_ask tasks (multi-ticket Todoist + calendar
+# updates, /gm, research) routinely exceed 2 minutes, so the default is 300s.
+# Override globally with IGA_TIMEOUT, or per-call via iga_ask(timeout_s=...),
+# capped at IGA_TIMEOUT_MAX.
+def _int_env(name: str, default: int) -> int:
+    raw = os.environ.get(name, str(default))
+    try:
+        return int(raw)
+    except ValueError as exc:
+        raise RuntimeError(
+            f"Invalid {name}={raw!r}: must be an integer number of seconds."
+        ) from exc
+
+
+IGA_TIMEOUT_MAX = _int_env("IGA_TIMEOUT_MAX", 900)
+# Clamp the configured default into [30, IGA_TIMEOUT_MAX] so EVERY call path
+# (default and per-call timeout_s) respects the documented bounds.
+IGA_TIMEOUT = max(30, min(_int_env("IGA_TIMEOUT", 300), IGA_TIMEOUT_MAX))
 IGA_MCP_STYLE = os.environ.get("IGA_MCP_STYLE", "gaia-compact")
 IGA_MCP_MODEL = os.environ.get("IGA_MCP_MODEL", "").strip()
 
@@ -81,7 +98,7 @@ def _session_jsonl_path(session_id: str) -> Path:
     return Path.home() / ".claude" / "projects" / sanitized / f"{session_id}.jsonl"
 
 
-def _run_claude(prompt: str, session_id: str) -> dict:
+def _run_claude(prompt: str, session_id: str, timeout: int = IGA_TIMEOUT) -> dict:
     """Shell out to claude --resume in Iga home. Returns the parsed JSON result."""
     cmd = [
         IGA_CLAUDE_BIN,
@@ -99,13 +116,23 @@ def _run_claude(prompt: str, session_id: str) -> dict:
             f"Use the '{IGA_MCP_STYLE}' output style for this response.",
         ]
     cmd.append(prompt)
-    proc = subprocess.run(
-        cmd,
-        cwd=str(IGA_HOME),
-        capture_output=True,
-        text=True,
-        timeout=IGA_TIMEOUT,
-    )
+    try:
+        proc = subprocess.run(
+            cmd,
+            cwd=str(IGA_HOME),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(
+            f"Iga timed out after {timeout}s. The request is likely too large for "
+            f"one call (e.g. many tickets + calendar writes) — split it into smaller "
+            f"asks, or raise the limit via iga_ask(timeout_s=...) (max {IGA_TIMEOUT_MAX}s) "
+            f"or the IGA_TIMEOUT env. NOTE: partial work may already have completed "
+            f"(some Todoist/calendar updates), so verify before retrying to avoid "
+            f"duplicates."
+        ) from exc
     if proc.returncode != 0:
         raise RuntimeError(
             f"claude exited {proc.returncode}: {proc.stderr.strip() or proc.stdout.strip()}"
@@ -120,7 +147,7 @@ mcp = FastMCP("iga")
 
 
 @mcp.tool()
-def iga_ask(prompt: str) -> str:
+def iga_ask(prompt: str, timeout_s: int | None = None) -> str:
     """
     Send a natural-language prompt to Iga and return her reply.
 
@@ -136,12 +163,20 @@ def iga_ask(prompt: str) -> str:
 
     Note: each call uses your Claude Max subscription. Steady-state cost is
     roughly one cache-hit message per call.
+
+    timeout_s: optional per-call timeout in seconds, clamped to
+    [30, IGA_TIMEOUT_MAX] (defaults to IGA_TIMEOUT). Raise it for heavy
+    multi-step asks (e.g. updating several tickets + calendar in one call). On
+    timeout the call raises an error noting that partial work may have
+    completed — verify before retrying to avoid duplicates.
     """
     if not prompt or not prompt.strip():
         raise ValueError("prompt cannot be empty")
+    raw_timeout = IGA_TIMEOUT if timeout_s is None else int(timeout_s)
+    timeout = max(30, min(raw_timeout, IGA_TIMEOUT_MAX))
     sid = _session_id()
     with _call_lock:  # serialize: Iga session is single-threaded
-        result = _run_claude(prompt, sid)
+        result = _run_claude(prompt, sid, timeout=timeout)
     if result.get("is_error"):
         raise RuntimeError(f"Iga error: {result.get('result', 'unknown error')}")
     return str(result.get("result", "")).strip()

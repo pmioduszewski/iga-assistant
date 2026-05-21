@@ -95,7 +95,7 @@ Current hooks:
 
 ## OSS-clean separation
 
-Engine has zero hardcoded the user data. Everything personal lives in:
+Engine has zero hardcoded user data. Everything personal lives in:
 
 - `rules/email/taxonomy.md` — label set + inbox-stays/archive rules
 - `rules/email/accounts.md` — Gmail accounts, per-sender rules, promo domains

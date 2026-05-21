@@ -1,7 +1,7 @@
 /**
  * Shared types for the Iga email triage engine.
  *
- * The engine is generic — no the user-specific data lives here. Account aliases,
+ * The engine is generic — no user-specific data lives here. Account aliases,
  * label whitelists, and per-sender rules come from `rules/email/*.md` and are
  * loaded at runtime.
  */

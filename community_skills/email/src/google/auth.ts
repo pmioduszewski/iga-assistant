@@ -27,7 +27,7 @@ const GWS_CREDS_DIR = path.join(
 /**
  * Convert an email address into the gws credential filename slug.
  *
- *   "the user@Example.com" → "user_at_example_dot_com"
+ *   "User@Example.com" → "user_at_example_dot_com"
  */
 export function slugForEmail(email: string): string {
   return email

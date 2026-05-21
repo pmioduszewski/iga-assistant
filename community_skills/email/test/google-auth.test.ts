@@ -19,7 +19,7 @@ describe("slugForEmail", () => {
 
   it("lowercases input", () => {
     assert.equal(
-      slugForEmail("the user@Example.COM"),
+      slugForEmail("User@Example.COM"),
       "user_at_example_dot_com",
     );
   });

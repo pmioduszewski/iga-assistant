@@ -34,7 +34,7 @@ prerequisites:
     check: cmd(node)
     severity: error
   - name: rules-email-config
-    description: Per-user account list + taxonomy + sender rules — the user-personal config consumed by the engine
+    description: Per-user account list + taxonomy + sender rules — user-personal config consumed by the engine
     check: file(rules/email/accounts.md)
     guide: docs/setup-rules.md
     severity: warning
@@ -85,7 +85,7 @@ Direct Gmail API engine (googleapis npm). Pre-filter rules + Sonnet classifier +
 
 ## Purpose
 
-the user runs four Gmail accounts (work/personal/biz/umbrella). Triaging them manually is a daily 15-30 min tax. This skill compresses it to ~30 seconds of Sonnet classification + one Gmail `batchModify` call per account. the user can run it interactively ("Iga, triage my work inbox") or via launchd at 06:00 so the inbox is groomed before he wakes.
+The user runs several Gmail accounts (e.g. work, personal, business). Triaging them manually is a daily 15-30 min tax. This skill compresses it to ~30 seconds of Sonnet classification + one Gmail `batchModify` call per account. It can be run interactively ("Iga, triage my work inbox") or via launchd at 06:00 so the inbox is groomed before the day starts.
 
 ## Architecture
 
@@ -133,14 +133,14 @@ The newsletter-research hook (separate skill: `skills/newsletter-research/`) is 
 | Layer | Where | Owned by |
 |---|---|---|
 | Engine code | `skills/email/src/` | Skill (OSS-publishable) |
-| Account list, sender rules | `rules/email/accounts.md` | the user-personal data — gitignored |
-| Taxonomy + label colors | `rules/email/taxonomy.md` | the user-personal data — gitignored |
-| Optional override of default pre-filter rules | `rules/email/overrides.md` | the user-personal — see `rules/email/overrides.md.example` |
-| Skill instructions (this file) | `skills/email/SKILL.md` | OSS-publishable, no the user data |
-| the user-personal SKILL overrides | `skills/email/SKILL.local.md` | the user — gitignored, optional |
+| Account list, sender rules | `rules/email/accounts.md` | user-personal data — gitignored |
+| Taxonomy + label colors | `rules/email/taxonomy.md` | user-personal data — gitignored |
+| Optional override of default pre-filter rules | `rules/email/overrides.md` | user-personal — see `rules/email/overrides.md.example` |
+| Skill instructions (this file) | `skills/email/SKILL.md` | OSS-publishable, no user data |
+| user-personal SKILL overrides | `skills/email/SKILL.local.md` | the user — gitignored, optional |
 | OAuth tokens | `~/.local/share/iga-email/credentials/<slug>.json` | Outside repo, file-permissioned |
 
-Engine reads `rules/email/*` at runtime via `IGA_RULES_DIR` env or auto-discovery (walks up parents looking for `rules/email/accounts.md`). No the user data lives in `skills/email/` itself.
+Engine reads `rules/email/*` at runtime via `IGA_RULES_DIR` env or auto-discovery (walks up parents looking for `rules/email/accounts.md`). No user data lives in `skills/email/` itself.
 
 ## MCP tools (when Iga is loaded)
 

@@ -88,7 +88,7 @@ export async function triage(opts: TriageOptions, preview?: PreviewFn): Promise<
       const accountDecisions = report.decisions.filter(
         (d) => d.message.account === account.alias,
       );
-      const missing = await applyDecisions(account, accountDecisions, taxonomy);
+      const missing = await applyDecisions(account, accountDecisions);
       for (const name of missing) {
         report.missingLabels.push({ account: account.alias, name });
       }
@@ -171,7 +171,6 @@ async function classifyAccount(
 async function applyDecisions(
   account: AccountConfig,
   decisions: TriageDecision[],
-  taxonomy: TaxonomyConfig,
 ): Promise<string[]> {
   const missingAll = new Set<string>();
   const items: BatchModifyItem[] = [];
@@ -204,6 +203,5 @@ async function applyDecisions(
     await batchApplyLabels(account.alias, account.email, items);
   }
 
-  void taxonomy;
   return [...missingAll];
 }

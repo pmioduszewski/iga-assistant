@@ -28,7 +28,7 @@ unread → pre-filter (rules table) ──► matched? → decision
 ## Install
 
 ```bash
-cd skills/email
+cd community_skills/email   # or skills/email once installed via `iga install email`
 npm install
 ```
 
@@ -42,15 +42,16 @@ npm test
 IGA_EMAIL_MOCK=1 npm run triage-mail -- --mock --dry-run --json
 ```
 
-## Live use (when MCP wiring lands)
+## Live use
 
-Today, `src/gmail.ts` is a documented shim. The engine knows the exact
-`manage_email` MCP calls it would make and logs them. Set `IGA_EMAIL_MOCK=1`
-for fixture-driven runs.
+`src/gmail.ts` routes live calls through the direct googleapis-backed
+`GmailClient` (`src/google/gmail-client.ts`) — no external MCP or CLI is
+required. Per-account OAuth refresh tokens are read from
+`~/.local/share/iga-email/credentials/<slug>.json`. Set `IGA_EMAIL_MOCK=1`
+for fixture-driven runs with no Gmail auth.
 
-In v2 the engine will either spawn the `iga-gmail` MCP as a sibling process
-or be invoked from within an Anthropic Agent SDK runtime that has the MCP
-preloaded. The pre-filter / classifier / hook-runner logic does not change.
+The engine is also exposed as the `iga-email` MCP server (`src/mcp-server.ts`):
+`triage`, `search`, `read`, `labels_*`, `filters_*`, `archive`, `delete`.
 
 ## CLI
 

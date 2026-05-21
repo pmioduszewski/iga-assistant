@@ -61,7 +61,8 @@ async function readFileSafe(p: string): Promise<string | null> {
 }
 
 /**
- * Extract markdown table rows. Returns array of cell arrays per row (excluding header).
+ * Extract markdown table rows. Returns array of cell arrays per row, with the
+ * header row included as the first entry (separator rows are skipped).
  * Tolerant: ignores tables that don't have at least 2 separator rows.
  */
 function parseMarkdownTables(md: string): string[][][] {

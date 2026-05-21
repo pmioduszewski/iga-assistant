@@ -9,6 +9,7 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { getGmailClient } from "./google/gmail-client.js";
 import type { BatchModifyItem } from "./google/types.js";
 import type { AccountAlias, GmailMessage } from "./types.js";
@@ -24,7 +25,7 @@ let mockFixturesCache: MockFixtures | null = null;
 
 async function loadMockFixtures(): Promise<MockFixtures> {
   if (mockFixturesCache) return mockFixturesCache;
-  const here = path.dirname(new URL(import.meta.url).pathname);
+  const here = path.dirname(fileURLToPath(import.meta.url));
   const fixtureRoot = path.resolve(here, "..", "test", "fixtures");
   const unreadPath = path.join(fixtureRoot, "unread.json");
   const labelsPath = path.join(fixtureRoot, "labels.json");
@@ -107,7 +108,7 @@ export async function readBody(
   bodyFormat: "html" | "text" = "text",
 ): Promise<{ subject: string; body: string }> {
   if (MOCK) {
-    return { subject: "[mock]", body: "Mock body. Set IGA_EMAIL_MOCK=0 to use live MCP." };
+    return { subject: "[mock]", body: "Mock body. Set IGA_EMAIL_MOCK=0 to use live Gmail (direct googleapis)." };
   }
   const client = await getGmailClient(account, accountEmail);
   return client.readBody(messageId, bodyFormat);

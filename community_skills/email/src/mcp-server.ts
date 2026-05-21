@@ -340,7 +340,7 @@ export async function handleSearch(input: SearchInput): Promise<ToolResult> {
           from: m.from,
           subject: m.subject,
           date: m.internalDate ? new Date(m.internalDate).toISOString() : "",
-          snippet: m.bodyPreview,
+          snippet: m.snippet,
         });
       }
     }

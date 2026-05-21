@@ -6,13 +6,13 @@ Wakes the Mac at 05:55 and triages all 4 inboxes at 06:00 every day. By the time
 
 - macOS (launchd is native)
 - Engine working interactively first: `pnpm tsx src/cli.ts triage --account umbrella --dry-run --json --max 3` returns sensible output
-- OAuth tokens present at `~/.local/share/google-workspace-mcp/credentials/`
+- OAuth tokens present at `~/.local/share/iga-email/credentials/`
 - `claude` CLI on `$PATH` (for the LLM classifier subprocess)
 
 ## One-time install (3 commands)
 
 ```sh
-cd ~/Gaia/skills/email
+cd ~/Gaia/skills/email   # installed location (in-repo template: community_skills/email)
 chmod +x engine/launchd/install.sh engine/launchd/uninstall.sh
 ./engine/launchd/install.sh
 ```
@@ -73,7 +73,7 @@ Each daily run: ~30-60 sec wallclock. ~10 calls to `claude -p` (4 accounts × ~2
 ## Uninstall
 
 ```sh
-~/Gaia/skills/email/engine/launchd/uninstall.sh
+~/Gaia/skills/email/engine/launchd/uninstall.sh   # installed location (in-repo template: community_skills/email)
 sudo pmset repeat cancel  # optional, removes the wake schedule
 ```
 

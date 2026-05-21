@@ -16,8 +16,8 @@ intent_triggers:
   - "/iga-mail"
 prerequisites:
   - name: oauth-credentials
-    description: OAuth refresh tokens for each Gmail account (read from gws cache for now; engine reuses existing google-workspace-mcp credentials)
-    check: file(~/.local/share/google-workspace-mcp/credentials)
+    description: OAuth refresh tokens for each Gmail account, one JSON per account at ~/.local/share/iga-email/credentials/<slug>.json
+    check: file(~/.local/share/iga-email/credentials)
     guide: docs/setup-oauth.md
     severity: error
   - name: claude-cli
@@ -68,7 +68,7 @@ triggers:
   - kind: slash-command
     spec: "iga-mail trash <messageId...>"
   - kind: mcp-tool
-    spec: "mcp__iga_email__triage / labels_* / filters_* / trash"
+    spec: "mcp__iga-email__triage / search / read / labels_* / filters_* / archive / delete"
   - kind: scheduled
     spec: "launchd LaunchAgent — see engine/launchd/com.iga.email-triage.plist (Phase 2)"
   - kind: auto
@@ -138,7 +138,7 @@ The newsletter-research hook (separate skill: `skills/newsletter-research/`) is 
 | Optional override of default pre-filter rules | `rules/email/overrides.md` | the user-personal — see `rules/email/overrides.md.example` |
 | Skill instructions (this file) | `skills/email/SKILL.md` | OSS-publishable, no the user data |
 | the user-personal SKILL overrides | `skills/email/SKILL.local.md` | the user — gitignored, optional |
-| OAuth tokens | `~/.local/share/google-workspace-mcp/credentials/<slug>.json` | Outside repo, file-permissioned |
+| OAuth tokens | `~/.local/share/iga-email/credentials/<slug>.json` | Outside repo, file-permissioned |
 
 Engine reads `rules/email/*` at runtime via `IGA_RULES_DIR` env or auto-discovery (walks up parents looking for `rules/email/accounts.md`). No the user data lives in `skills/email/` itself.
 
@@ -153,7 +153,7 @@ Engine reads `rules/email/*` at runtime via `IGA_RULES_DIR` env or auto-discover
 | `filters_list` | List Gmail filters | No |
 | `filters_create` | Create a Gmail-side filter | Yes |
 | `filters_delete` | Delete one or more filters; requires `confirm: true` | Yes |
-| `trash` | batchDelete messages; requires `confirm: true` | Yes |
+| `delete` | batchDelete messages; requires `confirm: true` (CLI alias: `trash`) | Yes |
 
 Safety defaults: `triage.dryRun = true`. Destructive ops require `confirm: true`.
 

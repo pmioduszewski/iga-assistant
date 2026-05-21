@@ -19,6 +19,7 @@ const {
   handleFiltersCreate,
   handleFiltersDelete,
   handleLabelsCreate,
+  handleSearch,
 } = await import("../src/mcp-server.js");
 
 function textOf(result: { content: Array<{ type: string; text: string }>; isError?: boolean }): string {
@@ -108,5 +109,25 @@ describe("mcp-server handlers", () => {
     const result = await handleLabelsCreate({ account: "work", name: "  " });
     assert.equal(result.isError, true);
     assert.match(textOf(result), /name/);
+  });
+
+  it("search with empty query returns a validation error", async () => {
+    const result = await handleSearch({ query: "" });
+    assert.equal(result.isError, true);
+    assert.match(textOf(result), /non-empty query/);
+  });
+
+  it("search with whitespace-only query returns a validation error", async () => {
+    const result = await handleSearch({ query: "   " });
+    assert.equal(result.isError, true);
+    assert.match(textOf(result), /non-empty query/);
+  });
+
+  it("search with unknown account returns helpful error listing valid aliases", async () => {
+    const result = await handleSearch({ account: "not-a-real-alias", query: "from:vercel.com" });
+    assert.equal(result.isError, true);
+    const msg = textOf(result);
+    assert.match(msg, /not-a-real-alias/);
+    assert.match(msg, /Valid aliases/);
   });
 });

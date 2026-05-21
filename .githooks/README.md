@@ -1,19 +1,25 @@
-# Git hooks — local secret guard
+# iga-guard — LLM privacy/PII guard hooks
 
-`pre-commit` and `pre-push` run **ggshield** (the same engine GitGuardian
-runs on PRs) so secrets are caught *before* a commit object exists — long
-before anything is pushed. Triaged false positives live in
-`../.gitguardian.yaml` (each with a written reason); the hooks never weaken
-detection.
+pre-commit / commit-msg / pre-push hooks that ask an **LLM** whether your change
+is safe to publish to this public, generic OSS repo — blocking anything
+user-specific (real people / clients / companies / projects, emails, phones,
+finances, secrets, home paths, private URLs, calendar/health/relationship data).
+There is **no static denylist** — the judge adapts to whatever a living, personal
+setup might contain.
 
-## Activate (once per clone — hooks dirs aren't auto-enabled by git)
-
-```sh
+## Enable (any clone)
+```
 git config core.hooksPath .githooks
-brew install ggshield   # if not already present
 ```
 
-Verify: `git config core.hooksPath` → `.githooks`.
+## Judge backend (auto-detected, first available wins, fail-CLOSED)
+- **Claude Code** — `claude` on PATH  (`IGA_GUARD_MODEL`, default `claude-sonnet-4-6`)
+- **GitHub Models** — `gh models` extension  (`IGA_GUARD_GH_MODEL`, default `openai/gpt-4o`)
 
-Emergency bypass: `git commit --no-verify` (the server-side PR check still
-runs regardless, so this only defers the gate, never removes it).
+If no judge is available, commits/pushes are **blocked** (a guard you can't run
+must not silently pass).
+
+## Overrides (use sparingly)
+- `IGA_GUARD_OFF=1 git …` — skip the guard for one command
+- `IGA_GUARD_MODEL` / `IGA_GUARD_GH_MODEL` — choose the model
+- `IGA_GUARD_MAXBYTES` — max diff bytes sent to the judge (default 120000)

@@ -54,8 +54,20 @@ IGA_CLAUDE_BIN = os.environ.get("IGA_CLAUDE_BIN", "claude")
 # updates, /gm, research) routinely exceed 2 minutes, so the default is 300s.
 # Override globally with IGA_TIMEOUT, or per-call via iga_ask(timeout_s=...),
 # capped at IGA_TIMEOUT_MAX.
-IGA_TIMEOUT = int(os.environ.get("IGA_TIMEOUT", "300"))
-IGA_TIMEOUT_MAX = int(os.environ.get("IGA_TIMEOUT_MAX", "900"))
+def _int_env(name: str, default: int) -> int:
+    raw = os.environ.get(name, str(default))
+    try:
+        return int(raw)
+    except ValueError as exc:
+        raise RuntimeError(
+            f"Invalid {name}={raw!r}: must be an integer number of seconds."
+        ) from exc
+
+
+IGA_TIMEOUT_MAX = _int_env("IGA_TIMEOUT_MAX", 900)
+# Clamp the configured default into [30, IGA_TIMEOUT_MAX] so EVERY call path
+# (default and per-call timeout_s) respects the documented bounds.
+IGA_TIMEOUT = max(30, min(_int_env("IGA_TIMEOUT", 300), IGA_TIMEOUT_MAX))
 IGA_MCP_STYLE = os.environ.get("IGA_MCP_STYLE", "gaia-compact")
 IGA_MCP_MODEL = os.environ.get("IGA_MCP_MODEL", "").strip()
 
@@ -151,13 +163,17 @@ def iga_ask(prompt: str, timeout_s: int | None = None) -> str:
 
     Note: each call uses your Claude Max subscription. Steady-state cost is
     roughly one cache-hit message per call.
+
+    timeout_s: optional per-call timeout in seconds, clamped to
+    [30, IGA_TIMEOUT_MAX] (defaults to IGA_TIMEOUT). Raise it for heavy
+    multi-step asks (e.g. updating several tickets + calendar in one call). On
+    timeout the call raises an error noting that partial work may have
+    completed — verify before retrying to avoid duplicates.
     """
     if not prompt or not prompt.strip():
         raise ValueError("prompt cannot be empty")
-    if timeout_s is None:
-        timeout = IGA_TIMEOUT
-    else:
-        timeout = max(30, min(int(timeout_s), IGA_TIMEOUT_MAX))
+    raw_timeout = IGA_TIMEOUT if timeout_s is None else int(timeout_s)
+    timeout = max(30, min(raw_timeout, IGA_TIMEOUT_MAX))
     sid = _session_id()
     with _call_lock:  # serialize: Iga session is single-threaded
         result = _run_claude(prompt, sid, timeout=timeout)

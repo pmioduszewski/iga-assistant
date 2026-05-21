@@ -1,87 +1,91 @@
 #!/usr/bin/env bash
 #
-# iga-guard — personalization / PII guard for the Iga OSS repo.
+# iga-guard — LLM privacy/PII judge for an open-source repo.
 #
-# Blocks commits/pushes whose content or message contains personalization-layer
-# data that must never reach the public repo. Two stages:
-#   1. Deterministic denylist (fast, offline).
-#   2. LLM review via `claude -p` (Claude Code headless) — catches things the
-#      denylist doesn't anticipate.
+# A static denylist can never keep up with a living, personal AI layer, so this
+# guard has NO dictionary. It asks an LLM to judge whether a change is safe to
+# publish to a PUBLIC, GENERIC, reusable repo — blocking anything user-specific
+# (real people / clients / companies / projects, emails, phones, finances,
+# secrets, home paths, private URLs, calendar/health/relationship data, etc.).
 #
-# The denylist lives OUTSIDE the tracked tree so it can hold the actual secret
-# terms without ever being committed:
-#     $IGA_HOOK_DENYLIST  (default: <repo>/.git/iga-guard-denylist.txt)
+# Judge backend, auto-detected (first available wins):
+#   1. Claude Code     →  `claude -p`            (IGA_GUARD_MODEL, default sonnet)
+#   2. GitHub Models   →  `gh models run`        (IGA_GUARD_GH_MODEL)
 #
-# Escape hatches (use sparingly, for genuine false positives):
-#     IGA_HOOK_LLM=0   git commit ...      # skip stage 2 only
-#     IGA_GUARD_OFF=1  git commit ...      # skip the guard entirely
+# Fail-CLOSED: if no judge is available or it errors, the commit/push is BLOCKED
+# (a guard you can't run must not silently pass). Emergency override (rare,
+# deliberate): IGA_GUARD_OFF=1.
 #
-# The ONLY real name allowed in the repo is the maintainer's, in LICENSE /
-# pyproject authorship / repo URLs. Everything else user-specific is blocked.
+# Enable in any clone:  git config core.hooksPath .githooks
+#
 set -euo pipefail
 
-[ "${IGA_GUARD_OFF:-0}" = "1" ] && exit 0
-
-mode="${1:-}"; shift || true
-ROOT="$(git rev-parse --show-toplevel)"
-DENYLIST="${IGA_HOOK_DENYLIST:-$ROOT/.git/iga-guard-denylist.txt}"
-EMPTY_TREE="4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-
-gather() {
-  case "$mode" in
-    staged) git diff --cached --no-color ;;
-    msg)    cat "$1" ;;
-    range)  git diff --no-color "$1" ;;
-    *) echo "iga-guard: unknown mode '$mode'" >&2; exit 2 ;;
-  esac
-}
-
-# Pre-push fast path: grep the pushed tree against the denylist directly.
-# Robust to rewritten/force-pushed history where the old remote SHA no longer
-# exists locally (a diff range would error). Denylist-only (commit-msg/pre-commit
-# already ran the LLM stage at authoring time).
-if [ "$mode" = "tree" ]; then
-  sha="${1:-HEAD}"
-  if [ -f "$DENYLIST" ]; then
-    pat="$(grep -vE '^[[:space:]]*(#|$)' "$DENYLIST" | sed 's/[][\.^$*+?(){}|/]/\\&/g' | paste -sd'|' -)"
-    if [ -n "$pat" ]; then
-      hits="$(git grep -inE "$pat" "$sha" -- . ':(exclude)**/pnpm-lock.yaml' ':(exclude)**/package-lock.json' 2>/dev/null | head -10 || true)"
-      if [ -n "$hits" ]; then
-        echo "🚫 iga-guard: blocked push — denylist term(s) in pushed tree ${sha:0:12}:" >&2
-        echo "$hits" >&2
-        exit 1
-      fi
-    fi
-  fi
+if [ "${IGA_GUARD_OFF:-0}" = "1" ]; then
+  echo "iga-guard: SKIPPED (IGA_GUARD_OFF=1)" >&2
   exit 0
 fi
 
-text="$(gather "${1:-}")"
-[ -z "$text" ] && exit 0
+mode="${1:-}"; shift || true
+MAXBYTES="${IGA_GUARD_MAXBYTES:-120000}"
 
-# ---- Stage 1: denylist ------------------------------------------------------
-if [ -f "$DENYLIST" ]; then
-  pat="$(grep -vE '^[[:space:]]*(#|$)' "$DENYLIST" | sed 's/[][\.^$*+?(){}|/]/\\&/g' | paste -sd'|' -)"
-  if [ -n "$pat" ]; then
-    hits="$(printf '%s' "$text" | grep -inE "$pat" | head -10 || true)"
-    if [ -n "$hits" ]; then
-      echo "🚫 iga-guard: blocked — personalization-layer term(s) detected:" >&2
-      echo "$hits" >&2
-      echo "→ Replace with generic placeholders. False positive? edit $DENYLIST." >&2
-      exit 1
-    fi
+case "$mode" in
+  staged) payload="$(git diff --cached --no-color)";          label="staged diff" ;;
+  msg)    payload="commit message:"$'\n'"$(cat "$1")";        label="commit message" ;;
+  range)  payload="$(git diff --no-color "$1" 2>/dev/null)";  label="pushed diff" ;;
+  *) echo "iga-guard: unknown mode '$mode'" >&2; exit 2 ;;
+esac
+
+# Nothing substantive to check.
+[ -z "${payload//[[:space:]]/}" ] && exit 0
+payload="$(printf '%s' "$payload" | head -c "$MAXBYTES")"
+
+SYS='You are a strict privacy guard for a PUBLIC, open-source repository. The repo is a GENERIC, reusable layer (an AI-assistant framework: skills, rules, a memory engine) — it must contain ZERO data specific to any individual user.
+
+BLOCK the change if it adds (or its message contains) ANY of the following:
+- a real person'"'"'s name, EXCEPT the project maintainer used for authorship/copyright/URLs;
+- a real client, customer, employer, company, product, or private project/codename;
+- an email address, phone number, or postal address;
+- financial figures, account numbers, invoices, balances, salaries, prices tied to a real entity;
+- credentials, API keys, tokens, secrets;
+- an absolute home path revealing a username (e.g. /Users/<name>, /home/<name>);
+- private URLs, calendar entries, health, family, or relationship details;
+- anything that is clearly one specific person'"'"'s private/personal data rather than generic reusable code or docs.
+
+ALLOW: generic placeholders (e.g. Acme, "the user", /Users/you), and the maintainer'"'"'s own authorship. Text that merely DESCRIBES these categories (documentation, this guard'"'"'s own instructions, example placeholders) is NOT a violation — only ACTUAL personal data is. When genuinely unsure, BLOCK.
+
+Respond with EXACTLY one line: "OK"  — or —  "BLOCK: <what was found and in which file/line>".'
+
+ASK="Judge whether the following ${label} is safe to publish to a public OSS repo. One line only: OK or BLOCK."
+
+run_judge() {
+  local prompt
+  prompt="$ASK"$'\n\n'"$payload"
+  if command -v claude >/dev/null 2>&1; then
+    printf '%s' "$prompt" | claude -p --model "${IGA_GUARD_MODEL:-claude-sonnet-4-6}" --append-system-prompt "$SYS" 2>/dev/null || true
+    return
   fi
+  if command -v gh >/dev/null 2>&1 && gh models --help >/dev/null 2>&1; then
+    printf '%s\n\n%s' "$SYS" "$prompt" | gh models run "${IGA_GUARD_GH_MODEL:-openai/gpt-4o}" 2>/dev/null || true
+    return
+  fi
+  # no judge available
+  return
+}
+
+verdict="$(run_judge | tr -d '\r' | grep -m1 -ioE '^(OK|BLOCK).*' || true)"
+
+if [ -z "$verdict" ]; then
+  echo "🚫 iga-guard: no LLM judge available (need \`claude\` or \`gh models\`), or it returned nothing." >&2
+  echo "   Blocking to stay safe. Install a judge, or override ONCE with: IGA_GUARD_OFF=1 git ..." >&2
+  exit 1
 fi
 
-# ---- Stage 2: LLM review ----------------------------------------------------
-if [ "${IGA_HOOK_LLM:-1}" = "1" ] && command -v claude >/dev/null 2>&1; then
-  sys='You are a strict pre-commit guard for an open-source repository. The ONLY real person allowed to appear is the maintainer "Paweł Mioduszewski" / handle "pmioduszewski" in LICENSE, authorship, or repo URLs. BLOCK anything else that is personalization-layer or PII: other real people'"'"'s names, real client/company/product/project names, email addresses, phone numbers, postal addresses, financial figures, home paths like /Users/<name>, API tokens or secrets, or content that is clearly user-specific rather than generic OSS material. Respond with EXACTLY one line: "BLOCK: <short reason>" or "OK".'
-  verdict="$(printf '%s' "$text" | head -c 60000 | claude -p --model "${IGA_HOOK_MODEL:-claude-haiku-4-5-20251001}" --append-system-prompt "$sys" 'Review the diff/text provided on stdin and respond OK or BLOCK.' 2>/dev/null || echo OK)"
-  if printf '%s' "$verdict" | grep -qiE '^[[:space:]]*BLOCK'; then
-    echo "🚫 iga-guard (LLM): $verdict" >&2
-    echo "→ False positive? re-run with IGA_HOOK_LLM=0 (denylist still applies)." >&2
-    exit 1
-  fi
+if printf '%s' "$verdict" | grep -qiE '^BLOCK'; then
+  echo "🚫 iga-guard BLOCKED this ${label} — looks like non-generic / personal data:" >&2
+  echo "   $verdict" >&2
+  echo "   Use generic placeholders. If it's a false positive: IGA_GUARD_OFF=1 git ..." >&2
+  exit 1
 fi
 
+echo "iga-guard: OK (${label})" >&2
 exit 0

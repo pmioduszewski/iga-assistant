@@ -1,33 +1,10 @@
 #!/usr/bin/env bash
-# Defense in depth: even if a commit slipped in via --no-verify or a hook
-# was disabled, scan the full set of commits about to be pushed BEFORE
-# they leave the machine. Mirrors the server-side GitGuardian PR gate.
-set -euo pipefail
-
-if ! command -v ggshield >/dev/null 2>&1; then
-  echo "pre-push: ggshield not installed — 'brew install ggshield'." >&2
-  exit 1
-fi
-
-# git feeds "<local-ref> <local-sha> <remote-ref> <remote-sha>" on stdin.
-zero="0000000000000000000000000000000000000000"
-fail=0
-while read -r _ local_sha _ remote_sha; do
-  [ "$local_sha" = "$zero" ] && continue            # branch deletion
-  if [ "$remote_sha" = "$zero" ]; then
-    range="$local_sha"                              # new branch: scan all reachable-not-on-remote
-    set +e; base="$(git rev-list "$local_sha" --not --remotes | tail -1)"; set -e
-    [ -n "$base" ] && range="${base}~1..${local_sha}" 2>/dev/null || range="$local_sha"
-  else
-    range="${remote_sha}..${local_sha}"
-  fi
-  if ! ggshield secret scan commit-range "$range"; then
-    fail=1
-  fi
+G="$(git rev-parse --show-toplevel)/.githooks/iga-guard.sh"
+EMPTY=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+st=0
+while read -r lref lsha rref rsha; do
+  [ "$lsha" = "0000000000000000000000000000000000000000" ] && continue
+  if printf '%s' "$rsha" | grep -qE '^0+$'; then range="$EMPTY..$lsha"; else range="$rsha..$lsha"; fi
+  "$G" range "$range" || st=1
 done
-
-if [ "$fail" -ne 0 ]; then
-  echo >&2
-  echo "pre-push: secret detected in outgoing commits — push blocked." >&2
-  exit 1
-fi
+exit $st

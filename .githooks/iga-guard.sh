@@ -36,6 +36,26 @@ gather() {
   esac
 }
 
+# Pre-push fast path: grep the pushed tree against the denylist directly.
+# Robust to rewritten/force-pushed history where the old remote SHA no longer
+# exists locally (a diff range would error). Denylist-only (commit-msg/pre-commit
+# already ran the LLM stage at authoring time).
+if [ "$mode" = "tree" ]; then
+  sha="${1:-HEAD}"
+  if [ -f "$DENYLIST" ]; then
+    pat="$(grep -vE '^[[:space:]]*(#|$)' "$DENYLIST" | sed 's/[][\.^$*+?(){}|/]/\\&/g' | paste -sd'|' -)"
+    if [ -n "$pat" ]; then
+      hits="$(git grep -inE "$pat" "$sha" -- . ':(exclude)**/pnpm-lock.yaml' ':(exclude)**/package-lock.json' 2>/dev/null | head -10 || true)"
+      if [ -n "$hits" ]; then
+        echo "🚫 iga-guard: blocked push — denylist term(s) in pushed tree ${sha:0:12}:" >&2
+        echo "$hits" >&2
+        exit 1
+      fi
+    fi
+  fi
+  exit 0
+fi
+
 text="$(gather "${1:-}")"
 [ -z "$text" ] && exit 0
 

@@ -3,7 +3,7 @@
  */
 
 import { google, gmail_v1 } from "googleapis";
-import { getOAuthClientForEmail } from "./auth.js";
+import { getOAuthClientForEmail, evictOAuthClient } from "./auth.js";
 import { groupBatchItems, type BatchModifyItem } from "./types.js";
 import {
   colorEquals,
@@ -58,12 +58,40 @@ export function _resetGmailClientCache(): void {
   clientCache.clear();
 }
 
+/** True for the OAuth "refresh token rejected" error, however it surfaces. */
+function isInvalidGrant(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (/invalid_grant/i.test(msg)) return true;
+  const data = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
+  return data === "invalid_grant";
+}
+
 export class GmailClient {
   constructor(
     public readonly account: AccountAlias,
     public readonly email: string,
-    private readonly gmail: gmail_v1.Gmail,
+    private gmail: gmail_v1.Gmail,
   ) {}
+
+  /**
+   * Run a Gmail API operation, self-healing the one cross-process failure mode
+   * that survives token persistence: a long-lived client whose in-memory
+   * refresh token was rotated out from under it by ANOTHER process (the
+   * menu-bar app, a CLI run) that refreshed and persisted a newer token. On
+   * invalid_grant we drop the cached OAuth client, rebuild from the now-current
+   * on-disk token, and retry exactly once. Non-auth errors propagate untouched.
+   */
+  private async call<T>(op: (g: gmail_v1.Gmail) => Promise<T>): Promise<T> {
+    try {
+      return await op(this.gmail);
+    } catch (e) {
+      if (!isInvalidGrant(e)) throw e;
+      evictOAuthClient(this.email);
+      const auth = await getOAuthClientForEmail(this.email);
+      this.gmail = google.gmail({ version: "v1", auth });
+      return await op(this.gmail);
+    }
+  }
 
   async listUnread(maxResults: number): Promise<GmailMessage[]> {
     return this.listByQuery("is:unread in:inbox", maxResults);
@@ -80,51 +108,52 @@ export class GmailClient {
   }
 
   private async listByQuery(q: string, maxResults: number): Promise<GmailMessage[]> {
-    const listRes = await this.gmail.users.messages.list({
-      userId: "me",
-      q,
-      maxResults,
-    });
-    const stubs = listRes.data.messages ?? [];
-    if (stubs.length === 0) return [];
+    return this.call(async (gmail) => {
+      const listRes = await gmail.users.messages.list({
+        userId: "me",
+        q,
+        maxResults,
+      });
+      const stubs = listRes.data.messages ?? [];
+      if (stubs.length === 0) return [];
 
-    const out: GmailMessage[] = new Array(stubs.length);
-    let cursor = 0;
-    const workers: Promise<void>[] = [];
-    const total = stubs.length;
-    const account = this.account;
-    const gmail = this.gmail;
+      const out: GmailMessage[] = new Array(stubs.length);
+      let cursor = 0;
+      const workers: Promise<void>[] = [];
+      const total = stubs.length;
+      const account = this.account;
 
-    const worker = async (): Promise<void> => {
-      while (true) {
-        const idx = cursor++;
-        if (idx >= total) return;
-        const id = stubs[idx]!.id!;
-        const res = await gmail.users.messages.get({
-          userId: "me",
-          id,
-          format: "metadata",
-          metadataHeaders: METADATA_HEADERS,
-        });
-        out[idx] = shapeMetadataMessage(account, res.data);
+      const worker = async (): Promise<void> => {
+        while (true) {
+          const idx = cursor++;
+          if (idx >= total) return;
+          const id = stubs[idx]!.id!;
+          const res = await gmail.users.messages.get({
+            userId: "me",
+            id,
+            format: "metadata",
+            metadataHeaders: METADATA_HEADERS,
+          });
+          out[idx] = shapeMetadataMessage(account, res.data);
+        }
+      };
+      for (let i = 0; i < Math.min(GET_CONCURRENCY, total); i++) {
+        workers.push(worker());
       }
-    };
-    for (let i = 0; i < Math.min(GET_CONCURRENCY, total); i++) {
-      workers.push(worker());
-    }
-    await Promise.all(workers);
-    return out;
+      await Promise.all(workers);
+      return out;
+    });
   }
 
   async listLabels(): Promise<GmailLabelSummary[]> {
-    const res = await this.gmail.users.labels.list({ userId: "me" });
+    return this.call(async (gmail) => {
+    const res = await gmail.users.labels.list({ userId: "me" });
     const labels = res.data.labels ?? [];
     // The list endpoint omits color; we must fetch per-label to know it.
     // Only user labels can have user-set colors — system labels never do.
     // Bound concurrency (GET_CONCURRENCY) so accounts with many labels don't
     // fire an unbounded burst of users.labels.get calls (rate-limit risk).
     const summaries: GmailLabelSummary[] = new Array(labels.length);
-    const gmail = this.gmail;
     let cursor = 0;
     const worker = async (): Promise<void> => {
       while (true) {
@@ -159,17 +188,20 @@ export class GmailClient {
     }
     await Promise.all(workers);
     return summaries;
+    });
   }
 
   async readBody(
     messageId: string,
     format: "text" | "html",
   ): Promise<{ subject: string; body: string }> {
-    const res = await this.gmail.users.messages.get({
-      userId: "me",
-      id: messageId,
-      format: "full",
-    });
+    const res = await this.call((g) =>
+      g.users.messages.get({
+        userId: "me",
+        id: messageId,
+        format: "full",
+      }),
+    );
     const payload = res.data.payload ?? {};
     const subject = findHeader(payload.headers ?? [], "Subject") ?? "";
     const mime = format === "html" ? "text/html" : "text/plain";
@@ -182,11 +214,13 @@ export class GmailClient {
     addLabelIds: string[],
     removeLabelIds: string[],
   ): Promise<void> {
-    await this.gmail.users.messages.modify({
-      userId: "me",
-      id: messageId,
-      requestBody: { addLabelIds, removeLabelIds },
-    });
+    await this.call((g) =>
+      g.users.messages.modify({
+        userId: "me",
+        id: messageId,
+        requestBody: { addLabelIds, removeLabelIds },
+      }),
+    );
   }
 
   async batchApplyLabels(items: BatchModifyItem[]): Promise<void> {
@@ -195,14 +229,16 @@ export class GmailClient {
       if (group.addLabelIds.length === 0 && group.removeLabelIds.length === 0) continue;
       for (let i = 0; i < group.ids.length; i += BATCH_MODIFY_CHUNK) {
         const chunk = group.ids.slice(i, i + BATCH_MODIFY_CHUNK);
-        await this.gmail.users.messages.batchModify({
-          userId: "me",
-          requestBody: {
-            ids: chunk,
-            addLabelIds: group.addLabelIds,
-            removeLabelIds: group.removeLabelIds,
-          },
-        });
+        await this.call((g) =>
+          g.users.messages.batchModify({
+            userId: "me",
+            requestBody: {
+              ids: chunk,
+              addLabelIds: group.addLabelIds,
+              removeLabelIds: group.removeLabelIds,
+            },
+          }),
+        );
       }
     }
   }
@@ -211,10 +247,12 @@ export class GmailClient {
     criteria: gmail_v1.Schema$FilterCriteria,
     action: gmail_v1.Schema$FilterAction,
   ): Promise<{ id: string; criteria: gmail_v1.Schema$FilterCriteria; action: gmail_v1.Schema$FilterAction }> {
-    const res = await this.gmail.users.settings.filters.create({
-      userId: "me",
-      requestBody: { criteria, action },
-    });
+    const res = await this.call((g) =>
+      g.users.settings.filters.create({
+        userId: "me",
+        requestBody: { criteria, action },
+      }),
+    );
     return {
       id: res.data.id ?? "",
       criteria: res.data.criteria ?? {},
@@ -223,7 +261,7 @@ export class GmailClient {
   }
 
   async listFilters(): Promise<Array<{ id: string; criteria: gmail_v1.Schema$FilterCriteria; action: gmail_v1.Schema$FilterAction }>> {
-    const res = await this.gmail.users.settings.filters.list({ userId: "me" });
+    const res = await this.call((g) => g.users.settings.filters.list({ userId: "me" }));
     return (res.data.filter ?? []).map((f) => ({
       id: f.id ?? "",
       criteria: f.criteria ?? {},
@@ -232,16 +270,18 @@ export class GmailClient {
   }
 
   async deleteFilter(id: string): Promise<void> {
-    await this.gmail.users.settings.filters.delete({ userId: "me", id });
+    await this.call((g) => g.users.settings.filters.delete({ userId: "me", id }));
   }
 
   async batchTrash(messageIds: string[]): Promise<void> {
     for (let i = 0; i < messageIds.length; i += BATCH_MODIFY_CHUNK) {
       const chunk = messageIds.slice(i, i + BATCH_MODIFY_CHUNK);
-      await this.gmail.users.messages.batchDelete({
-        userId: "me",
-        requestBody: { ids: chunk },
-      });
+      await this.call((g) =>
+        g.users.messages.batchDelete({
+          userId: "me",
+          requestBody: { ids: chunk },
+        }),
+      );
     }
   }
 
@@ -265,10 +305,12 @@ export class GmailClient {
         backgroundColor: color.backgroundColor,
       };
     }
-    const res = await this.gmail.users.labels.create({
-      userId: "me",
-      requestBody,
-    });
+    const res = await this.call((g) =>
+      g.users.labels.create({
+        userId: "me",
+        requestBody,
+      }),
+    );
     const out: { id: string; name: string; color?: LabelColor } = {
       id: res.data.id ?? "",
       name: res.data.name ?? name,
@@ -294,11 +336,13 @@ export class GmailClient {
         backgroundColor: patch.color.backgroundColor,
       };
     }
-    const res = await this.gmail.users.labels.patch({
-      userId: "me",
-      id: labelId,
-      requestBody,
-    });
+    const res = await this.call((g) =>
+      g.users.labels.patch({
+        userId: "me",
+        id: labelId,
+        requestBody,
+      }),
+    );
     const out: { id: string; name: string; color?: LabelColor } = {
       id: res.data.id ?? labelId,
       name: res.data.name ?? patch.name ?? "",

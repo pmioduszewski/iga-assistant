@@ -136,13 +136,23 @@ Behavioral contract for Iga:
 - When the user clearly states an emotion, **offer to log it** (or log it
   if they've said to just track it). Prefer the `iga_mood_log` MCP tool;
   bash/`record.py` only if the MCP is down.
-- **MULTI-FEELING = ONE call.** If the user names a primary + secondary
-  feeling (or several), pass them as a SINGLE `;`-joined `emotion`
-  string, **primary first** (e.g. `"Overwhelmed;Sad"`). NEVER make two
-  calls / two entries for one moment — that creates duplicate rows at the
-  same timestamp and renders as two bogus side-by-side feelings. One
-  moment = one entry. Quadrant/valence/energy are derived by the engine
-  from the primary token — Iga never sets them.
+- **MULTI-FEELING = ONE call, MAX 2 feelings.** How We Feel caps a
+  check-in at a primary + ONE secondary. Pass at most **two** tokens as a
+  SINGLE `;`-joined `emotion` string, **primary first** (e.g.
+  `"Overwhelmed;Defeated"`). NEVER exceed two — if the user names three or
+  more feelings, keep the primary + the single most salient secondary, and
+  ASK which secondary to keep when it's ambiguous; never silently log 3+.
+  NEVER make two calls / two entries for one moment — that creates
+  duplicate rows at the same timestamp and renders as two bogus
+  side-by-side feelings. One moment = one entry. Quadrant/valence/energy
+  are derived by the engine from the primary token — Iga never sets them.
+- **TITLE CASE — canonical How We Feel names.** Each feeling token in the
+  stored display `emotion` (and `attrs.src.Mood` / `Mood Key`) must be
+  Title Case matching the app's own naming (e.g. `"Exhausted;Discouraged"`,
+  NOT `"exhausted;discouraged"`), so chat-logged rows are indistinguishable
+  from app-imported exports and the digest counts / grid colours stay
+  clean. The engine normalises case for lexicon lookup and `emotion_key`
+  stays lowercase, but the human-facing display name is Title Case.
 - `at` is the user's local civil timestamp **now** (Iga supplies it; the
   engine reads no clock). State dir is ALWAYS `~/Gaia/state` (the MCP
   tool resolves it; never pass a different one).

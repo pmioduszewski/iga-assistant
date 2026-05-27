@@ -22,9 +22,9 @@ import SwiftUI
 //
 // CONTRACT: pure presentation. No Process, no write, no JSON encode, no
 // sqlite. The only mutation path is a habit-square click, which the habit
-// view relays through the single `ContractGuard.runRecord` seam exactly as
+// view relays through the single `ContractGuard.runRecord` entry point exactly as
 // before — unchanged. The "Run now" button relays to EmailTriageWatcher which
-// owns the seam call. Deleting the app removes this board; `/gm` keeps
+// owns the entry point call. Deleting the app removes this board; `/gm` keeps
 // working. ContractLitmus greps this file too (blanket + explicit assertion).
 
 struct BoardPanelView: View {

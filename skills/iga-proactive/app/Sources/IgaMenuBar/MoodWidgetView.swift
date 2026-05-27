@@ -19,7 +19,7 @@ import SwiftUI
 //
 // STRICTLY READ-ONLY. There is NO Button, NO onTapGesture, NO relay, NO
 // subprocess anywhere in this file. Logging a mood happens through the
-// sanctioned `engine/record.py` chat seam, never the UI — the same
+// sanctioned `engine/record.py` chat entry point, never the UI — the same
 // render+relay contract the ContractLitmus greps assert for the habit
 // Grid.
 
@@ -332,7 +332,7 @@ struct MoodWidgetView: View {
     // (quadrant-colour token + name + freshness). When the latest log is
     // old it dims and shows a gentle "tell Iga in chat to refresh" hint —
     // there is NO button (the Mood surface is strictly read-only; logging
-    // happens via the engine's record seam from chat, by contract).
+    // happens via the engine's record entry point from chat, by contract).
 
     private static let tsParser: DateFormatter = {
         let f = DateFormatter()

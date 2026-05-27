@@ -47,7 +47,7 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     func notify(id: String, title: String, body: String) {
         guard available, !deliveredIds.contains(id) else { return }
         deliveredIds.insert(id)
-        // Delivery goes through the sanctioned osascript seam (UN is
+        // Delivery goes through the sanctioned osascript entry point (UN is
         // dropped on this ad-hoc build). Blocking → off-main.
         DispatchQueue.global(qos: .utility).async {
             ContractGuard.runNotify(title: title, body: body)
@@ -71,7 +71,7 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     func diagnose(_ completion: @escaping (Diag) -> Void) {
         let bundle = available
         let verdict = bundle
-            ? "Delivery via osascript seam (works on ad-hoc builds). "
+            ? "Delivery via osascript entry point (works on ad-hoc builds). "
               + "Press Test to confirm a banner appears + grant the "
               + "one-time prompt if asked."
             : "No app bundle — running headless/from source."
@@ -80,7 +80,7 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
                         summary: verdict))
     }
 
-    /// Post a real test banner through the sanctioned osascript seam and
+    /// Post a real test banner through the sanctioned osascript entry point and
     /// report the ACTUAL outcome (this is the honest probe).
     func sendTest(_ completion: @escaping (Bool, String) -> Void) {
         guard available else {

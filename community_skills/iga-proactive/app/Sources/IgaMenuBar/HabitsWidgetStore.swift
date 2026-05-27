@@ -1,12 +1,12 @@
 import Foundation
 import Observation
 
-// MARK: - Multi-habit widget store (read-poll + single-seam relay)
+// MARK: - Multi-habit widget store (read-poll + single-entry point relay)
 //
 // Wave B. Polls the skill-produced `habit-tracker-habits.json` (schema_version
 // 2) and exposes the decoded `HabitsWidgetData` for the view. It holds ZERO
 // habit logic: it computes no streak, no goal, no grid level. The ONLY side
-// effect it can cause is relaying a click to the sanctioned record seam
+// effect it can cause is relaying a click to the sanctioned record entry point
 // (`ContractGuard.runRecord`) — the engine performs the mutation and re-emits
 // the JSON; this store then re-reads the refreshed file. Deleting the app
 // removes this poller only; the record CLI + engine keep working standalone.
@@ -30,7 +30,7 @@ final class HabitsWidgetStore {
     /// disables the tapped square until the engine round-trips.
     private(set) var pending: Set<String> = []
 
-    /// The last record-seam failure, surfaced to the Compact UI so a failed
+    /// The last record-entry point failure, surfaced to the Compact UI so a failed
     /// click is NEVER a silent no-op again (the original bug: a Finder-
     /// launched .app had no PATH, `uv` wasn't found, the non-zero exit was
     /// swallowed). Set on a failed relay, cleared on the next successful one
@@ -147,7 +147,7 @@ final class HabitsWidgetStore {
         pending.contains(Self.pendingKey(habitId, date))
     }
 
-    /// Relay a square click to the SANCTIONED record seam, then refresh from
+    /// Relay a square click to the SANCTIONED record entry point, then refresh from
     /// the engine-re-emitted JSON. The app decides NOTHING about the result —
     /// it names the gesture; the engine computes the new amount/streak/grid.
     ///
@@ -195,7 +195,7 @@ final class HabitsWidgetStore {
         }
     }
 
-    /// Test seam: drive `finishRelay` directly with a synthesized outcome
+    /// Test entry point: drive `finishRelay` directly with a synthesized outcome
     /// so the failure-propagation contract is unit-tested without spawning
     /// the real subprocess. Not used by production code paths.
     func testInjectRelayResult(
@@ -204,7 +204,7 @@ final class HabitsWidgetStore {
         finishRelay(key: key, ok: ok, exitCode: exitCode, stderr: stderr)
     }
 
-    /// One short human line from a record-seam failure — picks the most
+    /// One short human line from a record-entry point failure — picks the most
     /// actionable signal (the classic cause is `uv` not found on a
     /// Finder-launched app). Pure string shaping; no habit logic.
     nonisolated static func briefError(

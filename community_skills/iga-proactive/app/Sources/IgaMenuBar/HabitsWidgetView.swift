@@ -7,7 +7,7 @@ import SwiftUI
 //   • Compact (default) — one row per habit: icon + name, the last 7 days as
 //     squares, the current streak, and a weekly-goal ring. iStat-Menus
 //     density. The everyday glanceable view. This is the ONLY interactive
-//     view: a square click relays to the sanctioned record seam.
+//     view: a square click relays to the sanctioned record entry point.
 //
 //   • Grid (dense) — a READ-ONLY HabitKit-style contribution chart: 7 FIXED
 //     weekday rows × week-columns over the FULL history, small dense squares,
@@ -20,7 +20,7 @@ import SwiftUI
 // level — was computed by the FROZEN engine and decoded read-only. This view
 // computes NO habit logic. In Compact, clicking a square does not mutate
 // anything here: it calls `store.relayToggle`, which relays to the single
-// sanctioned record seam; the engine mutates + re-emits the JSON and the
+// sanctioned record entry point; the engine mutates + re-emits the JSON and the
 // poller refreshes. Grid issues no such call. Plain-language copy only
 // (wife-test bar). Inverse habits render inverted semantics (a filled square
 // = success = abstained).
@@ -288,7 +288,7 @@ struct HabitsWidgetView: View {
         }
     }
 
-    // MARK: one INTERACTIVE square — Compact only; click relays to the seam
+    // MARK: one INTERACTIVE square — Compact only; click relays to the entry point
 
     // The ONLY mutating cell renderer. Used EXCLUSIVELY by `compactRow`.
     // Grid uses `denseSquare` (read-only) — it never reaches this code.

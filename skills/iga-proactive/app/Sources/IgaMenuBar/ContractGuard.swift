@@ -71,7 +71,7 @@ enum ContractGuard {
 
     /// Execute the one sanctioned scan. Blocking; callers dispatch off-main.
     /// Centralized here so NO other file references a subprocess primitive —
-    /// the contract seam is exactly one symbol.
+    /// the contract entry point is exactly one symbol.
     static func runScan(timeout: TimeInterval = 90) -> ScanOutcome {
         let started = Date()
         let proc = engineScanProcess()
@@ -130,18 +130,18 @@ enum ContractGuard {
         "cd ~/Gaia/skills/iga-proactive && "
         + "PYTHONPATH=engine uv run python -m engine scan --json"
 
-    // MARK: - The ONLY sanctioned MUTATION seam (Wave B habit record)
+    // MARK: - The ONLY sanctioned MUTATION entry point (Wave B habit record)
     //
     // The hard contract extended to the habit widget: clicking a square is a
     // MUTATION the app must NOT perform itself (no JSON write, no streak/goal
-    // math). It relays to exactly ONE engine seam — the habit-tracker
-    // `record` CLI — analogous to the read-only scan seam above. That CLI
+    // math). It relays to exactly ONE engine entry point — the habit-tracker
+    // `record` CLI — analogous to the read-only scan entry point above. That CLI
     // mutates the substrate via frozen Wave-A code and re-emits the derived
     // widget JSON; the app only reads the refreshed file afterward.
     //
     // This is the SECOND sanctioned subprocess constructor; a THIRD — the
     // NON-MUTATING reproject (`habitReprojectProcess`/`runReproject`) — is
-    // added below. All three live here so the contract seam stays a small,
+    // added below. All three live here so the contract entry point stays a small,
     // explicitly-named set and the litmus can grep-prove nothing else execs.
     // The reproject is contract-safe: it is to the record CLI exactly what
     // the read-only `scan` is to the engine — the app only TRIGGERS the
@@ -328,7 +328,7 @@ enum ContractGuard {
         } catch {
             return ScanOutcome(
                 ok: false, exitCode: -1, stdout: "",
-                stderr: "failed to launch record seam: \(error)",
+                stderr: "failed to launch record entry point: \(error)",
                 startedAt: started, finishedAt: Date())
         }
         let outData = drain(outPipe.fileHandleForReading)
@@ -341,7 +341,7 @@ enum ContractGuard {
             proc.terminate()
             return ScanOutcome(
                 ok: false, exitCode: -2, stdout: "",
-                stderr: "record seam timed out after \(Int(timeout))s",
+                stderr: "record entry point timed out after \(Int(timeout))s",
                 startedAt: started, finishedAt: Date())
         }
         let code = proc.terminationStatus
@@ -354,13 +354,13 @@ enum ContractGuard {
             finishedAt: Date())
     }
 
-    /// Human-readable single line documenting the mutation seam shape.
+    /// Human-readable single line documenting the mutation entry point shape.
     static let documentedRecordCommand =
         "cd <abs-skill-dir> || exit 90 ; <abs-uv> run python "
         + "<abs-record.py> --state-dir <abs-live-state> --habit <id> "
         + "--date <YYYY-MM-DD> (--add | --remove | --set-amount N) --days N"
 
-    // MARK: - The NON-MUTATING refresh seam (cold-launch staleness fix)
+    // MARK: - The NON-MUTATING refresh entry point (cold-launch staleness fix)
     //
     // WHY: a Finder/Spotlight-launched .app opened after a Mac restart (no
     // scan/record since yesterday) would otherwise render a DAY-STALE window
@@ -369,12 +369,12 @@ enum ContractGuard {
     // app triggers this on launch (and whenever it notices the polled JSON's
     // `today` is behind the system date) so streak/goal/coach/`today` are
     // current WITHOUT a fake write. It is the projection analogue of the
-    // read-only `scan` seam: the engine owns the projection, the app only
+    // read-only `scan` entry point: the engine owns the projection, the app only
     // triggers it. `record.py --reproject` performs NO substrate mutation
     // (the substrate file is byte-identical before/after — proven).
 
     /// Build the (and only the) sanctioned NON-MUTATING reproject subprocess.
-    /// Same env-independent contract as the record seam: every input is an
+    /// Same env-independent contract as the record entry point: every input is an
     /// absolute literal resolved by Swift and passed via the explicit
     /// $IGA_HT_* env (a Finder/Spotlight .app inherits none), the `cd` is a
     /// LOUD `exit 90`, and the script is referenced by its absolute path so a
@@ -416,7 +416,7 @@ enum ContractGuard {
         } catch {
             return ScanOutcome(
                 ok: false, exitCode: -1, stdout: "",
-                stderr: "failed to launch reproject seam: \(error)",
+                stderr: "failed to launch reproject entry point: \(error)",
                 startedAt: started, finishedAt: Date())
         }
         let outData = drain(outPipe.fileHandleForReading)
@@ -429,7 +429,7 @@ enum ContractGuard {
             proc.terminate()
             return ScanOutcome(
                 ok: false, exitCode: -2, stdout: "",
-                stderr: "reproject seam timed out after \(Int(timeout))s",
+                stderr: "reproject entry point timed out after \(Int(timeout))s",
                 startedAt: started, finishedAt: Date())
         }
         let code = proc.terminationStatus
@@ -442,17 +442,17 @@ enum ContractGuard {
             finishedAt: Date())
     }
 
-    /// Human-readable single line documenting the reproject seam shape.
+    /// Human-readable single line documenting the reproject entry point shape.
     static let documentedReprojectCommand =
         "cd <abs-skill-dir> || exit 90 ; <abs-uv> run python "
         + "<abs-record.py> --state-dir <abs-live-state> --reproject --days N"
 
-    // MARK: - The habit-MANAGEMENT mutation seam (Wave D: ⋯ menu)
+    // MARK: - The habit-MANAGEMENT mutation entry point (Wave D: ⋯ menu)
     //
     // Renaming / deleting / goal-editing a habit and importing / exporting
     // the tracker are MUTATIONS (export is a read of intimate data). Same
-    // hard contract as the record seam: the app issues NO write and decides
-    // NOTHING — it relays a NAMED intent to exactly one engine seam
+    // hard contract as the record entry point: the app issues NO write and decides
+    // NOTHING — it relays a NAMED intent to exactly one engine entry point
     // (engine/manage.py), which mutates the substrate via frozen Wave-A code
     // and re-emits the widget JSON. This is the FOURTH (and last) sanctioned
     // subprocess constructor; all four live here so the litmus can
@@ -523,7 +523,7 @@ enum ContractGuard {
     }
 
     /// Build the (and only the) sanctioned habit-management subprocess.
-    /// Identical env-independent contract as the record seam: every input
+    /// Identical env-independent contract as the record entry point: every input
     /// absolute via $IGA_HT_* (a Finder/Spotlight .app inherits none), the
     /// `cd` a LOUD `exit 90`, the script referenced by its absolute path.
     static func habitManageProcess(
@@ -548,7 +548,7 @@ enum ContractGuard {
     }
 
     /// Execute the one sanctioned management op. Blocking; callers dispatch
-    /// off-main. Same outcome shape as the other seams.
+    /// off-main. Same outcome shape as the other entry points.
     static func runManage(
         habitId: String?, op: ManageOp,
         windowDays: Int, timeout: TimeInterval = 90
@@ -565,7 +565,7 @@ enum ContractGuard {
         } catch {
             return ScanOutcome(
                 ok: false, exitCode: -1, stdout: "",
-                stderr: "failed to launch manage seam: \(error)",
+                stderr: "failed to launch manage entry point: \(error)",
                 startedAt: started, finishedAt: Date())
         }
         let outData = drain(outPipe.fileHandleForReading)
@@ -578,7 +578,7 @@ enum ContractGuard {
             proc.terminate()
             return ScanOutcome(
                 ok: false, exitCode: -2, stdout: "",
-                stderr: "manage seam timed out after \(Int(timeout))s",
+                stderr: "manage entry point timed out after \(Int(timeout))s",
                 startedAt: started, finishedAt: Date())
         }
         let code = proc.terminationStatus
@@ -591,14 +591,14 @@ enum ContractGuard {
             finishedAt: Date())
     }
 
-    /// Human-readable single line documenting the manage seam shape.
+    /// Human-readable single line documenting the manage entry point shape.
     static let documentedManageCommand =
         "cd <abs-skill-dir> || exit 90 ; <abs-uv> run python "
         + "<abs-manage.py> --state-dir <abs-live-state> "
         + "(--rename N | --delete | --set-goal … | --export P | "
         + "--import P) [--habit <id>] --days N"
 
-    // MARK: - The mood-tracker INGEST trigger seam (semi-automatic backfill)
+    // MARK: - The mood-tracker INGEST trigger entry point (semi-automatic backfill)
     //
     // WHY: The source mood app has no API and no silent sync; the user drops a CSV
     // export into a configurable iCloud-Drive folder (manual "Save to
@@ -607,13 +607,13 @@ enum ContractGuard {
     // mini, deliberately NOT a LaunchAgent — TRIGGERS the mood-tracker's
     // own ingest. That CLI imports the export iff it changed (FROZEN
     // importer) and re-emits the Mood widget. This is the projection
-    // analogue of the read-only `scan`/`reproject` seams: the engine
+    // analogue of the read-only `scan`/`reproject` entry points: the engine
     // decides every write; the app only triggers. ingest.py is idempotent
     // — stable per-row ids (`m-sha1(Date|MoodKey|Notes)`) merged in
     // place + a file-content sha1 marker — so re-running with no new (or
     // an overlapping) export NEVER duplicates and is a cheap no-op. This
     // is the FIFTH (and last) sanctioned subprocess constructor; all live
-    // here so the litmus can grep-prove the seam set is closed.
+    // here so the litmus can grep-prove the entry point set is closed.
 
     /// The mood-tracker skill dir (engine frozen). Overridable via
     /// `IGA_MT_SKILL_DIR` (sandboxed runs/tests); the DEFAULT is the
@@ -654,7 +654,7 @@ enum ContractGuard {
     }
 
     /// Build the (and only the) sanctioned mood-ingest subprocess. Same
-    /// env-independent contract as the habit seams: every input is an
+    /// env-independent contract as the habit entry points: every input is an
     /// absolute literal resolved by Swift and passed via the explicit
     /// $IGA_MT_* env (a Finder/Spotlight .app inherits none), the `cd` is
     /// a LOUD `exit 90`, the script is referenced by its absolute path so
@@ -680,7 +680,7 @@ enum ContractGuard {
     }
 
     /// Execute the one sanctioned mood ingest. Blocking; callers dispatch
-    /// off-main. Same outcome shape as the other seams. Idempotent +
+    /// off-main. Same outcome shape as the other entry points. Idempotent +
     /// non-destructive by construction (the engine never duplicates and
     /// never deletes the user's file).
     static func runMoodIngest(
@@ -697,7 +697,7 @@ enum ContractGuard {
         } catch {
             return ScanOutcome(
                 ok: false, exitCode: -1, stdout: "",
-                stderr: "failed to launch mood-ingest seam: \(error)",
+                stderr: "failed to launch mood-ingest entry point: \(error)",
                 startedAt: started, finishedAt: Date())
         }
         let outData = drain(outPipe.fileHandleForReading)
@@ -710,7 +710,7 @@ enum ContractGuard {
             proc.terminate()
             return ScanOutcome(
                 ok: false, exitCode: -2, stdout: "",
-                stderr: "mood-ingest seam timed out after "
+                stderr: "mood-ingest entry point timed out after "
                     + "\(Int(timeout))s",
                 startedAt: started, finishedAt: Date())
         }
@@ -724,13 +724,13 @@ enum ContractGuard {
             finishedAt: Date())
     }
 
-    /// Human-readable single line documenting the mood-ingest seam shape.
+    /// Human-readable single line documenting the mood-ingest entry point shape.
     static let documentedMoodIngestCommand =
         "cd <abs-mood-skill-dir> || exit 90 ; <abs-uv> run python "
         + "<abs-ingest.py> --state-dir <abs-live-state> "
         + "--watch-dir <abs-watch-folder>"
 
-    // MARK: - The email-triage trigger seam (6th — last LaunchAgent retired)
+    // MARK: - The email-triage trigger entry point (6th — last LaunchAgent retired)
     //
     // email-triage was the FINAL pre-menu-bar LaunchAgent. It is a
     // DETERMINISTIC daily Node CLI (the `email` skill's triage --apply),
@@ -741,7 +741,7 @@ enum ContractGuard {
     // cadence (the wrapper self-sets PATH/cwd and writes its dated JSON
     // log, byte-for-byte the launchd-era behaviour). The app only
     // TRIGGERS; the skill decides everything. SIXTH (and last) sanctioned
-    // subprocess constructor — the seam set stays closed + grep-provable.
+    // subprocess constructor — the entry point set stays closed + grep-provable.
 
     /// Absolute path to the email skill's self-contained triage wrapper.
     /// Overridable via `IGA_EMAIL_TRIAGE_SCRIPT` (sandboxed runs/tests);
@@ -776,7 +776,7 @@ enum ContractGuard {
     }
 
     /// Execute the one sanctioned email triage. Blocking; callers
-    /// dispatch off-main. Same outcome shape as the other seams. Triage
+    /// dispatch off-main. Same outcome shape as the other entry points. Triage
     /// hits Gmail + applies labels, so the timeout is generous.
     static func runEmailTriage(
         timeout: TimeInterval = 300
@@ -792,7 +792,7 @@ enum ContractGuard {
         } catch {
             return ScanOutcome(
                 ok: false, exitCode: -1, stdout: "",
-                stderr: "failed to launch email-triage seam: \(error)",
+                stderr: "failed to launch email-triage entry point: \(error)",
                 startedAt: started, finishedAt: Date())
         }
         let outData = drain(outPipe.fileHandleForReading)
@@ -805,7 +805,7 @@ enum ContractGuard {
             proc.terminate()
             return ScanOutcome(
                 ok: false, exitCode: -2, stdout: "",
-                stderr: "email-triage seam timed out after "
+                stderr: "email-triage entry point timed out after "
                     + "\(Int(timeout))s",
                 startedAt: started, finishedAt: Date())
         }
@@ -819,12 +819,12 @@ enum ContractGuard {
             finishedAt: Date())
     }
 
-    /// Human-readable single line documenting the email-triage seam.
+    /// Human-readable single line documenting the email-triage entry point.
     static let documentedEmailTriageCommand =
         "[ -x <abs-iga-email-triage-wrapper> ] || exit 90 ; "
         + "exec <abs-iga-email-triage-wrapper>"
 
-    // MARK: - Notify seam (osascript)
+    // MARK: - Notify entry point (osascript)
     //
     // The app is ad-hoc signed → macOS drops its UNUserNotifications. The
     // reliable $0 path is `osascript display notification`, delivered by

@@ -227,11 +227,11 @@ the flat fill.
 per-day-goal habit opens a quick-log **drawer** (− / current·target
 / ＋, batch chips 1·5·10·50·100, Reset→0, Fill Day→target). Every drawer
 control names an absolute amount and relays it through the *single sanctioned
-record seam* (`record.py --set-amount`); the engine clamps/derives
+record entry point* (`record.py --set-amount`); the engine clamps/derives
 streak/goal/level and re-emits. The drawer shows engine truth, never a local
 guess. There is no blunt one-tap-complete of a 40-rep day.
 
-**Management.** `engine/manage.py` is the sole sanctioned seam for
+**Management.** `engine/manage.py` is the sole sanctioned entry point for
 rename / delete (cascading) / set-goal / reorder / **archive
 (graduate)** / **set-color** / import / export, mirroring `record.py`'s
 mandatory-`--state-dir`, isolation, and re-emit contract. Archive flips

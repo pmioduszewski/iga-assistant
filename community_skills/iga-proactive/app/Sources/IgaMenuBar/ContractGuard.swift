@@ -71,7 +71,7 @@ enum ContractGuard {
 
     /// Execute the one sanctioned scan. Blocking; callers dispatch off-main.
     /// Centralized here so NO other file references a subprocess primitive —
-    /// the contract seam is exactly one symbol.
+    /// the contract entry point is exactly one symbol.
     static func runScan(timeout: TimeInterval = 90) -> ScanOutcome {
         let started = Date()
         let proc = engineScanProcess()
@@ -130,17 +130,17 @@ enum ContractGuard {
         "cd ~/Gaia/skills/iga-proactive && "
         + "PYTHONPATH=engine uv run python -m engine scan --json"
 
-    // MARK: - The ONLY sanctioned MUTATION seam (Wave B habit record)
+    // MARK: - The ONLY sanctioned MUTATION entry point (Wave B habit record)
     //
     // The hard contract extended to the habit widget: clicking a square is a
     // MUTATION the app must NOT perform itself (no JSON write, no streak/goal
-    // math). It relays to exactly ONE engine seam — the habit-tracker
-    // `record` CLI — analogous to the read-only scan seam above. That CLI
+    // math). It relays to exactly ONE engine entry point — the habit-tracker
+    // `record` CLI — analogous to the read-only scan entry point above. That CLI
     // mutates the substrate via frozen Wave-A code and re-emits the derived
     // widget JSON; the app only reads the refreshed file afterward.
     //
     // This is the SECOND (and last) sanctioned subprocess constructor. Both
-    // live here so the contract seam stays exactly two named symbols and the
+    // live here so the contract entry point stays exactly two named symbols and the
     // litmus can grep-prove nothing else execs.
 
     /// The habit-tracker skill directory (engine lives here, Wave-A frozen).
@@ -323,7 +323,7 @@ enum ContractGuard {
         } catch {
             return ScanOutcome(
                 ok: false, exitCode: -1, stdout: "",
-                stderr: "failed to launch record seam: \(error)",
+                stderr: "failed to launch record entry point: \(error)",
                 startedAt: started, finishedAt: Date())
         }
         let outData = drain(outPipe.fileHandleForReading)
@@ -336,7 +336,7 @@ enum ContractGuard {
             proc.terminate()
             return ScanOutcome(
                 ok: false, exitCode: -2, stdout: "",
-                stderr: "record seam timed out after \(Int(timeout))s",
+                stderr: "record entry point timed out after \(Int(timeout))s",
                 startedAt: started, finishedAt: Date())
         }
         let code = proc.terminationStatus
@@ -349,7 +349,7 @@ enum ContractGuard {
             finishedAt: Date())
     }
 
-    /// Human-readable single line documenting the mutation seam shape.
+    /// Human-readable single line documenting the mutation entry point shape.
     static let documentedRecordCommand =
         "cd <abs-skill-dir> || exit 90 ; <abs-uv> run python "
         + "<abs-record.py> --state-dir <abs-live-state> --habit <id> "

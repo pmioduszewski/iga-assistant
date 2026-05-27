@@ -1,10 +1,10 @@
-"""The sanctioned record seam (Wave B): mutation correctness, idempotency,
+"""The sanctioned record entry point (Wave B): mutation correctness, idempotency,
 isolation, privacy, and the click→record→re-project→stats round trip.
 
 THE round-trip assertion that gates Definition-of-Done item 2 is
 ``test_click_record_reproject_updates_grid_and_streak_via_stats`` — it proves
-a "click" relayed to the seam updates the GRID and the STREAK exactly as the
-frozen ``stats.py`` computes them, with zero habit logic in the seam itself.
+a "click" relayed to the entry point updates the GRID and the STREAK exactly as the
+frozen ``stats.py`` computes them, with zero habit logic in the entry point itself.
 
 Privacy/isolation (binding): every test is synthetic-only and runs under an
 ``IGA_STATE_DIR`` tmp root; ``test_record_refuses_without_state_dir`` proves
@@ -54,7 +54,7 @@ def test_apply_add_creates_one_canonical_completion():
            if e.entity_id == "h-gym" and e.date == "2026-05-16"]
     assert len(evs) == 1
     assert evs[0].amount == 1
-    assert evs[0].id == rec.seam_event_id("h-gym", "2026-05-16")
+    assert evs[0].id == rec.entrypoint_event_id("h-gym", "2026-05-16")
     assert r["previous_amount"] == 0 and r["amount"] == 1
     assert r["changed"] is True and r["deleted"] is False
 
@@ -115,7 +115,7 @@ def test_apply_set_amount_is_exact_and_idempotent():
 
 def test_apply_collapses_a_multicompletion_day_to_one_event():
     """An imported day with several raw completions (Reading 05-16 has the
-    normal one + the tz-edge one) collapses to the seam's single canonical
+    normal one + the tz-edge one) collapses to the entry point's single canonical
     Event on the next mutation, preserving the SUM as the base amount."""
     s = imp.import_habitkit(habitkit_export())
     before = [e for e in s.events
@@ -154,9 +154,9 @@ def test_apply_unknown_entity_and_bad_amount_raise():
 def test_click_record_reproject_updates_grid_and_streak_via_stats(
     tmp_path, monkeypatch
 ):
-    """A 'click' relayed to the seam must update BOTH the projected grid and
+    """A 'click' relayed to the entry point must update BOTH the projected grid and
     the streak EXACTLY as the frozen stats.py computes them — proving the
-    Swift side needs zero habit logic. The seam adds the only missing day in
+    Swift side needs zero habit logic. The entry point adds the only missing day in
     Gym's current streak window; stats.current_streak is the oracle."""
     monkeypatch.setenv("IGA_STATE_DIR", str(tmp_path))
     _seed(tmp_path)
@@ -177,8 +177,8 @@ def test_click_record_reproject_updates_grid_and_streak_via_stats(
     s = sub.SubstrateStore("habit-tracker").load()
     hs = st.habit_stats(s, "h-gym", today=TODAY)
     # 2026-05-12 also has a fixture completion (c-g1) -> the streak is the
-    # consecutive run ...05-12,13,14,15,16 = 5 days. The seam did NOT compute
-    # this; stats.py did. Assert the seam-driven substrate yields it.
+    # consecutive run ...05-12,13,14,15,16 = 5 days. The entry point did NOT compute
+    # this; stats.py did. Assert the entry point-driven substrate yields it.
     assert hs.current_streak == 5, (
         f"stats.py streak after clicks = {hs.current_streak}, expected 5"
     )
@@ -232,16 +232,16 @@ def test_record_remove_unlights_grid_and_breaks_streak(tmp_path, monkeypatch):
 
 
 # --------------------------------------------------------------------------- #
-# 3. round-trip fixpoint still holds after a seam mutation
+# 3. round-trip fixpoint still holds after a entry point mutation
 # --------------------------------------------------------------------------- #
-def test_seam_authored_day_roundtrips_as_fixpoint():
-    """A seam-authored day is a natively-authored Event (no hk_* provenance).
+def test_entrypoint_authored_day_roundtrips_as_fixpoint():
+    """A entry point-authored day is a natively-authored Event (no hk_* provenance).
     Per the documented contract (test_roundtrip ::
     test_native_substrate_roundtrip_is_idempotent_normalizer) the FIRST round
     trip legitimately *adds* synthesized HabitKit provenance attrs so the
     export is a valid HabitKit file; the binding guarantee is domain-field
     preservation + import∘export being an idempotent normalizer (a fixpoint
-    after the first pass). The seam must not weaken that."""
+    after the first pass). The entry point must not weaken that."""
     from _engine import export_habitkit as exp
 
     s = imp.import_habitkit(habitkit_export())
@@ -249,17 +249,17 @@ def test_seam_authored_day_roundtrips_as_fixpoint():
         s, entity_id="h-gym", day="2026-06-01", op="set", set_amount=2
     )
     s2 = imp.import_habitkit(exp.export_habitkit(s))
-    # domain fields of the seam-authored day survive the round trip exactly
+    # domain fields of the entry point-authored day survive the round trip exactly
     ev = next(
         e for e in s2.events
         if e.entity_id == "h-gym" and e.date == "2026-06-01"
     )
     assert ev.amount == 2 and ev.date == "2026-06-01"
-    assert ev.id == rec.seam_event_id("h-gym", "2026-06-01")
+    assert ev.id == rec.entrypoint_event_id("h-gym", "2026-06-01")
     # idempotent normalizer: a second round trip is a no-op (true fixpoint)
     s3 = imp.import_habitkit(exp.export_habitkit(s2))
     assert sub.data_equal(s2, s3), (
-        "seam mutation broke the import∘export fixpoint"
+        "entry point mutation broke the import∘export fixpoint"
     )
 
 
@@ -280,7 +280,7 @@ def test_record_refuses_without_state_dir():
     )
     assert p.returncode != 0
     assert "--state-dir" in (p.stderr + p.stdout)
-    # the programmatic seam also refuses an empty state_dir
+    # the programmatic entry point also refuses an empty state_dir
     import pytest
 
     with pytest.raises(rec.RecordError):
@@ -289,7 +289,7 @@ def test_record_refuses_without_state_dir():
 
 
 def test_record_cli_isolated_roundtrip(tmp_path):
-    """Drive the CLI exactly as the app's relay seam would, fully isolated."""
+    """Drive the CLI exactly as the app's relay entry point would, fully isolated."""
     src = tmp_path / "export.json"
     src.write_text(json.dumps(habitkit_export()), encoding="utf-8")
     imp.import_file(src, tmp_path)
@@ -309,7 +309,7 @@ def test_record_cli_isolated_roundtrip(tmp_path):
 
 
 def test_record_never_touches_real_state(tmp_path, monkeypatch):
-    """A full seam run (CLI + programmatic) must leave the user's REAL
+    """A full entry point run (CLI + programmatic) must leave the user's REAL
     ~/Gaia/state substrate AND both widget JSONs byte/mtime-unchanged."""
     real_root = _real_state_root()
     watched = [
@@ -335,16 +335,16 @@ def test_record_never_touches_real_state(tmp_path, monkeypatch):
     for p in watched:
         existed, mtime, data = before[p]
         if existed:
-            assert p.exists(), f"{p}: real file deleted by the seam"
+            assert p.exists(), f"{p}: real file deleted by the entry point"
             assert p.stat().st_mtime == mtime, (
-                f"{p}: REAL ~/Gaia/state mtime changed — seam wrote live data"
+                f"{p}: REAL ~/Gaia/state mtime changed — entry point wrote live data"
             )
             assert p.read_bytes() == data, (
                 f"{p}: REAL ~/Gaia/state bytes changed — data loss"
             )
         else:
             assert not p.exists(), (
-                f"{p}: seam created a file under the real ~/Gaia/state "
+                f"{p}: entry point created a file under the real ~/Gaia/state "
                 f"despite IGA_STATE_DIR isolation"
             )
 

@@ -1,12 +1,12 @@
-"""The sanctioned management seam (Wave D): rename / delete / set-goal /
+"""The sanctioned management entry point (Wave D): rename / delete / set-goal /
 import / export correctness, idempotency, isolation, privacy, and the
 substrate-mutation → re-project contract.
 
 Privacy/isolation (binding): every test is synthetic-only and runs under an
 ``IGA_STATE_DIR`` tmp root. ``test_manage_refuses_without_state_dir`` proves
-the seam has NO implicit real-state default; ``test_export_is_pure_read``
+the entry point has NO implicit real-state default; ``test_export_is_pure_read``
 proves an export never mutates the substrate; the source-scan guard proves
-the seam never hard-references the real HabitKit export path.
+the entry point never hard-references the real HabitKit export path.
 """
 
 from __future__ import annotations
@@ -240,7 +240,7 @@ def test_set_goal_rejects_bad_period_and_target():
 
 
 # --------------------------------------------------------------------------- #
-# 4. the I/O seam: persist + re-emit; export is a pure read
+# 4. the I/O entry point: persist + re-emit; export is a pure read
 # --------------------------------------------------------------------------- #
 def test_manage_rename_persists_and_reemits_widget(tmp_path, monkeypatch):
     monkeypatch.setenv("IGA_STATE_DIR", str(tmp_path))
@@ -248,15 +248,15 @@ def test_manage_rename_persists_and_reemits_widget(tmp_path, monkeypatch):
     hid = _any_habit_id(s)
     res = mng.manage(
         state_dir=tmp_path, op="rename",
-        entity_id=hid, name="Renamed In Seam", window_days=120)
+        entity_id=hid, name="Renamed In EntryPoint", window_days=120)
     assert Path(res["habits_widget_path"]).exists()
     reloaded = sub.SubstrateStore("habit-tracker").load()
-    assert reloaded.entity(hid).name == "Renamed In Seam"
+    assert reloaded.entity(hid).name == "Renamed In EntryPoint"
     doc = json.loads(Path(res["habits_widget_path"]).read_text())
     names = {h["name"] for h in doc["data"]["habits"]}
     # archived habits are excluded from the widget; the renamed (active)
     # one must be reflected there.
-    assert "Renamed In Seam" in names
+    assert "Renamed In EntryPoint" in names
 
 
 def test_manage_set_goal_then_widget_shows_per_day_target(
@@ -294,7 +294,7 @@ def test_export_is_pure_read_then_import_round_trips(
         "export MUST NOT mutate the substrate (pure read)"
     )
     # Re-importing our own export into a FRESH root reproduces the
-    # substrate (the frozen importer's fixpoint, exercised via the seam).
+    # substrate (the frozen importer's fixpoint, exercised via the entry point).
     fresh = tmp_path / "fresh"
     fresh.mkdir()
     monkeypatch.setenv("IGA_STATE_DIR", str(fresh))
@@ -370,7 +370,7 @@ def test_manage_never_touches_real_state(tmp_path, monkeypatch):
             )
             assert p.read_bytes() == datab
         else:
-            assert not p.exists(), f"{p}: seam created a real-state file"
+            assert not p.exists(), f"{p}: entry point created a real-state file"
 
 
 def test_no_engine_source_references_real_export_path():

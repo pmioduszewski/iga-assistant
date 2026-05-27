@@ -1,4 +1,4 @@
-"""The SANCTIONED record seam: the single way a completion is mutated.
+"""The SANCTIONED record entry point: the single way a completion is mutated.
 
 WHY THIS EXISTS (Iga v3 Wave B)
 -------------------------------
@@ -6,10 +6,10 @@ The menu-bar widget lets the user *click a square* to add / remove / set a
 day's completion. That click is a MUTATION. The hard architectural contract
 (MemPalace iga/decisions/3542bae6, extended to the substrate in Wave A/B) is
 that the **app holds zero habit logic and issues no writes** except by relaying
-to exactly one engine seam — analogous to the existing engine-scan seam the
+to exactly one engine entry point — analogous to the existing engine-scan entry point the
 app already uses for the proactive engine.
 
-This module IS that seam for the habit substrate. It:
+This module IS that entry point for the habit substrate. It:
 
   * mutates the substrate **only** through Wave-A ``substrate.py``
     (``SubstrateStore`` load/save — atomic tmp+os.replace, isolation-aware);
@@ -23,7 +23,7 @@ This module IS that seam for the habit substrate. It:
     write the user's live ``~/Gaia/state``;
   * after the mutation, **re-emits the derived widget JSON** via
     ``widget_projection`` so the polling app sees the new grid/streak/goal
-    immediately. The projection is pure Wave-A code — this seam consumes it,
+    immediately. The projection is pure Wave-A code — this entry point consumes it,
     it does not duplicate it.
 
 WHAT A "COMPLETION" IS HERE
@@ -31,7 +31,7 @@ WHAT A "COMPLETION" IS HERE
 One civil day for one entity carries a single canonical completion Event with
 an integer ``amount`` (the source per-day completion count). Multiple raw
 completions in a day are *summed* by ``stats.py``; for the click-to-log UX the
-seam keeps exactly one Event per (entity, day) and adjusts its ``amount``:
+entry point keeps exactly one Event per (entity, day) and adjusts its ``amount``:
 
   --add            amount = max(1, current + 1)   (first click logs "done"=1)
   --remove         amount -> 0; if it was the only marker, the Event is
@@ -45,7 +45,7 @@ seam keeps exactly one Event per (entity, day) and adjusts its ``amount``:
 
 Idempotency key: ``(entity_id, date)``. Re-running the same ``--set-amount``
 or a ``--remove`` on an already-absent day changes nothing and is reported as
-a no-op. The Event id is stable & deterministic for a seam-authored day
+a no-op. The Event id is stable & deterministic for a entry point-authored day
 (``rec-<entity>-<date>``) so a second identical call cannot create a duplicate
 and a round-trip through export/import stays a fixpoint.
 
@@ -89,8 +89,8 @@ SubstrateStore = _sub.SubstrateStore
 # --------------------------------------------------------------------------- #
 # canonical per-(entity, day) completion id
 # --------------------------------------------------------------------------- #
-def seam_event_id(entity_id: str, day: str) -> str:
-    """Deterministic, stable id for a seam-authored completion. Stable so a
+def entrypoint_event_id(entity_id: str, day: str) -> str:
+    """Deterministic, stable id for a entry point-authored completion. Stable so a
     repeated identical click cannot duplicate the Event and so export/import
     stays a fixpoint."""
     return f"rec-{entity_id}-{day}"
@@ -139,7 +139,7 @@ def apply_record(
 
     existing = _events_for_day(s, entity_id, day)
     # The canonical "current amount" for the day is the SUM (same relation
-    # stats.py uses); seam-authored days collapse to one Event but an
+    # stats.py uses); entry point-authored days collapse to one Event but an
     # imported day may legitimately carry several.
     current = sum(int(e.amount) for e in existing)
 
@@ -158,22 +158,22 @@ def apply_record(
 
     # Re-materialize the day as the single canonical Event (or none).
     # Remove every existing Event for the day first (collapses any
-    # multi-completion day to the seam's one-Event invariant), then re-add
+    # multi-completion day to the entry point's one-Event invariant), then re-add
     # exactly one iff target > 0.
     if existing:
         keep_ids = {id(e) for e in existing}
         s.events = [e for e in s.events if id(e) not in keep_ids]
 
-    # Preserve tz_offset / note from a prior seam Event for the day if any
+    # Preserve tz_offset / note from a prior entry point Event for the day if any
     # (so toggling off→on the same day doesn't silently drop a note).
     prior = next(
-        (e for e in existing if e.id == seam_event_id(entity_id, day)),
+        (e for e in existing if e.id == entrypoint_event_id(entity_id, day)),
         existing[0] if existing else None,
     )
     if target > 0:
         s.events.append(
             Event(
-                id=seam_event_id(entity_id, day),
+                id=entrypoint_event_id(entity_id, day),
                 entity_id=entity_id,
                 date=day,
                 amount=target,
@@ -193,7 +193,7 @@ def apply_record(
 
 
 # --------------------------------------------------------------------------- #
-# the seam: mutate the store, re-emit the widget (isolation-mandatory)
+# the entry point: mutate the store, re-emit the widget (isolation-mandatory)
 # --------------------------------------------------------------------------- #
 def record(
     *,
@@ -208,7 +208,7 @@ def record(
     atomically, persist via the FROZEN ``SubstrateStore``, then re-emit the
     derived widget JSON via the FROZEN ``widget_projection``.
 
-    ``state_dir`` is MANDATORY (callers — including the app seam — must pass
+    ``state_dir`` is MANDATORY (callers — including the app entry point — must pass
     an explicit root). Returns non-private counters + the re-projected widget
     path. Pure delegation: zero streak/goal/grid math lives here.
     """
@@ -228,7 +228,7 @@ def record(
 
     # Re-emit BOTH derived widget JSONs so the polling app refreshes whichever
     # widget it renders (frozen v1 single-habit + Wave-B multi-habit). Pure
-    # Wave-A/B projection — consumed, never reimplemented; the seam computes
+    # Wave-A/B projection — consumed, never reimplemented; the entry point computes
     # no streak/goal/grid math.
     kw: dict = {"entity_id": entity_id}
     if window_days is not None:
@@ -263,7 +263,7 @@ def reproject(
     the *widget* files — they never save the substrate back, so the
     substrate file is byte-identical before and after. The engine still owns
     the projection; the app only triggers it (exactly like the read-only
-    scan seam). Returns the two widget paths.
+    scan entry point). Returns the two widget paths.
     """
     import os
 
@@ -285,7 +285,7 @@ def reproject(
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="record",
-        description="The sanctioned habit-tracker record seam: mutate one "
+        description="The sanctioned habit-tracker record entry point: mutate one "
         "(habit, day) completion via the Wave-A substrate, then re-emit the "
         "derived widget JSON. The menu-bar widget relays clicks here; it "
         "never mutates JSON or computes habit logic itself. With "

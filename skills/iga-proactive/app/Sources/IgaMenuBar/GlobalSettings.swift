@@ -8,7 +8,7 @@ import AppKit
 // status-item RIGHT-CLICK menu. Whole-tracker backup/restore moved out of
 // the per-habit ⋯ sheet (it was vague there: it's ALL habits, not the
 // selected one). Render+relay only — every mutation goes through the
-// sanctioned manage seam via `store.relayManage`.
+// sanctioned manage entry point via `store.relayManage`.
 
 struct GlobalSettingsView: View {
     let habits: HabitsWidgetStore

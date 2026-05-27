@@ -13,7 +13,7 @@ import Observation
 //
 // It holds ZERO email logic and constructs NO subprocess itself — it
 // only relays a day-gated tick to the sanctioned
-// `ContractGuard.runEmailTriage()` seam (the wrapper self-handles
+// `ContractGuard.runEmailTriage()` entry point (the wrapper self-handles
 // PATH/cwd/logging, byte-for-byte the launchd-era behaviour). The
 // once-per-day marker is persisted in UserDefaults so an app relaunch
 // can never double-trigger a real Gmail mutation.
@@ -23,7 +23,7 @@ import Observation
 final class EmailTriageWatcher {
 
     private(set) var lastRun: Date?
-    /// The seam's last result (diagnostics only — the app never parses
+    /// The entry point's last result (diagnostics only — the app never parses
     /// or acts on it; the email skill decides everything).
     private(set) var lastStatus: String?
     /// Wall-clock duration of the last triage (finishedAt − startedAt).
@@ -193,7 +193,7 @@ final class EmailTriageWatcher {
 
     /// Manual run triggered by the user via the "Run now" button. Ignores the
     /// once-per-day marker — an explicit user action always runs. Relays only
-    /// through the sanctioned `ContractGuard.runEmailTriage()` seam.
+    /// through the sanctioned `ContractGuard.runEmailTriage()` entry point.
     func runNow() {
         guard !isRunning else { return }
         isRunning = true

@@ -1,4 +1,4 @@
-"""The SANCTIONED habit-management seam: the single way habits are
+"""The SANCTIONED habit-management entry point: the single way habits are
 created-shaped / renamed / deleted / goal-edited / imported / exported.
 
 WHY THIS EXISTS (Iga v3 Wave D)
@@ -10,7 +10,7 @@ architectural contract (MemPalace iga/decisions/3542bae6, extended to the
 substrate in Wave A/B and to the record click in Wave B) is unchanged here:
 
   * the **app holds zero habit logic and issues no writes** — it relays a
-    named intent to exactly ONE engine seam, analogous to ``record.py``;
+    named intent to exactly ONE engine entry point, analogous to ``record.py``;
   * this module mutates the substrate **only** through the FROZEN Wave-A
     ``substrate.py`` (``SubstrateStore`` load/save — atomic tmp+os.replace,
     isolation-aware) and reuses the FROZEN ``import_habitkit`` /
@@ -131,7 +131,7 @@ def apply_set_goal(
 
     ``period`` must be in ``PERIODS`` (day|week|month|none). the tracker
     "bi-weekly" is NOT representable in this substrate — pass the closest
-    representable period; this seam never fabricates a recurrence model the
+    representable period; this entry point never fabricates a recurrence model the
     frozen stats engine cannot evaluate.
 
     Mechanics (deterministic, round-trip-stable): every currently-active
@@ -283,7 +283,7 @@ def apply_reorder(
 
 
 # --------------------------------------------------------------------------- #
-# the seam: dispatch a named intent, persist, re-emit the widget
+# the entry point: dispatch a named intent, persist, re-emit the widget
 # --------------------------------------------------------------------------- #
 def _reemit(window_days: int | None) -> tuple:
     kw: dict = {}
@@ -385,7 +385,7 @@ def manage(
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="manage",
-        description="The sanctioned habit-tracker management seam: "
+        description="The sanctioned habit-tracker management entry point: "
         "rename / delete / set-goal a habit, or import / export the whole "
         "tracker, via the FROZEN Wave-A substrate, then re-emit the derived "
         "widget JSON. The menu-bar ⋯ menu relays here; it never mutates "

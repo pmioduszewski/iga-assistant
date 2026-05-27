@@ -14,7 +14,7 @@ HARD BOUNDARY
   * the frozen Wave 1 ledger (read-only — done/failed rows + output_ref), and
   * an injected ``output_resolver`` callable that maps an ``output_ref`` to a
     small ``{title, tldr}`` dict.
-The resolver is the seam: in production an entrypoint passes a closure that
+The resolver is the entry point: in production an entrypoint passes a closure that
 reads a drawer via MemPalace; in tests it's a dict lookup. The surfacer never
 imports MemPalace.
 

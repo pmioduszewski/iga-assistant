@@ -1,12 +1,12 @@
 import Foundation
 import Observation
 
-// MARK: - Multi-habit widget store (read-poll + single-seam relay)
+// MARK: - Multi-habit widget store (read-poll + single-entry point relay)
 //
 // Wave B. Polls the skill-produced `habit-tracker-habits.json` (schema_version
 // 2) and exposes the decoded `HabitsWidgetData` for the view. It holds ZERO
 // habit logic: it computes no streak, no goal, no grid level. The ONLY side
-// effect it can cause is relaying a click to the sanctioned record seam
+// effect it can cause is relaying a click to the sanctioned record entry point
 // (`ContractGuard.runRecord`) — the engine performs the mutation and re-emits
 // the JSON; this store then re-reads the refreshed file. Deleting the app
 // removes this poller only; the record CLI + engine keep working standalone.
@@ -30,7 +30,7 @@ final class HabitsWidgetStore {
     /// disables the tapped square until the engine round-trips.
     private(set) var pending: Set<String> = []
 
-    /// The last record-seam failure, surfaced to the Compact UI so a failed
+    /// The last record-entry point failure, surfaced to the Compact UI so a failed
     /// click is NEVER a silent no-op again (the original bug: a Finder-
     /// launched .app had no PATH, `uv` wasn't found, the non-zero exit was
     /// swallowed). Set on a failed relay, cleared on the next successful one
@@ -207,7 +207,7 @@ final class HabitsWidgetStore {
     /// is for the user's own clicks) — the Compact strip stays usable
     /// regardless because its window is system-date-anchored, so a failed
     /// refresh degrades to "engine numbers a little stale", never "can't
-    /// mark today". Relays ONLY via the sanctioned ContractGuard seam.
+    /// mark today". Relays ONLY via the sanctioned ContractGuard entry point.
     private func maybeReproject() {
         let today = Self.systemTodayISO()
         guard !reprojectInFlight, reprojectedForDay != today else { return }
@@ -269,7 +269,7 @@ final class HabitsWidgetStore {
     /// controls so a double-submit can't race.
     private(set) var managePending = false
 
-    /// Relay a NAMED management intent to the sanctioned manage seam, then
+    /// Relay a NAMED management intent to the sanctioned manage entry point, then
     /// refresh from the engine-re-emitted JSON. The app decides NOTHING —
     /// the engine performs the mutation + re-projection; this only names it
     /// and re-reads. A failure is SURFACED via `lastRelayError` (same
@@ -309,7 +309,7 @@ final class HabitsWidgetStore {
         onDone?(ok)
     }
 
-    /// Test seam: drive `finishManage` directly with a synthesized outcome
+    /// Test entry point: drive `finishManage` directly with a synthesized outcome
     /// (no real subprocess). Not used by production paths.
     func testInjectManageResult(
         ok: Bool, exitCode: Int32, stderr: String
@@ -343,7 +343,7 @@ final class HabitsWidgetStore {
         currentlyDone ? .remove : .add
     }
 
-    /// Relay a BINARY square click to the SANCTIONED record seam, then
+    /// Relay a BINARY square click to the SANCTIONED record entry point, then
     /// refresh from the engine-re-emitted JSON. The app decides NOTHING
     /// about the result — it names the gesture; the engine computes the new
     /// amount/streak/grid. (Per-day-goal habits use `relaySetAmount` via the
@@ -419,7 +419,7 @@ final class HabitsWidgetStore {
         }
     }
 
-    /// Test seam: drive `finishRelay` directly with a synthesized outcome
+    /// Test entry point: drive `finishRelay` directly with a synthesized outcome
     /// so the failure-propagation contract is unit-tested without spawning
     /// the real subprocess. Not used by production code paths.
     func testInjectRelayResult(
@@ -428,7 +428,7 @@ final class HabitsWidgetStore {
         finishRelay(key: key, ok: ok, exitCode: exitCode, stderr: stderr)
     }
 
-    /// One short human line from a record-seam failure — picks the most
+    /// One short human line from a record-entry point failure — picks the most
     /// actionable signal (the classic cause is `uv` not found on a
     /// Finder-launched app). Pure string shaping; no habit logic.
     nonisolated static func briefError(

@@ -120,7 +120,7 @@ def _is_covered(identity: str, covered: list[str]) -> bool:
 
 
 def _null_stream_counts(_lookback_days: int) -> dict[str, int]:
-    """Default seam: no Gmail wired → no streams → no offer (graceful)."""
+    """Default entry point: no Gmail wired → no streams → no offer (graceful)."""
     LOG.info("No stream_counts injected; no unhooked-cluster offer.")
     return {}
 

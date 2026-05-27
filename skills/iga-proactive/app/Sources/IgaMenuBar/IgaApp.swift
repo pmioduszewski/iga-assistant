@@ -72,7 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let mw = MoodWidgetStore()
         moodWidget = mw
         // Always-on host for the semi-auto mood ingest (reliable; NOT a
-        // LaunchAgent). Triggers the sanctioned ingest seam hourly and
+        // LaunchAgent). Triggers the sanctioned ingest entry point hourly and
         // refreshes the Mood widget on success.
         let miw = MoodIngestWatcher(onIngested: { [weak mw] in
             mw?.poll()
@@ -83,7 +83,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let etw = EmailTriageWatcher()
         emailTriage = etw
 
-        // ONE panel hosting BOTH columns. It never touches the engine seam —
+        // ONE panel hosting BOTH columns. It never touches the engine entry point —
         // pure UI plumbing (contract-safe).
         panel = PanelController(
             store: s,

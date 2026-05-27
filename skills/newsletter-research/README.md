@@ -68,7 +68,7 @@ generic menu-bar `WidgetHost` (`SkillDiscovery` + `WidgetHostStore` +
 `WidgetHostView`) already discovers and renders `message` widgets read-only
 and tolerates an absent data file (shows "waiting for newsletter-research").
 **No app code is specific to this skill** — minimal footprint, contract
-intact (no Process / record / engine seam from the card). The worker writes
+intact (no Process / record / engine entry point from the card). The worker writes
 the findings JSON atomically each run.
 
 ## Tests

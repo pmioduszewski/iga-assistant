@@ -57,18 +57,29 @@ Respond with EXACTLY one line: "OK"  — or —  "BLOCK: <what was found and in 
 
 ASK="Judge whether the following ${label} is safe to publish to a public OSS repo. One line only: OK or BLOCK."
 
+# Bounded execution — the judge must NEVER hang a commit/push. Portable timeout.
+_iga_to() { # _iga_to SECONDS cmd...
+  local s="$1"; shift
+  if command -v timeout >/dev/null 2>&1; then timeout "$s" "$@"
+  elif command -v gtimeout >/dev/null 2>&1; then gtimeout "$s" "$@"
+  else perl -e 'my $s=shift; my $p=fork; if(!defined$p){exit 127} if(!$p){setpgrp(0,0); exec @ARGV; exit 127} $SIG{ALRM}=sub{kill "KILL",-$p; exit 124}; alarm $s; waitpid $p,0; exit($?>>8)' "$s" "$@"
+  fi
+}
+
 run_judge() {
-  local prompt
+  local prompt to
   prompt="$ASK"$'\n\n'"$payload"
+  to="${IGA_GUARD_TIMEOUT:-90}"
   if command -v claude >/dev/null 2>&1; then
-    printf '%s' "$prompt" | claude -p --model "${IGA_GUARD_MODEL:-claude-sonnet-4-6}" --append-system-prompt "$SYS" 2>/dev/null || true
+    # Clean env so a nested `claude` (when committing from inside Claude Code)
+    # starts as an independent instance and can't deadlock on the parent session.
+    printf '%s' "$prompt" | _iga_to "$to" env -u CLAUDECODE claude -p --model "${IGA_GUARD_MODEL:-claude-haiku-4-5-20251001}" --append-system-prompt "$SYS" 2>/dev/null || true
     return
   fi
   if command -v gh >/dev/null 2>&1 && gh models --help >/dev/null 2>&1; then
-    printf '%s\n\n%s' "$SYS" "$prompt" | gh models run "${IGA_GUARD_GH_MODEL:-openai/gpt-4o}" 2>/dev/null || true
+    printf '%s\n\n%s' "$SYS" "$prompt" | _iga_to "$to" gh models run "${IGA_GUARD_GH_MODEL:-openai/gpt-4o}" 2>/dev/null || true
     return
   fi
-  # no judge available
   return
 }
 

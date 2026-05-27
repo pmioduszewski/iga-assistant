@@ -10,7 +10,7 @@ import SwiftUI
 //
 // Contract: holds ZERO habit logic and issues NO writes. Every control names
 // an absolute desired amount and relays it via `store.relaySetAmount` to the
-// single sanctioned record seam; the engine clamps/derives streak/goal/level
+// single sanctioned record entry point; the engine clamps/derives streak/goal/level
 // and re-emits. The drawer's displayed value is the ENGINE TRUTH read back
 // from the decoded state (`store.currentAmount`) — never a local optimistic
 // guess that could diverge. Binary habits never reach this drawer (they stay
@@ -254,7 +254,7 @@ struct HabitLogDrawer: View {
         .disabled(!enabled || pending)
     }
 
-    /// Name an absolute desired amount → the sanctioned seam. The engine is
+    /// Name an absolute desired amount → the sanctioned entry point. The engine is
     /// the only mutator; the displayed value updates when the poll re-reads
     /// the re-emitted state.
     private func relay(_ newAmount: Int) {

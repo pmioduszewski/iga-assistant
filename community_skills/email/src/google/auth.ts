@@ -55,9 +55,45 @@ export async function readCredentialFile(filePath: string): Promise<GoogleAuthor
 const clientCache = new Map<string, OAuth2Client>();
 
 /**
+ * Atomically persist a rotated refresh token back to the credential file,
+ * preserving every other field. Best-effort: a failure here is swallowed (the
+ * caller is an event handler that must never throw), and the worst case is the
+ * next process retries.
+ *
+ * Re-reads the on-disk file first so a concurrent writer's other-field updates
+ * are not clobbered; the write is tmp-file + rename so a reader never sees a
+ * half-written credential.
+ */
+async function persistRefreshToken(credFile: string, newRefreshToken: string): Promise<void> {
+  try {
+    let onDisk: Partial<GoogleAuthorizedUser>;
+    try {
+      onDisk = JSON.parse(await fs.readFile(credFile, "utf8")) as Partial<GoogleAuthorizedUser>;
+    } catch {
+      return; // file vanished/corrupt — don't fabricate one here
+    }
+    if (onDisk.refresh_token === newRefreshToken) return; // already current
+    const merged = { ...onDisk, refresh_token: newRefreshToken };
+    const tmp = `${credFile}.tmp-${process.pid}-${Date.now()}`;
+    await fs.writeFile(tmp, JSON.stringify(merged, null, 2) + "\n", { mode: 0o600 });
+    await fs.rename(tmp, credFile);
+  } catch {
+    /* best-effort — next refresh will try again */
+  }
+}
+
+/**
  * Build (or return cached) OAuth2Client for the given email address. The client
  * is preloaded with the refresh token; google-auth-library handles automatic
  * access-token refresh on each request.
+ *
+ * Some Google OAuth client configs (and any consent screen still in "Testing")
+ * issue a NEW refresh token on each refresh and invalidate the previous one.
+ * google-auth-library surfaces the replacement via the 'tokens' event but never
+ * writes it back — so without the handler below the on-disk token is consumed
+ * once and every later refresh fails with invalid_grant (observed 2026-05-23:
+ * token valid at 17:05, dead at 17:12, disk byte-identical). Persisting the
+ * rotated token keeps the credential current across processes.
  */
 export async function getOAuthClientForEmail(email: string): Promise<OAuth2Client> {
   const cached = clientCache.get(email);
@@ -72,8 +108,20 @@ export async function getOAuthClientForEmail(email: string): Promise<OAuth2Clien
   });
   client.setCredentials({ refresh_token: cred.refresh_token });
 
+  client.on("tokens", (tokens) => {
+    if (tokens.refresh_token && tokens.refresh_token !== cred.refresh_token) {
+      cred.refresh_token = tokens.refresh_token; // keep this process's view current
+      void persistRefreshToken(credFile, tokens.refresh_token);
+    }
+  });
+
   clientCache.set(email, client);
   return client;
+}
+
+/** Drop a cached OAuth client so the next call rebuilds it from disk. */
+export function evictOAuthClient(email: string): void {
+  clientCache.delete(email);
 }
 
 export function _resetAuthCache(): void {

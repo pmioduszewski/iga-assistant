@@ -16,6 +16,7 @@ import { triage } from "./triage.js";
 import { ensureLabelsImpl, getGmailClient } from "./google/gmail-client.js";
 import type { CanonicalLabelSpec, EnsureLabelsResult } from "./google/gmail-client.js";
 import { loadConfig } from "./config-loader.js";
+import { runAuthFlow, listCredentialedAccounts } from "./google/auth-flow.js";
 import type { LabelColorSpec, ThinkingLevel, TaxonomyConfig, TriageOptions } from "./types.js";
 
 const TRIAGE_HELP = `iga-mail triage — Iga email triage engine
@@ -51,6 +52,8 @@ Subcommands:
   labels list               list Gmail labels
   labels create <name>      create a Gmail label
   labels ensure             sync canonical taxonomy labels (with colors) to Gmail
+  auth --account <email>    (re)authorize a Google account via loopback OAuth
+  auth --all                re-auth every account that has a credential file
 
 Global options:
   --account <alias>         which account to operate on (required for non-triage)
@@ -481,6 +484,56 @@ const TRIAGE_FLAG_TOKENS = new Set([
   "--mock", "--json", "--model", "--thinking", "-h", "--help",
 ]);
 
+const AUTH_HELP = `iga-mail auth — (re)authorize Google accounts via loopback OAuth
+
+Usage:
+  iga-mail auth --account <email>            re-auth one account (reuses its client_id/secret/scopes)
+  iga-mail auth --all                        re-auth every account with a credential file
+  iga-mail auth --account <email> --client-secrets <path.json>
+                                             authorize a NEW account from a Google client secrets file
+
+Notes:
+  - Opens your browser for Google consent; writes ~/.local/share/iga-email/credentials/<slug>.json (mode 0600)
+  - Use this when triage fails with "invalid_grant" (tokens revoked by a password change / sign-out)
+  - After it finishes, restart the iga-email MCP (/mcp) so the server reloads the new tokens
+`;
+
+async function cmdAuth(args: string[]): Promise<void> {
+  if (args.includes("-h") || args.includes("--help")) {
+    process.stdout.write(AUTH_HELP);
+    return;
+  }
+  const getOpt = (name: string): string | undefined => {
+    const i = args.indexOf(name);
+    return i >= 0 ? args[i + 1] : undefined;
+  };
+  const clientSecretsPath = getOpt("--client-secrets");
+
+  let emails: string[];
+  if (args.includes("--all")) {
+    emails = await listCredentialedAccounts();
+    if (emails.length === 0) {
+      throw new Error(
+        "No credential files found to re-auth. Use `auth --account <email> --client-secrets <path>`.",
+      );
+    }
+  } else {
+    const account = getOpt("--account");
+    if (!account) {
+      throw new Error("auth requires --account <email> or --all. See `iga-mail auth --help`.");
+    }
+    emails = [account];
+  }
+
+  for (const email of emails) {
+    process.stderr.write(`\n=== ${email} ===\n`);
+    await runAuthFlow(email, { clientSecretsPath });
+  }
+  process.stderr.write(
+    `\nDone. Re-authorized ${emails.length} account(s). Restart the iga-email MCP (/mcp) to load the new tokens.\n`,
+  );
+}
+
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const first = argv[0];
@@ -527,6 +580,8 @@ async function main(): Promise<void> {
       if (sub === "ensure") return cmdLabelsEnsure(rest);
       throw new Error(`Unknown labels subcommand: ${sub ?? "(none)"}. Use list|create|ensure.`);
     }
+    case "auth":
+      return cmdAuth(argv.slice(1));
     case "help":
       process.stdout.write(ROOT_HELP);
       return;

@@ -1,4 +1,4 @@
-"""The SANCTIONED mood record seam — the single way a mood is logged.
+"""The SANCTIONED mood record entry point — the single way a mood is logged.
 
 WHY THIS EXISTS
 ---------------
@@ -8,9 +8,9 @@ data in a private CloudKit container, so there is no silent auto-sync
 (confirmed; the semi-automatic export-ingest path is `ingest.py`). The
 *real* answer to "live, one-place tracking" is therefore this: Iga logs a
 mood for the user straight from chat ("Iga, log mood: anxious about the
-demo, tag work"), exactly as the habit record seam logs a habit click.
+demo, tag work"), exactly as the habit record entry point logs a habit click.
 
-This module IS that seam for the mood substrate. It:
+This module IS that entry point for the mood substrate. It:
 
   * mutates the substrate **only** through `substrate.py` (`MoodStore`
     load/save — atomic tmp+os.replace, isolation-aware); it never
@@ -19,7 +19,7 @@ This module IS that seam for the mood substrate. It:
     importer's `_entry_from_row` — a chat-logged mood is byte-identical to
     the same mood imported from a source-app CSV, so `export(S)` still
     re-imports to `S` (the anti-lock-in round-trip fixpoint holds for
-    seam-authored entries too — the synthesized `attrs['src']` bag is a
+    entry point-authored entries too — the synthesized `attrs['src']` bag is a
     valid source-app-shaped row the exporter rebuilds verbatim);
   * is **idempotent** — the importer's stable per-row id (sha1 of
     Date|MoodKey|Notes) means re-logging the *same* emotion+note at the
@@ -34,7 +34,7 @@ This module IS that seam for the mood substrate. It:
 
 Stdlib only. No LLM. No network. No clock read except `--at` (the caller
 passes the civil timestamp explicitly — same determinism contract as
-`stats.py`/the habit seam). No engine source hard-references the real
+`stats.py`/the habit entry point). No engine source hard-references the real
 export path (privacy guard, tested).
 """
 
@@ -78,7 +78,7 @@ class RecordError(ValueError):
 
 # the source app's Date format the importer round-trips
 # (e.g. ``2026 Sun May 17 3:39 PM``). strftime/strptime are symmetric in
-# the engine's (unset → C/en) locale, so import(export(seam)) is exact.
+# the engine's (unset → C/en) locale, so import(export(entry point)) is exact.
 _SRC_DATE_FMT = "%Y %a %b %d %I:%M %p"
 
 _AT_FMTS = (
@@ -189,7 +189,7 @@ def reproject(*, state_dir: str | Path,
     substrate WITHOUT loading-mutating-saving it (the substrate file is
     byte-identical before and after — `widget_projection.project` only
     `load()`s and atomically writes the *widget* file). Mirrors the habit
-    seam's `--reproject` so a cold-launched app is never day-stale."""
+    entry point's `--reproject` so a cold-launched app is never day-stale."""
     if not state_dir:
         raise RecordError("state_dir is mandatory (no implicit real default)")
     os.environ["IGA_STATE_DIR"] = str(state_dir)
@@ -202,7 +202,7 @@ def reproject(*, state_dir: str | Path,
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="record",
-        description="The sanctioned mood-tracker record seam: log one "
+        description="The sanctioned mood-tracker record entry point: log one "
         "mood via the substrate (quadrant/valence derived deterministically "
         "by reusing the importer, so it round-trips like an imported row), "
         "then re-emit the Mood grid. With --reproject it instead does a "

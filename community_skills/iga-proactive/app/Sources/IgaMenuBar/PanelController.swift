@@ -24,14 +24,14 @@ import Observation
 // This controller is pure UI plumbing. It RENDERS two SwiftUI columns and
 // RELAYS dismissal OS events. It constructs NO Process, writes NO file,
 // encodes NO JSON, opens NO sqlite handle. It cannot violate the
-// render/relay/trigger contract because it never touches the engine seam at
+// render/relay/trigger contract because it never touches the engine entry point at
 // all — the hosted habit view relays clicks through the same single
-// `ContractGuard.runRecord` seam, unchanged. Deleting the app removes this
+// `ContractGuard.runRecord` entry point, unchanged. Deleting the app removes this
 // panel (and the whole viewer); `/gm` inline keeps working untouched.
 //
 // Behaviour (corrected spec):
 //   • borderless, non-activating utility panel (no Dock icon — LSUIElement)
-//   • ONE panel ≈764pt wide = fundamentals(380) + 4pt seam + board(380)
+//   • ONE panel ≈764pt wide = fundamentals(380) + 4pt gap + board(380)
 //   • a single status-item click shows it; clicking it again hides it
 //   • outside-click (global + local monitors) and Esc close BOTH (one panel)
 //   • clicking INSIDE either column keeps both open (hit-tests panel frame)
@@ -50,14 +50,14 @@ final class PanelController: NSObject {
     /// constants, never engine/UI state.
     nonisolated static let columnWidth: CGFloat = 380
 
-    /// The seam between the two columns. The spec allows a ≤2pt seam; a 1pt
+    /// The gap between the two columns. The spec allows a ≤2pt gap; a 1pt
     /// `Divider()` plus its surrounding zero spacing keeps the right column's
     /// LEFT edge effectively touching the left column's RIGHT edge.
-    nonisolated static let seamWidth: CGFloat = 1
+    nonisolated static let gapWidth: CGFloat = 1
 
-    /// Total panel width: left column + 1pt divider seam + right column.
+    /// Total panel width: left column + 1pt divider gap + right column.
     nonisolated static let panelWidth: CGFloat =
-        columnWidth * 2 + seamWidth
+        columnWidth * 2 + gapWidth
 
     /// Fixed panel height. Both columns are top-aligned and share this height
     /// (the ASCII spec: "Top-aligned … comparable height").
@@ -169,7 +169,7 @@ final class PanelController: NSObject {
         // Concrete root view (no AnyView — fix #3): the HStack is hosted via
         // a named `RootView` struct so the hierarchy keeps its static type
         // (better diffing, no type erasure). The layout invariant lives in
-        // `RootView`: fundamentals LEFT, 1pt seam, board RIGHT, zero outer
+        // `RootView`: fundamentals LEFT, 1pt gap, board RIGHT, zero outer
         // spacing → siblings in one HStack in one window (the board can never
         // render under/over the fundamentals).
         let hosting = NSHostingView(rootView: RootView(
@@ -333,7 +333,7 @@ final class PanelController: NSObject {
 // pure layout plumbing — it owns NO state, computes nothing, and just hands
 // the @Observable stores (received as plain `let`s, the single injection
 // path — fix #5) to the two columns. THE layout invariant is here:
-// fundamentals on the LEFT, a 1pt divider seam, board on the RIGHT, zero
+// fundamentals on the LEFT, a 1pt divider gap, board on the RIGHT, zero
 // outer spacing → the two columns are siblings in one HStack in one window,
 // so the board can never render under/over/below the fundamentals.
 struct RootView: View {
@@ -355,7 +355,7 @@ struct RootView: View {
                        alignment: .top)
 
             Divider()
-                .frame(width: PanelController.seamWidth)
+                .frame(width: PanelController.gapWidth)
 
             BoardPanelView(
                 host: host,

@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-// MARK: - Mood widget store (pure read-poll — ZERO engine seam)
+// MARK: - Mood widget store (pure read-poll — ZERO engine entry point)
 //
 // The mood-tracker's second-instance analogue of HabitsWidgetStore, but
 // strictly READ-ONLY: the Mood grid is an analytics surface, never a
@@ -9,7 +9,7 @@ import Observation
 // subprocess — it only polls the skill-produced `mood-tracker-mood.json`
 // (schema_version 2, type `mood-grid`) and exposes the decoded per-day
 // dominant-quadrant cells for the view. Marking/logging happens through
-// the sanctioned `engine/record.py` chat seam, not here. Deleting the app
+// the sanctioned `engine/record.py` chat entry point, not here. Deleting the app
 // removes this poller only; the engine + CLI keep working standalone.
 //
 // Robustness mirrors HabitsWidgetStore: an absent/partial/garbage file

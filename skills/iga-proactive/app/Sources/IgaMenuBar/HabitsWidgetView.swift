@@ -7,7 +7,7 @@ import SwiftUI
 //   • Compact (default) — one row per habit: icon + name, the last 7 days as
 //     squares, the current streak, and a weekly-goal ring. iStat-Menus
 //     density. The everyday glanceable view. This is the ONLY interactive
-//     view: a square click relays to the sanctioned record seam.
+//     view: a square click relays to the sanctioned record entry point.
 //
 //   • Grid (dense) — a READ-ONLY contribution chart: 7 FIXED
 //     weekday rows × week-columns over the FULL history, small dense squares,
@@ -20,7 +20,7 @@ import SwiftUI
 // level — was computed by the FROZEN engine and decoded read-only. This view
 // computes NO habit logic. In Compact, clicking a square does not mutate
 // anything here: it calls `store.relayToggle`, which relays to the single
-// sanctioned record seam; the engine mutates + re-emits the JSON and the
+// sanctioned record entry point; the engine mutates + re-emits the JSON and the
 // poller refreshes. Grid issues no such call. Plain-language copy only
 // (wife-test bar). Inverse habits render inverted semantics (a filled square
 // = success = abstained).
@@ -145,7 +145,7 @@ struct HabitsWidgetView: View {
     /// the series stays ONE continuous dated calendar. Result: the grid
     /// fills the width, month abbreviations still label correctly (the
     /// backfilled cells carry real earlier dates, so older months appear),
-    /// and there is NO seam/blank column between the empty and the real
+    /// and there is NO entry point/blank column between the empty and the real
     /// data (it's all one contiguous run). Newest day stays at the
     /// trailing edge. Cells/gaps stay FIXED — only days are prepended,
     /// never stretched (the "balloon the gap" regression stays dead).
@@ -622,7 +622,7 @@ struct HabitsWidgetView: View {
         .frame(height: Self.weekdayLabelHeight)
     }
 
-    // MARK: one INTERACTIVE square — Compact only; click relays to the seam
+    // MARK: one INTERACTIVE square — Compact only; click relays to the entry point
 
     // The ONLY mutating cell renderer. Used EXCLUSIVELY by `compactRow`.
     // Grid uses `denseSquare` (read-only) — it never reaches this code.

@@ -61,6 +61,6 @@ File EXACTLY ONE drawer via `mempalace_add_drawer`:
   `handled` metadata) so it isn't re-queued.
 
 Constraints: no other writes, no calendar/Todoist mutation, no habit
-record/manage seam calls (you observe, you don't mark). If the digest shows
+record/manage entry point calls (you observe, you don't mark). If the digest shows
 "Nothing at risk", file a one-line drawer affirming the system is working
 and stop — silence is fine.

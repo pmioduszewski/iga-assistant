@@ -14,7 +14,7 @@ prerequisites:
     severity: error
 triggers:
   - kind: cli
-    spec: "PRIMARY conversational path = the `iga_mood_log` MCP tool (emotion `;`-joined primary-first for multi-feeling — ONE call per moment, never two). It wraps `engine/record.py --state-dir ~/Gaia/state --emotion <name[;name2]> --at <YYYY-MM-DDTHH:MM> [--note .. --people .. --places .. --events ..]`, the sanctioned chat log seam (bash fallback only if the MCP is down). `engine/widget_projection.py [--days N]` rebuilds the Mood grid. `engine/summary.py` is the read-only Iga digest. `engine/import_mood_csv.py --input <csv> --state-dir <dir>` imports a mood-app export. `engine/ingest.py --state-dir ~/Gaia/state` is the idempotent backfill (newest export in the configurable watch folder iff changed)."
+    spec: "PRIMARY conversational path = the `iga_mood_log` MCP tool (emotion `;`-joined primary-first for multi-feeling — ONE call per moment, never two). It wraps `engine/record.py --state-dir ~/Gaia/state --emotion <name[;name2]> --at <YYYY-MM-DDTHH:MM> [--note .. --people .. --places .. --events ..]`, the sanctioned chat log entry point (bash fallback only if the MCP is down). `engine/widget_projection.py [--days N]` rebuilds the Mood grid. `engine/summary.py` is the read-only Iga digest. `engine/import_mood_csv.py --input <csv> --state-dir <dir>` imports a mood-app export. `engine/ingest.py --state-dir ~/Gaia/state` is the idempotent backfill (newest export in the configurable watch folder iff changed)."
 substrate:
   - kind: mood-tracker
     version: 1
@@ -82,7 +82,7 @@ four colours the source app uses), NOT a valence ramp. The payload
 also keeps a legacy 0..4 `cells` array (so any generic contribution-grid
 reader still works) plus a short deterministic coach line (dominant
 quadrant · top emotion · trend). The view is strictly read-only; logging
-happens via the `engine/record.py` chat seam, never the grid.
+happens via the `engine/record.py` chat entry point, never the grid.
 
 ## Iga read path (the whole point)
 
@@ -107,13 +107,13 @@ correlations (they're context, not causation).
 The source mood app keeps its data in a private CloudKit container, so there is
 **no silent auto-sync** (only the semi-automatic export → `ingest.py`
 path). The real "track mood live without opening another app" answer is
-this seam: when the user **expresses a feeling in chat** ("I'm anxious
+this entry point: when the user **expresses a feeling in chat** ("I'm anxious
 about the demo", "felt great after the run with the kids"), Iga logs it
-for them via the sanctioned record seam — exactly analogous to the habit
-record seam. The grid/UI is render-only and **never** mutates.
+for them via the sanctioned record entry point — exactly analogous to the habit
+record entry point. The grid/UI is render-only and **never** mutates.
 
 **Primary path = the `iga_mood_log` MCP tool** (the `iga` MCP wraps this
-seam). Iga MUST use the MCP tool when the `iga` MCP is connected — NOT a
+entry point). Iga MUST use the MCP tool when the `iga` MCP is connected — NOT a
 bash/`record.py` call:
 
 ```
@@ -122,7 +122,7 @@ iga_mood_log(emotion="Overwhelmed;Sad", at="2026-05-17T14:30",
 ```
 
 Fallback ONLY when the `iga` MCP is not connected (then the underlying
-seam directly):
+entry point directly):
 
 ```
 uv run python skills/mood-tracker/engine/record.py \
@@ -172,9 +172,9 @@ cd <repo-root> && uv run python -m pytest skills/mood-tracker/tests/ -q
 
 Covers the quadrant map + palette, the import field-mapping + idempotency
 + date parse, the round-trip **fixpoint** (`import(export(S))` data-equals
-`S`) — including for **seam-authored** (chat-logged) entries, the
+`S`) — including for **entry point-authored** (chat-logged) entries, the
 deterministic stats/summary, the dense `mood-grid` projection (per-day
-dominant quadrant + colour), the record seam (importer-equivalent
+dominant quadrant + colour), the record entry point (importer-equivalent
 modelling, idempotency, non-mutating `--reproject`), and the isolation +
 privacy guard (no real export path referenced; `--state-dir` mandatory;
 real `~/Gaia/state` byte/mtime-unchanged across the whole pipeline incl.

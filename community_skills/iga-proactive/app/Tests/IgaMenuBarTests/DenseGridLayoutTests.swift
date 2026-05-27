@@ -17,7 +17,7 @@ import XCTest
 // COLUMNS not rows (rows always 7); that `monthLabelColumns` labels exactly
 // the month-change columns; and — via a source grep mirroring ContractLitmus
 // — that the dense/Grid render path contains NO mutator, while Compact still
-// owns the record seam. Pure functions, no running UI.
+// owns the record entry point. Pure functions, no running UI.
 
 final class DenseGridLayoutTests: XCTestCase {
 
@@ -210,14 +210,14 @@ final class DenseGridLayoutTests: XCTestCase {
             }
         }
 
-        // The Compact interactive cell renderer still owns the seam.
+        // The Compact interactive cell renderer still owns the entry point.
         let compactSquare = members.first { $0.name == "square" }
         XCTAssertNotNil(compactSquare,
             "the interactive Compact `square(...)` must still exist")
         XCTAssertTrue(
             compactSquare!.body.contains("onTapGesture")
                 && compactSquare!.body.contains("relayToggle"),
-            "Compact's `square` must still relay clicks via the seam")
+            "Compact's `square` must still relay clicks via the entry point")
 
         // The read-only Grid cell renderer must NOT relay.
         let denseSquare = members.first { $0.name == "denseSquare" }

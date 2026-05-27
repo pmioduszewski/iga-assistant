@@ -228,10 +228,10 @@ def derive_gmail_query(spec: dict[str, Any]) -> tuple[str, str]:
 
 
 # --------------------------------------------------------------------------- #
-# Gmail search seam (injected; default = nothing wired)
+# Gmail search entry point (injected; default = nothing wired)
 # --------------------------------------------------------------------------- #
 def _null_gmail_search(query: str) -> list[dict[str, Any]]:
-    """Default Gmail seam: no Gmail wired → no messages.
+    """Default Gmail entry point: no Gmail wired → no messages.
 
     Graceful degradation, never raise — mirrors ``triggers.eval_todoist``
     with no token. A real entrypoint injects a closure over the iga-gmail

@@ -143,7 +143,7 @@ false green: "Test run with 0 tests … passed"). `--enable-xctest` makes XCTest
 discovery explicit; rely only on that form in CI or before publishing. The
 Swift suite includes `ContractLitmusTests` which source-greps every
 `Sources/*.swift` file and fails the build if any forbidden write / subprocess
-primitive escapes the single sanctioned `ContractGuard` seam.
+primitive escapes the single sanctioned `ContractGuard` entry point.
 
 ## Deeper docs
 

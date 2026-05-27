@@ -65,7 +65,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let hw = HabitsWidgetStore()
         habitsWidget = hw
 
-        // ONE panel hosting BOTH columns. It never touches the engine seam —
+        // ONE panel hosting BOTH columns. It never touches the engine entry point —
         // pure UI plumbing (contract-safe).
         panel = PanelController(
             store: s,

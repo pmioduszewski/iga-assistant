@@ -29,7 +29,7 @@ Engine + entrypoints complete and frozen. `status: building → stable`.
   JSON state file (atomic write, schema_version 1).
 - `engine/surfacer.py` — completed-research → capped `/gm`+`/back` 📑
   payload; refreshes the same state file; no MCP imports (injected
-  resolver seam).
+  resolver entry point).
 - `skills/iga-proactive-research/proactive.yaml` — the bespoke research
   scanner ported to a declarative two-job `proactive:` block.
 
@@ -41,7 +41,7 @@ Engine + entrypoints complete and frozen. `status: building → stable`.
 ### macOS menu-bar companion (`app/`)
 - SwiftUI `MenuBarExtra` app (macOS 13+, `LSUIElement`): render + relay +
   trigger only, zero job logic in Swift. `ContractGuard` is the single
-  sanctioned engine-exec seam; `LedgerReader` is driver-level read-only.
+  sanctioned engine-exec entry point; `LedgerReader` is driver-level read-only.
 - `ContractLitmusTests` — source-grep + runtime assertions enforcing the
   hard contract and the deletion invariant.
 - Scheduler host (`NSBackgroundActivityScheduler` + wake trigger) as the

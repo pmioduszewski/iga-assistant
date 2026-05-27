@@ -99,7 +99,7 @@ swift test --enable-xctest
 > form you should rely on in CI or before publishing. The suite includes
 > `ContractLitmusTests` (source-grep + runtime assertions) which fails the
 > build if any write/subprocess primitive escapes the single sanctioned
-> `ContractGuard` seam.
+> `ContractGuard` entry point.
 
 ## Where it installs (discoverable as “Iga”)
 
@@ -187,7 +187,7 @@ Checklist: ☐ right-click→Open ☐ Allow notifications ☐ enable Login Item.
 |---|---|
 | `EngineState.swift` | Pure decoder for the v1 state contract |
 | `LedgerReader.swift` | Read-only sqlite reader (driver-level RO guard) |
-| `ContractGuard.swift` | The single sanctioned engine-exec seam |
+| `ContractGuard.swift` | The single sanctioned engine-exec entry point |
 | `EngineRunner.swift` | Runs the one scan command |
 | `StateStore.swift` | Poller + notification diffing (de-duped by idem key) |
 | `Notifier.swift` | `UNUserNotificationCenter` wrapper |

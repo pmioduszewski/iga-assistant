@@ -21,7 +21,7 @@ import SwiftUI
 //
 // CONTRACT: pure presentation. No Process, no write, no JSON encode, no
 // sqlite. The only mutation path is a habit-square click, which the habit
-// view relays through the single `ContractGuard.runRecord` seam exactly as
+// view relays through the single `ContractGuard.runRecord` entry point exactly as
 // before — unchanged. Deleting the app removes this board; `/gm` keeps
 // working. ContractLitmus greps this file too (blanket + explicit assertion).
 

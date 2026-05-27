@@ -7,10 +7,10 @@ import AppKit
 // goal/schedule, archive, delete, and back up / restore the whole tracker.
 // It holds ZERO habit logic and issues NO writes: every action names an
 // intent and relays it via `store.relayManage` to the single sanctioned
-// manage seam; the engine performs the mutation + re-emits the JSON.
+// manage entry point; the engine performs the mutation + re-emits the JSON.
 //
 // One op per explicit button (no op-chaining) so a multi-field "save" can't
-// race the single-op engine seam. Controls disable while a relay is in
+// race the single-op engine entry point. Controls disable while a relay is in
 // flight; a failure is surfaced inline. Plain-language copy only.
 
 struct HabitManageSheet: View {

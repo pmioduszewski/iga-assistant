@@ -15,7 +15,7 @@ import XCTest
 //      (also covered in LedgerReaderTests).
 //   2. SOURCE GREP — scan every Sources/*.swift file and fail if any
 //      forbidden write/dispatch primitive appears outside the sanctioned
-//      ContractGuard seam.
+//      ContractGuard entry point.
 
 final class ContractLitmusTests: XCTestCase {
 
@@ -71,7 +71,7 @@ final class ContractLitmusTests: XCTestCase {
         XCTAssertFalse(args.contains("python -c"))   // no inline engine code
     }
 
-    // MARK: 2. source grep — no write/dispatch primitive escapes the seam
+    // MARK: 2. source grep — no write/dispatch primitive escapes the entry point
 
     func testNoForbiddenWriteOrDispatchPrimitivesInSource() throws {
         // Primitives that would let Swift mutate engine state or invent job
@@ -108,7 +108,7 @@ final class ContractLitmusTests: XCTestCase {
                 XCTAssertFalse(
                     code.contains(token),
                     "\(name) constructs '\(token)' outside ContractGuard — "
-                    + "all engine execution must go through the seam")
+                    + "all engine execution must go through the entry point")
             }
         }
     }
@@ -471,18 +471,18 @@ final class ContractLitmusTests: XCTestCase {
         }
     }
 
-    // MARK: 4. Wave B — the record (MUTATION) seam contract
+    // MARK: 4. Wave B — the record (MUTATION) entry point contract
     //
     // Clicking a habit square is a MUTATION. The hard contract extended:
     //   • the app issues NO write itself — it relays to exactly ONE engine
-    //     seam (the habit-tracker `record` CLI), analogous to the read-only
-    //     scan seam; the engine mutates the substrate + re-emits the JSON;
-    //   • the seam carries a MANDATORY explicit --state-dir (no implicit
+    //     entry point (the habit-tracker `record` CLI), analogous to the read-only
+    //     scan entry point; the engine mutates the substrate + re-emits the JSON;
+    //   • the entry point carries a MANDATORY explicit --state-dir (no implicit
     //     real-state default — the privacy/data-loss guard);
     //   • the widget computes NO streak/goal/grid math (zero habit logic);
     //   • deleting the app leaves the record CLI fully working standalone.
 
-    func testRecordSeamCommandShapeIsExactAndStateDirMandatory() {
+    func testRecordEntryPointCommandShapeIsExactAndStateDirMandatory() {
         XCTAssertEqual(
             ContractGuard.documentedRecordCommand,
             "cd <abs-skill-dir> || exit 90 ; <abs-uv> run python "
@@ -506,7 +506,7 @@ final class ContractLitmusTests: XCTestCase {
         XCTAssertTrue(args.contains("--habit 'h-gym'"))
         XCTAssertTrue(args.contains("--date '2026-05-16'"))
         XCTAssertTrue(args.contains("--add"))
-        // The seam never embeds inline python or a write verb on JSON.
+        // The entry point never embeds inline python or a write verb on JSON.
         XCTAssertFalse(args.contains("python -c"))
         XCTAssertFalse(args.contains(".json"))
         // remove + set-amount variants render the right flag.
@@ -522,7 +522,7 @@ final class ContractLitmusTests: XCTestCase {
             .contains("--set-amount 4"))
     }
 
-    func testRecordSeamSanitizesDynamicValues() {
+    func testRecordEntryPointSanitizesDynamicValues() {
         // A crafted id/date cannot break out of the single-quoted arg: the
         // shell-safe filter strips everything but [A-Za-z0-9-_:].
         let p = ContractGuard.habitRecordProcess(
@@ -552,7 +552,7 @@ final class ContractLitmusTests: XCTestCase {
 
     func testOnlyContractGuardConstructsTheMutationSubprocess() throws {
         // The blanket grep already bans Process() outside ContractGuard.
-        // This is the explicit, named mutation-seam assertion: no source but
+        // This is the explicit, named mutation-entry point assertion: no source but
         // ContractGuard references runRecord's subprocess, and the widget
         // host relays ONLY via ContractGuard.runRecord — never a Process,
         // never a JSON write, never engine math.
@@ -564,14 +564,14 @@ final class ContractLitmusTests: XCTestCase {
                 "\(name) constructs a Process — the record mutation must "
                 + "go through ContractGuard.runRecord only")
         }
-        // The relay store must call the sanctioned seam and nothing else.
+        // The relay store must call the sanctioned entry point and nothing else.
         let store = try swiftSources()
             .first { $0.name == "HabitsWidgetStore.swift" }
         XCTAssertNotNil(store)
         let code = stripComments(store!.body)
         XCTAssertTrue(
             code.contains("ContractGuard.runRecord"),
-            "the habits store must relay clicks via the sanctioned seam")
+            "the habits store must relay clicks via the sanctioned entry point")
         for forbidden in [
             "Process()", ".write(to:", "write(toFile:", "JSONEncoder(",
             "createFile(atPath:", "current_streak =", "longest_streak =",
@@ -703,7 +703,7 @@ final class ContractLitmusTests: XCTestCase {
         XCTAssertFalse(ns.goal.hasGoal)   // no goal → no ring
     }
 
-    func testRecordSeamDeletionInvariantStandaloneAndIsolated() throws {
+    func testRecordEntryPointDeletionInvariantStandaloneAndIsolated() throws {
         // OPERATIONAL proof: the record CLI runs WITHOUT the app, mutates an
         // isolated substrate, re-emits the Wave-B widget JSON, and the grid +
         // streak it produces match the FROZEN stats.py — proving the Swift
@@ -725,13 +725,13 @@ final class ContractLitmusTests: XCTestCase {
         guard let record else {
             return XCTFail(
                 "skills/habit-tracker/engine/record.py not reachable — the "
-                + "record seam must exist independent of the app")
+                + "record entry point must exist independent of the app")
         }
         let engineDir = record.deletingLastPathComponent()
         let rcode = try String(contentsOf: record, encoding: .utf8)
         XCTAssertFalse(
             rcode.contains("IgaMenuBar") || rcode.contains("import Swift"),
-            "the record seam must not depend on the app in any way")
+            "the record entry point must not depend on the app in any way")
         XCTAssertTrue(
             rcode.contains("SubstrateStore"),
             "record must mutate via the frozen Wave-A substrate store")
@@ -754,7 +754,7 @@ final class ContractLitmusTests: XCTestCase {
                                     snap($0)) }
 
         let tmpRoot = fm.temporaryDirectory.appendingPathComponent(
-            "iga-record-seam-\(UUID().uuidString)")
+            "iga-record-ep-\(UUID().uuidString)")
         try fm.createDirectory(at: tmpRoot,
                                withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: tmpRoot) }
@@ -793,20 +793,20 @@ final class ContractLitmusTests: XCTestCase {
                 + "\(exportFile.path.replacingOccurrences(of: " ", with: "\\ ")) "
                 + "--state-dir \(tmpRoot.path)"),
             0, "isolated import must succeed")
-        // Click three consecutive days via the record seam CLI.
+        // Click three consecutive days via the record entry point CLI.
         for d in ["2026-05-14", "2026-05-15", "2026-05-16"] {
             XCTAssertEqual(
                 run("uv run python \(eng)/record.py --state-dir "
                     + "\(tmpRoot.path) --habit h-gym --date \(d) --add "
                     + "--days 30"),
-                0, "record seam (app absent) must succeed for \(d)")
+                0, "record entry point (app absent) must succeed for \(d)")
         }
 
-        // The seam re-emitted the Wave-B widget JSON into the ISOLATED root.
+        // The entry point re-emitted the Wave-B widget JSON into the ISOLATED root.
         let hb = tmpRoot.appendingPathComponent(
             "widgets/habit-tracker-habits.json")
         XCTAssertTrue(fm.fileExists(atPath: hb.path),
-            "record seam must re-emit the multi-habit widget JSON")
+            "record entry point must re-emit the multi-habit widget JSON")
         let obj = try JSONSerialization.jsonObject(
             with: Data(contentsOf: hb)) as? [String: Any]
         XCTAssertEqual(obj?["schema_version"] as? Int, 2)
@@ -817,7 +817,7 @@ final class ContractLitmusTests: XCTestCase {
         // by stats.py and surfaced verbatim. The Swift side computed nothing.
         XCTAssertEqual(gym?["current_streak"] as? Int, 3,
             "engine-computed streak after 3 clicks must be 3 (stats.py "
-            + "is the oracle; the app/seam added no logic)")
+            + "is the oracle; the app/entry point added no logic)")
         let gcells = gym?["cells"] as? [[String: Any]] ?? []
         let lit = Set(gcells.compactMap { c -> String? in
             (c["level"] as? Int ?? 0) > 0 ? c["date"] as? String : nil
@@ -834,7 +834,7 @@ final class ContractLitmusTests: XCTestCase {
                     "isolated record run deleted real state \(p.path)")
                 XCTAssertEqual(snap(p), mtime,
                     "REAL ~/Gaia/state changed (\(p.lastPathComponent)) — "
-                    + "the record seam wrote to live data")
+                    + "the record entry point wrote to live data")
             } else {
                 XCTAssertFalse(fm.fileExists(atPath: p.path),
                     "isolated record run created \(p.path) under real state")
@@ -879,7 +879,7 @@ final class ContractLitmusTests: XCTestCase {
                 "Wave-C v2 source \(f) missing — the unified two-column "
                 + "panel + status-item trigger must exist")
         }
-        // None of the UI-plumbing sources may touch the engine seam: no
+        // None of the UI-plumbing sources may touch the engine entry point: no
         // Process, no write, no JSON encode, no sqlite, no inline data.
         let forbidden = [
             "Process()", ".write(to:", "write(toFile:",
@@ -897,8 +897,8 @@ final class ContractLitmusTests: XCTestCase {
                     code.contains(token),
                     "\(name) contains '\(token)' — the unified panel + "
                     + "status-item trigger must render/relay only and must "
-                    + "NOT itself touch the engine seam (the hosted habit "
-                    + "view relays clicks via the existing single seam)")
+                    + "NOT itself touch the engine entry point (the hosted habit "
+                    + "view relays clicks via the existing single entry point)")
             }
         }
     }
@@ -1007,7 +1007,7 @@ final class ContractLitmusTests: XCTestCase {
 
     func testTwoColumnGeometryBoardIsRightAndTopsAligned() {
         let W = PanelController.columnWidth
-        let seam = PanelController.seamWidth
+        let gap = PanelController.gapWidth
         let H = PanelController.panelHeight
 
         // A typical large screen visible frame.
@@ -1015,13 +1015,13 @@ final class ContractLitmusTests: XCTestCase {
 
         func assertInvariant(
             _ panelFrame: NSRect, _ label: String) {
-            // The panel hosts: [ fundamentals(W) | seam | board(W) ].
+            // The panel hosts: [ fundamentals(W) | gap | board(W) ].
             // Compute each column's screen sub-rect from the panel origin.
             let fundamentals = NSRect(
                 x: panelFrame.minX, y: panelFrame.minY,
                 width: W, height: H)
             let board = NSRect(
-                x: panelFrame.minX + W + seam, y: panelFrame.minY,
+                x: panelFrame.minX + W + gap, y: panelFrame.minY,
                 width: W, height: H)
 
             // Board is to the RIGHT of fundamentals — its leading edge is
@@ -1031,10 +1031,10 @@ final class ContractLitmusTests: XCTestCase {
                 "\(label): board.origin.x must be ≥ fundamentals.maxX "
                 + "(board to the RIGHT, never under) — got board.minX="
                 + "\(board.minX) fundamentals.maxX=\(fundamentals.maxX)")
-            // Edge-to-edge: the seam between them is ≤ 2pt (touching).
+            // Edge-to-edge: the gap between them is ≤ 2pt (touching).
             XCTAssertLessThanOrEqual(
                 board.minX - fundamentals.maxX, 2.0,
-                "\(label): the seam between the columns must be ≤2pt "
+                "\(label): the gap between the columns must be ≤2pt "
                 + "(edge-to-edge)")
             // Tops aligned: identical maxY (Cocoa top = origin.y + height).
             XCTAssertEqual(
@@ -1141,7 +1141,7 @@ final class ContractLitmusTests: XCTestCase {
         // The Grid (dense) mode is now a READ-ONLY HabitKit contribution
         // chart: it shows the full history, scrolls horizontally, and NEVER
         // mutates. Marking lives in Compact only — its interactive `square`
-        // relays via the single sanctioned `store.relayToggle` seam. Assert
+        // relays via the single sanctioned `store.relayToggle` entry point. Assert
         // (source-grep, comment-stripped) that no `dense*` Grid render member
         // contains a mutator, while the Compact `square` still does, and the
         // period selector / densePeriodDays knob is gone.
@@ -1185,7 +1185,7 @@ final class ContractLitmusTests: XCTestCase {
         XCTAssertTrue(
             compactSquare!.body.contains("onTapGesture")
                 && compactSquare!.body.contains("relayToggle"),
-            "Compact's `square` must still relay clicks via the seam")
+            "Compact's `square` must still relay clicks via the entry point")
         // The read-only Grid cell renderer must exist and be inert.
         let denseSquare = members.first { $0.name == "denseSquare" }
         XCTAssertNotNil(denseSquare,

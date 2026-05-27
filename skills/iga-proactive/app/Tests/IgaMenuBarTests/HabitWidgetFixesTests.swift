@@ -4,7 +4,7 @@ import XCTest
 // MARK: - The two Compact-mode habit-widget fixes, machine-checked
 //
 // FIX 1 — the silent-no-op click bug. A Finder/Spotlight-launched .app has
-// no login-shell PATH, so a bare `uv` in the record seam was not found and
+// no login-shell PATH, so a bare `uv` in the record entry point was not found and
 // the non-zero exit was swallowed. The fix: an ABSOLUTE uv path baked into
 // the record subprocess, and the failure SURFACED (never swallowed).
 //
@@ -14,10 +14,10 @@ import XCTest
 
 final class HabitWidgetFixesTests: XCTestCase {
 
-    // MARK: FIX 1 — record seam uses an ABSOLUTE interpreter, not bare `uv`
+    // MARK: FIX 1 — record entry point uses an ABSOLUTE interpreter, not bare `uv`
 
-    func testRecordSeamUsesAnAbsoluteInterpreterPath() {
-        // The resolved uv path the seam will use. In CI/dev `uv` is on PATH
+    func testRecordEntryPointUsesAnAbsoluteInterpreterPath() {
+        // The resolved uv path the entry point will use. In CI/dev `uv` is on PATH
         // so this is an absolute file; the contract is that the BUILT
         // command references the resolved interpreter via $IGA_HT_UV (set
         // to an absolute path), never a bare `uv` token that a PATH-less
@@ -29,9 +29,9 @@ final class HabitWidgetFixesTests: XCTestCase {
         // The command must invoke the interpreter via the env indirection,
         // NOT a bare `uv run`.
         XCTAssertTrue(cmd.contains("\"$IGA_HT_UV\" run python"),
-            "record seam must call the resolved uv via $IGA_HT_UV: \(cmd)")
+            "record entry point must call the resolved uv via $IGA_HT_UV: \(cmd)")
         XCTAssertFalse(cmd.contains(" uv run "),
-            "record seam must NOT use a bare `uv` (PATH-less .app fails)")
+            "record entry point must NOT use a bare `uv` (PATH-less .app fails)")
         // The env var must be present and, when uv is installed, absolute.
         let uvEnv = p.environment?["IGA_HT_UV"] ?? ""
         XCTAssertFalse(uvEnv.isEmpty,
@@ -47,11 +47,11 @@ final class HabitWidgetFixesTests: XCTestCase {
             (p.environment?["IGA_HT_SKILL_DIR"] ?? "").hasPrefix("/"))
     }
 
-    // The record seam must stand entirely on its own under a PATH-less,
+    // The record entry point must stand entirely on its own under a PATH-less,
     // env-less Finder/Spotlight launch: EVERY input is an absolute literal
     // resolved by Swift, the `cd` is guarded (loud, not silent), and there
     // is no reliance on $IGA_HT_* being pre-set in the inherited environment.
-    func testRecordSeamFullyAbsoluteAndGuardedForFinderLaunch() {
+    func testRecordEntryPointFullyAbsoluteAndGuardedForFinderLaunch() {
         let p = ContractGuard.habitRecordProcess(
             habitId: "h-gym", date: "2026-05-16",
             op: .add, windowDays: 30)
@@ -104,7 +104,7 @@ final class HabitWidgetFixesTests: XCTestCase {
     // reversible. This is the operational proof the relay survives a real
     // GUI launch, not just a dev/terminal one. Skips cleanly if the local
     // toolchain (uv) or the frozen skill isn't present (CI without it).
-    func testRecordSeamPersistsUnderMinimalGuiEnvEndToEnd() throws {
+    func testRecordEntryPointPersistsUnderMinimalGuiEnvEndToEnd() throws {
         let fm = FileManager.default
         // Locate the frozen habit-tracker skill from the test file upward.
         var dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
@@ -191,7 +191,7 @@ final class HabitWidgetFixesTests: XCTestCase {
             var env: [String: String] = [
                 "HOME": fm.homeDirectoryForCurrentUser.path]
             // The app sets these absolutely; pin SKILL/STATE to the isolated
-            // substrate (override surface the seam intentionally exposes).
+            // substrate (override surface the entry point intentionally exposes).
             env["IGA_HT_UV"] = uv
             env["IGA_HT_SKILL_DIR"] = skill.path
             env["IGA_HT_STATE_DIR"] = tmp.path
@@ -543,7 +543,7 @@ final class HabitWidgetFixesTests: XCTestCase {
             XCTAssertFalse(c.date.isEmpty,
                 "backfill carries a real date (months still label)")
         }
-        // ONE contiguous ascending day series — no seam/gap anywhere.
+        // ONE contiguous ascending day series — no entry point/gap anywhere.
         for i in 1..<out.count {
             let a = fmt.date(from: out[i - 1].date)!
             let b = fmt.date(from: out[i].date)!
@@ -695,7 +695,7 @@ final class HabitWidgetFixesTests: XCTestCase {
 
     // MARK: FIX 3 — Compact window anchors to the SYSTEM date, not the
     // engine's stale baked `today` (the cold-launch "clicking is useless"
-    // bug). + the non-mutating reproject seam contract.
+    // bug). + the non-mutating reproject entry point contract.
 
     func testCompactWindowAnchorsToSystemTodayNotStaleEngineWindow() {
         // Engine file is a DAY STALE: its last cell is 2026-05-16, but the
@@ -838,7 +838,7 @@ final class HabitWidgetFixesTests: XCTestCase {
             "first column (today-6) must carry a weekday label")
     }
 
-    func testReprojectSeamCommandShapeIsExactNonMutatingAndEnvIndependent() {
+    func testReprojectEntryPointCommandShapeIsExactNonMutatingAndEnvIndependent() {
         XCTAssertEqual(
             ContractGuard.documentedReprojectCommand,
             "cd <abs-skill-dir> || exit 90 ; <abs-uv> run python "
@@ -861,7 +861,7 @@ final class HabitWidgetFixesTests: XCTestCase {
         XCTAssertFalse(cmd.contains("--add"))
         XCTAssertFalse(cmd.contains("--remove"))
         XCTAssertFalse(cmd.contains("--set-amount"))
-        // Same absolute, env-independent contract as the record seam.
+        // Same absolute, env-independent contract as the record entry point.
         let env = p.environment ?? [:]
         for key in ["IGA_HT_SKILL_DIR", "IGA_HT_STATE_DIR",
                     "IGA_HT_RECORD_PY"] {
@@ -1133,9 +1133,9 @@ final class HabitWidgetFixesTests: XCTestCase {
             .flat)
     }
 
-    // MARK: FIX 5 — the habit-management seam (Wave D ⋯ menu)
+    // MARK: FIX 5 — the habit-management entry point (Wave D ⋯ menu)
 
-    func testManageSeamCommandShapeIsExactAndEnvIndependent() {
+    func testManageEntryPointCommandShapeIsExactAndEnvIndependent() {
         XCTAssertEqual(
             ContractGuard.documentedManageCommand,
             "cd <abs-skill-dir> || exit 90 ; <abs-uv> run python "
@@ -1188,7 +1188,7 @@ final class HabitWidgetFixesTests: XCTestCase {
             habitId: "h-x", op: .setOrder(position: 0), windowDays: 7)
         XCTAssertTrue((r0.arguments ?? []).joined(separator: " ")
             .contains("--set-order 1"),
-            "position is clamped to ≥1 at the seam")
+            "position is clamped to ≥1 at the entry point")
 
         // archive / unarchive.
         let arc = (ContractGuard.habitManageProcess(
@@ -1228,7 +1228,7 @@ final class HabitWidgetFixesTests: XCTestCase {
         }
     }
 
-    func testManageSeamSafelyQuotesNamesAndPathsAndResistsInjection() {
+    func testManageEntryPointSafelyQuotesNamesAndPathsAndResistsInjection() {
         // A habit name with a space, a quote, and shell metacharacters must
         // be SINGLE-QUOTE escaped (not charset-stripped — that's ids only),
         // so it reaches the engine intact AND cannot break out of the shell.
@@ -1274,7 +1274,7 @@ final class HabitWidgetFixesTests: XCTestCase {
             "a successful op clears the prior error")
     }
 
-    func testManageSeamRenamePersistsUnderMinimalGuiEnvEndToEnd() throws {
+    func testManageEntryPointRenamePersistsUnderMinimalGuiEnvEndToEnd() throws {
         let fm = FileManager.default
         var dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         var skill: URL?
@@ -1395,9 +1395,9 @@ final class HabitWidgetFixesTests: XCTestCase {
                          allowExceed: false), 40)
     }
 
-    func testLogDrawerRelaysAbsoluteAmountViaSanctionedSetAmountSeam() {
+    func testLogDrawerRelaysAbsoluteAmountViaSanctionedSetAmountEntryPoint() {
         // Reset (→0), Fill Day (→target) and ± all become an explicit
-        // --set-amount through the SAME sanctioned record seam — never a
+        // --set-amount through the SAME sanctioned record entry point — never a
         // bespoke write. (Engine clamps/derives; app only names the value.)
         for n in [0, 1, 25, 40, 500] {
             let p = ContractGuard.habitRecordProcess(

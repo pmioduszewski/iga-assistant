@@ -4,7 +4,7 @@ WHY THIS EXISTS
 ---------------
 ``runtime.scan_tick`` produces a list of :class:`~engine.runtime.QueuedCandidate`
 that have ALREADY passed the ledger claim + governor gate. This module is the
-seam between the engine and whatever entrypoint actually runs the work.
+entry point between the engine and whatever entrypoint actually runs the work.
 
 INLINE MODE (the only mode in Wave 2; daemon/menu-bar is Wave 3)
 ----------------------------------------------------------------

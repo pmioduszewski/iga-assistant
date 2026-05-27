@@ -84,7 +84,7 @@ def wired(tmp_path, monkeypatch):
     fake Todoist fetcher + a fixed 'now', and the skills dir pinned so the
     CLI's scan_tick discovers exactly our test job.
 
-    We patch ``triggers._default_todoist_fetch`` (the real network seam) and
+    We patch ``triggers._default_todoist_fetch`` (the real network entry point) and
     a fixed token so the CLI runs the *real* engine with mocked I/O only —
     no monkeypatching of the engine's admission logic whatsoever.
     """
@@ -99,7 +99,7 @@ def wired(tmp_path, monkeypatch):
     monkeypatch.delenv("IGA_PROACTIVE_SPAWN", raising=False)
     monkeypatch.setenv("TODOIST_API_TOKEN", "fake-token")
 
-    # Mock the network seam only.
+    # Mock the network entry point only.
     monkeypatch.setattr(
         triggers_mod, "_default_todoist_fetch", lambda token, label: _one_task()
     )

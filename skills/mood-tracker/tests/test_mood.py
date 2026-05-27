@@ -262,8 +262,8 @@ def test_pipeline_never_touches_real_state(tmp_path, monkeypatch):
             assert not w.exists(), f"{w}: created under real state"
 
 
-# ---- record seam (the live, one-place chat logging) -------------------
-def test_record_seam_models_like_an_import_and_is_idempotent():
+# ---- record entry point (the live, one-place chat logging) -------------------
+def test_record_entrypoint_models_like_an_import_and_is_idempotent():
     s = sub.MoodSubstrate()
     row = rec.build_row(emotion="Anxious", at="2026-05-17T09:15",
                         note="before the demo", people="Boss",
@@ -301,11 +301,11 @@ def test_record_entry_round_trips_like_an_import(tmp_path):
                    at="2026-05-16T23:10", note="long day",
                    places="Home office")
     assert r["quadrant"] == "blue" and r["logs"] == 1
-    # the seam re-emitted the Mood widget into the isolated state.
+    # the entry point re-emitted the Mood widget into the isolated state.
     assert (tmp_path / "widgets" / "mood-tracker-mood.json").exists()
     # record() set IGA_STATE_DIR=tmp_path for the process; read it back.
     s = sub.MoodStore().load()
-    # export → import is an exact fixpoint for seam-authored entries too
+    # export → import is an exact fixpoint for entry point-authored entries too
     # (the synthesized source-app row rebuilds verbatim — anti-lock-in).
     out = exp.export_csv(s)
     s2 = imp.import_csv(out)

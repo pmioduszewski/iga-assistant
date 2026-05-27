@@ -24,7 +24,7 @@ enum NotificationSource: String, CaseIterable {
     /// MoodWidgetStore: daily mood check-in nudge.
     case mood         = "iga.notif.mood"
     /// EmailTriageWatcher: triage result surfacing (toggle ready for when
-    /// the seam exposes a per-run notification; currently always true).
+    /// the entry point exposes a per-run notification; currently always true).
     case emailTriage  = "iga.notif.emailTriage"
 }
 

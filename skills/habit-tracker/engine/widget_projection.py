@@ -604,7 +604,7 @@ def project_all(
     """Re-emit BOTH derived widget files in one isolation-aware pass: the
     frozen v1 ``habit-tracker-habit-grid.json`` (legacy single-habit, contract
     unchanged) AND the Wave-B ``habit-tracker-habits.json`` (multi-habit,
-    schema_version 2). The record seam calls this so a click refreshes
+    schema_version 2). The record entry point calls this so a click refreshes
     whichever widget the running app renders. Returns ``(v1_path,
     habits_path)``. Additive — ``project`` itself is untouched."""
     v1 = project(entity_id=entity_id, window_days=window_days)

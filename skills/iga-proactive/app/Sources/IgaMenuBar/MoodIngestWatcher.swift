@@ -7,13 +7,13 @@ import Observation
 // menu-bar app is already running (login item, accessory), so it is the
 // dependable host on the always-on Mac mini. This object periodically
 // (default hourly — the user wants ~1 h) TRIGGERS the sanctioned
-// `ContractGuard.runMoodIngest()` seam, which imports the newest export
+// `ContractGuard.runMoodIngest()` entry point, which imports the newest export
 // from the configurable iCloud-Drive `Iga/` folder iff it changed and
 // re-emits the Mood widget. On success it nudges the MoodWidgetStore to
 // re-poll so the Board updates with no user action.
 //
 // It holds ZERO mood logic and constructs NO subprocess itself — it only
-// relays a timer tick to the engine seam (exactly like HabitsWidgetStore
+// relays a timer tick to the engine entry point (exactly like HabitsWidgetStore
 // relays a click). A timer (not a DispatchSource vnode watch) is used
 // deliberately: iCloud-Drive files appear as lazily-materialized
 // placeholders, so file-system events are unreliable; a periodic poll
@@ -46,7 +46,7 @@ final class MoodIngestWatcher {
     private var inFlight = false
 
     /// Friendly one-liner of the folder being watched, for the widget's
-    /// sync popover. Reads the resolved path from the seam (the watcher
+    /// sync popover. Reads the resolved path from the entry point (the watcher
     /// already legitimately couples to ContractGuard) and shortens the
     /// long iCloud container prefix to "iCloud Drive ▸ …".
     var watchDirDisplay: String {

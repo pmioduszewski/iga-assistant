@@ -4,7 +4,7 @@ import XCTest
 // MARK: - The two Compact-mode habit-widget fixes, machine-checked
 //
 // FIX 1 — the silent-no-op click bug. A Finder/Spotlight-launched .app has
-// no login-shell PATH, so a bare `uv` in the record seam was not found and
+// no login-shell PATH, so a bare `uv` in the record entry point was not found and
 // the non-zero exit was swallowed. The fix: an ABSOLUTE uv path baked into
 // the record subprocess, and the failure SURFACED (never swallowed).
 //
@@ -14,10 +14,10 @@ import XCTest
 
 final class HabitWidgetFixesTests: XCTestCase {
 
-    // MARK: FIX 1 — record seam uses an ABSOLUTE interpreter, not bare `uv`
+    // MARK: FIX 1 — record entry point uses an ABSOLUTE interpreter, not bare `uv`
 
-    func testRecordSeamUsesAnAbsoluteInterpreterPath() {
-        // The resolved uv path the seam will use. In CI/dev `uv` is on PATH
+    func testRecordEntryPointUsesAnAbsoluteInterpreterPath() {
+        // The resolved uv path the entry point will use. In CI/dev `uv` is on PATH
         // so this is an absolute file; the contract is that the BUILT
         // command references the resolved interpreter via $IGA_HT_UV (set
         // to an absolute path), never a bare `uv` token that a PATH-less
@@ -29,9 +29,9 @@ final class HabitWidgetFixesTests: XCTestCase {
         // The command must invoke the interpreter via the env indirection,
         // NOT a bare `uv run`.
         XCTAssertTrue(cmd.contains("\"$IGA_HT_UV\" run python"),
-            "record seam must call the resolved uv via $IGA_HT_UV: \(cmd)")
+            "record entry point must call the resolved uv via $IGA_HT_UV: \(cmd)")
         XCTAssertFalse(cmd.contains(" uv run "),
-            "record seam must NOT use a bare `uv` (PATH-less .app fails)")
+            "record entry point must NOT use a bare `uv` (PATH-less .app fails)")
         // The env var must be present and, when uv is installed, absolute.
         let uvEnv = p.environment?["IGA_HT_UV"] ?? ""
         XCTAssertFalse(uvEnv.isEmpty,
@@ -47,11 +47,11 @@ final class HabitWidgetFixesTests: XCTestCase {
             (p.environment?["IGA_HT_SKILL_DIR"] ?? "").hasPrefix("/"))
     }
 
-    // The record seam must stand entirely on its own under a PATH-less,
+    // The record entry point must stand entirely on its own under a PATH-less,
     // env-less Finder/Spotlight launch: EVERY input is an absolute literal
     // resolved by Swift, the `cd` is guarded (loud, not silent), and there
     // is no reliance on $IGA_HT_* being pre-set in the inherited environment.
-    func testRecordSeamFullyAbsoluteAndGuardedForFinderLaunch() {
+    func testRecordEntryPointFullyAbsoluteAndGuardedForFinderLaunch() {
         let p = ContractGuard.habitRecordProcess(
             habitId: "h-gym", date: "2026-05-16",
             op: .add, windowDays: 30)
@@ -104,7 +104,7 @@ final class HabitWidgetFixesTests: XCTestCase {
     // reversible. This is the operational proof the relay survives a real
     // GUI launch, not just a dev/terminal one. Skips cleanly if the local
     // toolchain (uv) or the frozen skill isn't present (CI without it).
-    func testRecordSeamPersistsUnderMinimalGuiEnvEndToEnd() throws {
+    func testRecordEntryPointPersistsUnderMinimalGuiEnvEndToEnd() throws {
         let fm = FileManager.default
         // Locate the frozen habit-tracker skill from the test file upward.
         var dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
@@ -191,7 +191,7 @@ final class HabitWidgetFixesTests: XCTestCase {
             var env: [String: String] = [
                 "HOME": fm.homeDirectoryForCurrentUser.path]
             // The app sets these absolutely; pin SKILL/STATE to the isolated
-            // substrate (override surface the seam intentionally exposes).
+            // substrate (override surface the entry point intentionally exposes).
             env["IGA_HT_UV"] = uv
             env["IGA_HT_SKILL_DIR"] = skill.path
             env["IGA_HT_STATE_DIR"] = tmp.path

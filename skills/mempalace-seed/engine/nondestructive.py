@@ -8,11 +8,13 @@ _ALLOWED = {"get", "query", "count", "peek"}
 
 
 class ReadOnly:
-    """Wraps a Chroma collection (or any palace store) and hard-blocks writes
-    so the export pipeline can NEVER mutate the live palace."""
+    """Wraps a palace collection and hard-blocks writes so the export pipeline
+    can NEVER mutate the live palace. The backend is stored under a mangled,
+    slotted name so it cannot be reached via normal attribute access."""
+    __slots__ = ("_ReadOnly__backend",)
 
     def __init__(self, backend):
-        self._b = backend
+        object.__setattr__(self, "_ReadOnly__backend", backend)
 
     def __getattr__(self, name):
         if name in _BLOCKED:
@@ -20,5 +22,9 @@ class ReadOnly:
                 raise WriteAttemptError(f"write op '{name}' blocked (read-only export)")
             return _blocked
         if name in _ALLOWED:
-            return getattr(self._b, name)
+            backend = object.__getattribute__(self, "_ReadOnly__backend")
+            return getattr(backend, name)
         raise AttributeError(name)
+
+    def __setattr__(self, name, value):
+        raise WriteAttemptError("read-only handle is immutable")

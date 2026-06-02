@@ -29,6 +29,8 @@ class SeedEntry:
             raise ValidationError("source_drawer_ids required (traceability)")
         if self.status not in ("current", "abandoned"):
             raise ValidationError(f"bad status: {self.status}")
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValidationError(f"confidence out of range: {self.confidence}")
         return self
 
 
@@ -58,7 +60,9 @@ class Seed:
         s = cls(meta=d.get("meta", {}), needs_pablo=d.get("needs_pablo", []))
         for cat, entries in d.get("categories", {}).items():
             for e in entries:
-                s.categories.setdefault(cat, []).append(SeedEntry(**e))
+                s.categories.setdefault(cat, []).append(
+                    SeedEntry(**{k: v for k, v in e.items() if k in SeedEntry.__dataclass_fields__})
+                )
         return s
 
 

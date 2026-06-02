@@ -19,7 +19,7 @@ def load_live_drawers(palace_path):
     create=False so we never create/mutate; ReadOnly blocks any write op."""
     import os
     from types import SimpleNamespace
-    os.environ.setdefault("MEMPALACE_PALACE_PATH", palace_path)
+    os.environ["MEMPALACE_PALACE_PATH"] = palace_path
     from mempalace import palace as _p  # lazy import
     from engine.nondestructive import ReadOnly
     col = ReadOnly(_p.get_collection(palace_path, collection_name="mempalace_drawers", create=False))

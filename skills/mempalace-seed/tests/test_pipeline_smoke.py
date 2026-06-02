@@ -19,3 +19,11 @@ def test_pipeline_writes_three_artifacts(tmp_path, mini_palace):
     assert final["meta"]["rounds"] == 3
     assert final["categories"]["tools_stack"][0]["fact"] == "Uses Widget CLI"
     assert (tmp_path / "r3-signoff.md").exists()
+    # All five artifacts must exist
+    assert (tmp_path / "seed.v1.json").exists()
+    assert (tmp_path / "seed.v2.json").exists()
+    assert (tmp_path / "r2-report.json").exists()
+    # r2-report.json must be valid JSON with required keys
+    r2report = json.loads((tmp_path / "r2-report.json").read_text())
+    assert "missing_found" in r2report
+    assert "contradictions_resolved" in r2report

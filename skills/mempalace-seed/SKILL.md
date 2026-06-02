@@ -27,16 +27,17 @@ dump_material (read-only)
     R1 (primary agent)
         Distil raw drawers into a structured seed draft.
         Prompt: engine/prompts/r1_distill.md
+        Output: seed.v1.json
           ↓
     R2 (fresh subagent — no session context from R1)
         Completeness + contradiction check against raw material.
         Prompt: engine/prompts/r2_validate.md
+        Output: seed.v2.json, r2-report.json
           ↓
     R3 (fresh subagent — no session context from R1/R2)
         Correctness + factual consistency check.
-        Prompt: engine/prompts/r3_validate.md
-          ↓
-    artifacts/  (seed.json, validation reports)
+        Prompt: engine/prompts/r3_signoff.md
+        Output: seed.final.json, r3-signoff.md
 ```
 
 Each subagent in R2/R3 spawns with a fresh context window to avoid anchoring on R1's output.
@@ -50,10 +51,11 @@ Write all run artifacts under a gitignored location:
 ```
 state/golden-seed/runs/<timestamp>/
     material.json      ← curated raw input (personal)
-    seed_draft.json    ← R1 output (personal)
-    r2_report.json     ← R2 validation (personal)
-    r3_report.json     ← R3 validation (personal)
-    seed.json          ← final validated golden seed (personal)
+    seed.v1.json       ← R1 output (personal)
+    seed.v2.json       ← R2 output (personal)
+    r2-report.json     ← R2 validation report (personal)
+    seed.final.json    ← final validated golden seed (personal)
+    r3-signoff.md      ← R3 sign-off narrative (personal)
 ```
 
 `state/` is gitignored. Never pass a path inside the repo root as `out_path` to `dump_material`.
@@ -64,6 +66,6 @@ Round prompts live in `engine/prompts/`:
 
 - `r1_distill.md` — instructions for the primary distillation agent
 - `r2_validate.md` — completeness + contradiction checklist for the R2 subagent
-- `r3_validate.md` — correctness + consistency checklist for the R3 subagent
+- `r3_signoff.md` — correctness + consistency checklist for the R3 subagent
 
 Prompts reference placeholder variables (e.g. `{material_path}`, `{seed_draft_path}`) injected by the pipeline controller.

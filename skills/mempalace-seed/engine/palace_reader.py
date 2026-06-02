@@ -16,22 +16,17 @@ def select_curated(drawers):
 
 def load_live_drawers(palace_path):
     """Read-only enumeration of the real palace via the mempalace lib.
-    Imported lazily so unit tests never touch Chroma. Returns drawer-shaped
-    namespaces. Wrap the collection in ReadOnly before any access.
-
-    NOTE TO INTEGRATOR: the exact accessor for the drawers collection in the
-    installed mempalace lib must be confirmed before the Task 8 live run; the
-    call below is the expected shape and may need adjusting to match
-    mempalace/palace.py. This function is intentionally NOT unit-tested."""
+    create=False so we never create/mutate; ReadOnly blocks any write op."""
     import os
-    os.environ.setdefault("MEMPALACE_PALACE_PATH", palace_path)
-    from mempalace import palace as _p  # noqa: lazy import
-    from engine.nondestructive import ReadOnly
-    col = ReadOnly(_p.get_drawers_collection(palace_path))
-    raw = col.get(include=["metadatas", "documents"])
     from types import SimpleNamespace
+    os.environ.setdefault("MEMPALACE_PALACE_PATH", palace_path)
+    from mempalace import palace as _p  # lazy import
+    from engine.nondestructive import ReadOnly
+    col = ReadOnly(_p.get_collection(palace_path, collection_name="mempalace_drawers", create=False))
+    raw = col.get(include=["metadatas", "documents"])
     drawers = []
     for did, meta, doc in zip(raw["ids"], raw["metadatas"], raw["documents"]):
+        meta = meta or {}
         drawers.append(SimpleNamespace(
             drawer_id=did, wing=meta.get("wing", ""), room=meta.get("room", ""),
             text=doc or "", created_at=meta.get("filed_at", "")))

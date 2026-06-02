@@ -35,9 +35,19 @@ case "$mode" in
   *) echo "iga-guard: unknown mode '$mode'" >&2; exit 2 ;;
 esac
 
-# Nothing substantive to check.
-[ -z "${payload//[[:space:]]/}" ] && exit 0
-payload="$(printf '%s' "$payload" | head -c "$MAXBYTES")"
+# Nothing substantive to check. NOTE: do NOT use ${payload//[[:space:]]/} here —
+# that global substitution is O(n^2) in macOS's bash 3.2 and hangs for ~minutes on
+# a 64 KB diff (this was THE bug that looked like a "judge hang" for hours; see
+# GUARD_NOTES.md). And do NOT `printf "$payload" | grep -q ...` either: under
+# `set -o pipefail`, grep exits early on a match → printf gets SIGPIPE → the
+# pipeline returns non-zero → a `|| exit 0` would SILENTLY skip the judge. A plain
+# empty check is O(1) and sufficient (a real git diff is never whitespace-only).
+[ -z "$payload" ] && exit 0
+# Truncate to MAXBYTES. `head -c` closes the pipe early when payload > MAXBYTES,
+# which SIGPIPEs printf; under `set -o pipefail` + `set -e` that would abort the
+# whole guard (exit 141) — so `|| true` absorbs it (payload still gets the bytes
+# head read). This bit a 2.6 MB new-branch push range. See GUARD_NOTES.md.
+payload="$(printf '%s' "$payload" | head -c "$MAXBYTES")" || true
 
 SYS='You are a strict privacy guard for a PUBLIC, open-source repository. The repo is a GENERIC, reusable layer (an AI-assistant framework: skills, rules, a memory engine) — it must contain ZERO data specific to any individual user.
 
@@ -60,34 +70,38 @@ ASK="Judge whether the following ${label} is safe to publish to a public OSS rep
 # Bounded execution — the judge must NEVER hang a commit/push. Portable timeout.
 _iga_to() { # _iga_to SECONDS cmd...
   local s="$1"; shift
-  if command -v timeout >/dev/null 2>&1; then timeout "$s" "$@"
-  elif command -v gtimeout >/dev/null 2>&1; then gtimeout "$s" "$@"
+  if command -v timeout >/dev/null 2>&1; then timeout -s KILL "$s" "$@"
+  elif command -v gtimeout >/dev/null 2>&1; then gtimeout -s KILL "$s" "$@"
   else perl -e 'my $s=shift; my $p=fork; if(!defined$p){exit 127} if(!$p){setpgrp(0,0); exec @ARGV; exit 127} $SIG{ALRM}=sub{kill "KILL",-$p; exit 124}; alarm $s; waitpid $p,0; exit($?>>8)' "$s" "$@"
   fi
 }
 
+# The judge is the Python wrapper `iga-judge.py`. It tries GitHub Copilot CLI first
+# (`copilot -p` — runs on the SEPARATE Copilot subscription, so it's reliable, never
+# touches Claude limits, and has none of the nested-`claude -p` flakiness), then
+# nested `claude -p` on the Claude subscription as a fallback. Each backend runs in
+# its own process group with a killpg timeout, so a mute/hung CLI can never stall a
+# commit. The wrapper prints exactly one verdict line (OK / BLOCK: ...).
+#
+# Deliberately simple: earlier versions juggled API/claude/gh backends inline in
+# bash, and the `set -euo pipefail` interaction with the empty-fallthrough cases
+# was the real hang (not the model). One pipe to the wrapper — that's it.
 run_judge() {
-  local prompt to
-  prompt="$ASK"$'\n\n'"$payload"
-  to="${IGA_GUARD_TIMEOUT:-90}"
-  if command -v claude >/dev/null 2>&1; then
-    # Clean env so a nested `claude` (when committing from inside Claude Code)
-    # starts as an independent instance and can't deadlock on the parent session.
-    printf '%s' "$prompt" | _iga_to "$to" env -u CLAUDECODE claude -p --model "${IGA_GUARD_MODEL:-claude-haiku-4-5-20251001}" --append-system-prompt "$SYS" 2>/dev/null || true
-    return
-  fi
-  if command -v gh >/dev/null 2>&1 && gh models --help >/dev/null 2>&1; then
-    printf '%s\n\n%s' "$SYS" "$prompt" | _iga_to "$to" gh models run "${IGA_GUARD_GH_MODEL:-openai/gpt-4o}" 2>/dev/null || true
-    return
-  fi
-  return
+  command -v python3 >/dev/null 2>&1 || return 0
+  local judge
+  judge="$(git rev-parse --show-toplevel 2>/dev/null)/.githooks/iga-judge.py"
+  [ -f "$judge" ] || return 0
+  printf '%s\n\n%s' "$ASK" "$payload" \
+    | IGA_GUARD_TIMEOUT="${IGA_GUARD_TIMEOUT:-80}" python3 "$judge" "$SYS" 2>/dev/null \
+    | tr -d '\r' | grep -m1 -ioE '^(OK|BLOCK).*' || true
 }
 
-verdict="$(run_judge | tr -d '\r' | grep -m1 -ioE '^(OK|BLOCK).*' || true)"
+verdict="$(run_judge || true)"
 
 if [ -z "$verdict" ]; then
-  echo "🚫 iga-guard: no LLM judge available (need \`claude\` or \`gh models\`), or it returned nothing." >&2
-  echo "   Blocking to stay safe. Install a judge, or override ONCE with: IGA_GUARD_OFF=1 git ..." >&2
+  echo "🚫 iga-guard: judge unavailable or mute after retries (tried API key / claude×3 / gh models)." >&2
+  echo "   For a reliable judge when committing from inside an agent, export ANTHROPIC_API_KEY." >&2
+  echo "   Blocking to stay safe. Override ONCE (after you've eyeballed the diff): IGA_GUARD_OFF=1 git ..." >&2
   exit 1
 fi
 

@@ -73,7 +73,7 @@ Phase 2 (optional, not required for v1): a launchd LaunchAgent (Mac) or systemd 
 
 **Dedup (idempotency):** for each candidate, compute `topic_hash = sha1(normalized_title + target_date).hexdigest()[:16]`. Normalize title: lowercase, strip whitespace, collapse internal whitespace, drop emoji and punctuation. Query MemPalace for a drawer matching `RESEARCH:<topic_hash>` in `projects/*/research`; skip if any have `last_updated > NOW() - 48h`. If MemPalace lacks `last_updated`, fall back to name-only dedup (conservative — never re-researches until drawer is deleted).
 
-**Output:** `~/Gaia/scratch/iga-research-queue.json` — array of:
+**Output:** `~/Iga/scratch/iga-research-queue.json` — array of:
 ```json
 {
   "topic_hash": "...",

@@ -67,8 +67,8 @@ A substrate document on disk:
 4. **`$IGA_STATE_DIR` isolation (privacy / data-loss guard)** — the substrate
    store **reuses the producer's `state_root()` resolver verbatim**. It does
    not re-implement path resolution. Precedence is unchanged:
-   `$IGA_STATE_DIR` > `$IGA_HOME/state` > `~/Gaia/state`. When
-   `$IGA_STATE_DIR` is set, nothing under the real `~/Gaia/state` is read or
+   `$IGA_STATE_DIR` > `$IGA_HOME/state` > `~/Iga/state`. When
+   `$IGA_STATE_DIR` is set, nothing under the real `~/Iga/state` is read or
    written. This is the same guard that protects the user's live widget data;
    it is shared, never duplicated.
 5. **Forward-compatible parse** — an unknown future field in a record is
@@ -161,4 +161,4 @@ uniformly.
 - Any OSS mirror ships **synthetic seed data only** — never personal content.
 - An importer CLI for an external app MUST require an explicit
   `--state-dir`; there is deliberately no implicit real-state default, so a
-  careless invocation can never write the user's live `~/Gaia/state`.
+  careless invocation can never write the user's live `~/Iga/state`.

@@ -48,7 +48,7 @@ final class ContractLitmusTests: XCTestCase {
     func testSanctionedCommandIsExactlyTheDocumentedScan() {
         XCTAssertEqual(
             ContractGuard.documentedCommand,
-            "cd ~/Gaia/skills/iga-proactive && "
+            "cd ~/Iga/skills/iga-proactive && "
             + "PYTHONPATH=engine uv run python -m engine scan --json")
 
         let joined = ContractGuard.engineScanArgv.joined(separator: " ")
@@ -313,7 +313,7 @@ final class ContractLitmusTests: XCTestCase {
           - id: habit-grid
             type: contribution-grid
             title: Habit streak
-            data_source: ~/Gaia/state/widgets/habit-tracker-habit-grid.json
+            data_source: ~/Iga/state/widgets/habit-tracker-habit-grid.json
             refresh: 60
             coach:
               tone: encouraging
@@ -396,7 +396,7 @@ final class ContractLitmusTests: XCTestCase {
         // Reading the source is necessary but not sufficient — actually
         // RUN the producer with the app absent from the equation and
         // assert it emits a valid widget JSON. Critically, this MUST NOT
-        // touch the user's live ~/Gaia/state: point IGA_STATE_DIR at a
+        // touch the user's live ~/Iga/state: point IGA_STATE_DIR at a
         // throwaway temp dir so all producer reads/writes are rooted
         // there. (Process() here is fine — the contract grep only scans
         // Sources/IgaMenuBar, never the test target.)
@@ -408,7 +408,7 @@ final class ContractLitmusTests: XCTestCase {
         defer { try? fm.removeItem(at: tmpRoot) }
 
         let realState = fm.homeDirectoryForCurrentUser
-            .appendingPathComponent("Gaia/state/widgets")
+            .appendingPathComponent("Iga/state/widgets")
             .appendingPathComponent("habit-tracker-habit-grid.json")
         let realExisted = fm.fileExists(atPath: realState.path)
         let realAttrsBefore = realExisted
@@ -454,7 +454,7 @@ final class ContractLitmusTests: XCTestCase {
         XCTAssertEqual(obj?["type"] as? String, "contribution-grid",
             "standalone producer must emit a valid v1 widget JSON")
 
-        // And it NEVER touched the user's live ~/Gaia/state.
+        // And it NEVER touched the user's live ~/Iga/state.
         if realExisted {
             XCTAssertTrue(
                 fm.fileExists(atPath: realState.path),
@@ -462,7 +462,7 @@ final class ContractLitmusTests: XCTestCase {
             let after = try? fm.attributesOfItem(atPath: realState.path)
             XCTAssertEqual(
                 after?[.modificationDate] as? Date, realMTimeBefore,
-                "REAL ~/Gaia/state widget JSON changed — the Swift "
+                "REAL ~/Iga/state widget JSON changed — the Swift "
                 + "deletion-invariant test wrote to live data")
         } else {
             XCTAssertFalse(
@@ -708,7 +708,7 @@ final class ContractLitmusTests: XCTestCase {
         // isolated substrate, re-emits the Wave-B widget JSON, and the grid +
         // streak it produces match the FROZEN stats.py — proving the Swift
         // side needs zero habit logic. Fully isolated: IGA_STATE_DIR points
-        // at a throwaway dir so the user's live ~/Gaia/state is never
+        // at a throwaway dir so the user's live ~/Iga/state is never
         // touched (mtime-asserted). (Process() here is fine — the contract
         // grep only scans Sources/IgaMenuBar, never the test target.)
         let fm = FileManager.default
@@ -737,7 +737,7 @@ final class ContractLitmusTests: XCTestCase {
             "record must mutate via the frozen Wave-A substrate store")
 
         let realRoot = fm.homeDirectoryForCurrentUser
-            .appendingPathComponent("Gaia/state")
+            .appendingPathComponent("Iga/state")
         let watched = [
             realRoot.appendingPathComponent(
                 "substrates/habit-tracker.json"),
@@ -827,13 +827,13 @@ final class ContractLitmusTests: XCTestCase {
                 "clicked day \(d) must be lit in the re-emitted grid")
         }
 
-        // And the user's REAL ~/Gaia/state was never touched.
+        // And the user's REAL ~/Iga/state was never touched.
         for (p, existed, mtime) in before {
             if existed {
                 XCTAssertTrue(fm.fileExists(atPath: p.path),
                     "isolated record run deleted real state \(p.path)")
                 XCTAssertEqual(snap(p), mtime,
-                    "REAL ~/Gaia/state changed (\(p.lastPathComponent)) — "
+                    "REAL ~/Iga/state changed (\(p.lastPathComponent)) — "
                     + "the record entry point wrote to live data")
             } else {
                 XCTAssertFalse(fm.fileExists(atPath: p.path),

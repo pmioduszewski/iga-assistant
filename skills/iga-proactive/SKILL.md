@@ -19,8 +19,8 @@ prerequisites:
     check: cmd(python3)
     severity: error
   - name: state-dir-writable
-    description: Ledger/governor db lives at $IGA_PROACTIVE_DB or ~/Gaia/state/proactive.db; parent dir must be creatable.
-    check: any(env(IGA_PROACTIVE_DB), file(~/Gaia))
+    description: Ledger/governor db lives at $IGA_PROACTIVE_DB or ~/Iga/state/proactive.db; parent dir must be creatable.
+    check: any(env(IGA_PROACTIVE_DB), file(~/Iga))
     severity: warning
   - name: todoist-token
     description: The todoist() trigger reads ~/.config/todoist/token or $TODOIST_API_TOKEN. Absent → todoist jobs yield nothing (graceful, not an error). Only needed if a proactive job uses a todoist() trigger.
@@ -152,7 +152,7 @@ governor.record(model, est_tokens)             # AFTER successful spawn only
 ledger.mark(key, "done", output_ref=...)
 ```
 
-The db path is `$IGA_PROACTIVE_DB` or `~/Gaia/state/proactive.db`. It is
+The db path is `$IGA_PROACTIVE_DB` or `~/Iga/state/proactive.db`. It is
 gitignored (`*.db`).
 
 ## Hard boundary

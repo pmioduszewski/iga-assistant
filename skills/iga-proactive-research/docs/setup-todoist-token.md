@@ -15,7 +15,7 @@ chmod 600 ~/.config/todoist/token
 export TODOIST_API_TOKEN="YOUR_TOKEN_HERE"
 
 # 4. Verify
-python3 ~/Gaia/skills/iga-proactive-research/engine/scanner.py
+python3 ~/Iga/skills/iga-proactive-research/engine/scanner.py
 # Expect: scanner runs, exits 0, no "config error" message
 ```
 
@@ -64,14 +64,14 @@ If the leading bits are anything other than `-rw-------`, run `chmod 600 ~/.conf
 After saving the token, run a **dry scan** (no workers, just detect candidates):
 
 ```bash
-IGA_PROACTIVE_SPAWN=0 python3 ~/Gaia/skills/iga-proactive-research/engine/scanner.py
+IGA_PROACTIVE_SPAWN=0 python3 ~/Iga/skills/iga-proactive-research/engine/scanner.py
 ```
 
 What you should see:
 - Exit code `0`
 - The scanner reads Todoist tasks with label `iga-research` (initially: none — that's fine)
 - The scanner reads MemPalace `research-queue` drawers (initially: none)
-- An empty queue file written to `~/Gaia/scratch/iga-research-queue.json`
+- An empty queue file written to `~/Iga/scratch/iga-research-queue.json`
 - Stdout: `[]` (the empty WORKER_REQUEST array)
 
 If you see `exit code 1 — Todoist API token not configured`, the token wasn't picked up. Re-check the path and permissions.

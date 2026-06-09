@@ -8,11 +8,11 @@ SKILL_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 LOG_DIR="$HOME/Library/Logs/iga"
 
 export PATH="$HOME/.volta/bin:$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
-PYTHON="$HOME/Gaia/mempalace/.venv/bin/python"
+PYTHON="$HOME/Iga/mempalace/.venv/bin/python"
 export IGA_RUN_MODE=daemon
 
 mkdir -p "$LOG_DIR"
-mkdir -p "$HOME/Gaia/scratch"
+mkdir -p "$HOME/Iga/scratch"
 
 cd "$SKILL_DIR"
 

@@ -69,7 +69,7 @@ def _parse_iso(s: str) -> datetime:
 
 
 def default_db_path() -> Path:
-    """``$IGA_PROACTIVE_DB`` if set, else ``~/Gaia/state/proactive.db``."""
+    """``$IGA_PROACTIVE_DB`` if set, else ``~/Iga/state/proactive.db``."""
     env = os.environ.get("IGA_PROACTIVE_DB")
     if env:
         return Path(env).expanduser()

@@ -30,14 +30,14 @@ enum ContractGuard {
             return env
         }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return "\(home)/Gaia/skills/iga-proactive"
+        return "\(home)/Iga/skills/iga-proactive"
     }
 
     /// The EXACT, only engine command this app may run. Mirrors the command
     /// documented in the brief & SKILL.md. Any change here is a contract
     /// change and must be reviewed against the frozen decision.
     ///
-    ///   cd ~/Gaia/skills/iga-proactive \
+    ///   cd ~/Iga/skills/iga-proactive \
     ///     && PYTHONPATH=engine uv run python -m engine scan --json
     static let engineScanArgv: [String] = [
         "-c",
@@ -127,7 +127,7 @@ enum ContractGuard {
 
     /// Human-readable single line for the README / about box / tests.
     static let documentedCommand =
-        "cd ~/Gaia/skills/iga-proactive && "
+        "cd ~/Iga/skills/iga-proactive && "
         + "PYTHONPATH=engine uv run python -m engine scan --json"
 
     // MARK: - The ONLY sanctioned MUTATION entry point (Wave B habit record)
@@ -157,7 +157,7 @@ enum ContractGuard {
             return env
         }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return "\(home)/Gaia/skills/habit-tracker"
+        return "\(home)/Iga/skills/habit-tracker"
     }
 
     /// Absolute path to the frozen habit-tracker `record.py`. Resolved by the
@@ -178,7 +178,7 @@ enum ContractGuard {
             return env
         }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return "\(home)/Gaia/state"
+        return "\(home)/Iga/state"
     }
 
     /// Resolve an ABSOLUTE `uv` interpreter path. CRITICAL for the

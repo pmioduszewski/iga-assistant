@@ -3,7 +3,7 @@ import SQLite3
 
 // MARK: - Read-ONLY ledger reader
 //
-// The frozen engine owns `~/Gaia/state/proactive.db` (env IGA_PROACTIVE_DB),
+// The frozen engine owns `~/Iga/state/proactive.db` (env IGA_PROACTIVE_DB),
 // table `job_runs(idempotency_key, job_id, last_run_ts, status, output_ref,
 // cooldown_until)`. This app NEVER writes it. We open with the SQLite URI
 // `?mode=ro` flag AND SQLITE_OPEN_READONLY so any accidental write attempt
@@ -42,14 +42,14 @@ struct LedgerSnapshot: Equatable {
 
 enum LedgerReader {
 
-    /// `$IGA_PROACTIVE_DB` or `~/Gaia/state/proactive.db`.
+    /// `$IGA_PROACTIVE_DB` or `~/Iga/state/proactive.db`.
     static func defaultDBPath() -> String {
         if let env = ProcessInfo.processInfo.environment["IGA_PROACTIVE_DB"],
            !env.isEmpty {
             return (env as NSString).expandingTildeInPath
         }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return "\(home)/Gaia/state/proactive.db"
+        return "\(home)/Iga/state/proactive.db"
     }
 
     /// Open the ledger strictly read-only and snapshot it. Never throws.

@@ -56,11 +56,11 @@ dark appearance.
 ## What it reads / runs
 
 - State JSON (read-only): `$IGA_PROACTIVE_STATE` or
-  `~/Gaia/scratch/proactive-state.json`
+  `~/Iga/scratch/proactive-state.json`
 - Ledger (read-only, `?mode=ro` + `SQLITE_OPEN_READONLY`):
-  `$IGA_PROACTIVE_DB` or `~/Gaia/state/proactive.db`
+  `$IGA_PROACTIVE_DB` or `~/Iga/state/proactive.db`
 - The ONLY command it execs:
-  `cd ~/Gaia/skills/iga-proactive && PYTHONPATH=engine uv run python -m engine scan --json`
+  `cd ~/Iga/skills/iga-proactive && PYTHONPATH=engine uv run python -m engine scan --json`
 
 Poll cadence: 15s default, override with `IGA_POLL_SECONDS`.
 
@@ -148,7 +148,7 @@ and the Mac's record of the background scheduler). Full removal:
 3. **Delete both bundles:**
    ```
    rm -rf ~/Applications/Iga.app                  # installed copy
-   rm -rf ~/Gaia/skills/iga-proactive/app/Iga.app # repo build
+   rm -rf ~/Iga/skills/iga-proactive/app/Iga.app # repo build
    ```
 4. **(Optional) Clear persisted preferences.** The scheduling-enabled flag
    persists in the app's `UserDefaults` domain. To wipe it so a future
@@ -160,7 +160,7 @@ and the Mac's record of the background scheduler). Full removal:
 
 This removes only the scheduler host + viewer + notifier. Per the deletion
 invariant above, `/gm` calling the engine in-session still works with zero
-external infrastructure — the engine, ledger (`~/Gaia/state/proactive.db`),
+external infrastructure — the engine, ledger (`~/Iga/state/proactive.db`),
 and state file are untouched by an app uninstall.
 
 ## One-time human-only setup (unavoidable OS permission clicks)

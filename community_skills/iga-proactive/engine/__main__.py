@@ -2,7 +2,7 @@
 
 Run from ``skills/iga-proactive/`` (the repo's flat-import house style):
 
-    cd ~/Gaia/skills/iga-proactive
+    cd ~/Iga/skills/iga-proactive
     PYTHONPATH=engine python -m engine scan
 
 All logic lives in :mod:`cli`; this module is only the ``-m`` shim so the

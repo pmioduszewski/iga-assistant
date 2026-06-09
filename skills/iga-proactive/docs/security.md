@@ -31,14 +31,14 @@ a crash.
 
 ## What the engine writes
 
-- The sqlite ledger (`$IGA_PROACTIVE_DB` or `~/Gaia/state/proactive.db`) —
+- The sqlite ledger (`$IGA_PROACTIVE_DB` or `~/Iga/state/proactive.db`) —
   job idempotency keys, job ids, statuses, timestamps, and a dispatch audit
   log. Idempotency keys are author-defined templates rendered from candidate
   context (e.g. a Todoist task id + due date). **If your idempotency key
   embeds sensitive identifiers, they land in this local sqlite file.** It is
   gitignored (`*.db`) and never committed, but it is plaintext on disk.
 - The v1 JSON state file (`$IGA_PROACTIVE_STATE` or
-  `~/Gaia/scratch/proactive-state.json`) — tick stats, the queue of
+  `~/Iga/scratch/proactive-state.json`) — tick stats, the queue of
   WORKER_REQUESTs (which include rendered context such as task titles/IDs),
   governor counters, and the surface lines. Gitignored via `scratch/`.
   Plaintext on disk; treat it as you would the ledger.

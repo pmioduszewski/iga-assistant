@@ -68,17 +68,17 @@ the load-bearing ones are marked **LOAD-BEARING**.)
 |---|---|---|---|
 | `engine/runtime.py` | `_SKILLS_DIR_DEFAULT = Path(__file__).resolve().parents[3] / "skills"` | **LOAD-BEARING.** Assumes `engine/` is exactly 3 levels under `<repo>/skills/iga-proactive/engine/`. A relocation that changes depth breaks job discovery. | Override at call time via `scan_tick(skills_dir=...)`. |
 | `engine/runtime.py` | `skill_md = skills_dir / "iga-proactive" / "SKILL.md"` | **LOAD-BEARING.** `_read_engine_caps` reads *this* skill's own SKILL.md by the literal name `iga-proactive` to get `engine_config:` caps. Rename → caps silently fall back to defaults. | |
-| `engine/ledger.py` | `~/Gaia/state/proactive.db` default | Default db path. Overridable via `$IGA_PROACTIVE_DB`. | Cosmetic if adopters set the env var; otherwise assumes a `~/Gaia` tree. |
-| `engine/dispatcher.py` | `_DEFAULT_STATE_PATH = "~/Gaia/scratch/proactive-state.json"` | Default state path. Overridable via `$IGA_PROACTIVE_STATE`. Relies on `scratch/` being gitignored to keep `git status` clean. | |
-| `engine/__main__.py`, `engine/cli.py` | an absolute `cd <home>/Gaia/skills/iga-proactive ...` example in the `-m` docstring / argparse epilog | Help-text example only. Not executed. | Cosmetic; genericize the absolute home path to `~/Gaia/...` on publish. |
+| `engine/ledger.py` | `~/Iga/state/proactive.db` default | Default db path. Overridable via `$IGA_PROACTIVE_DB`. | Cosmetic if adopters set the env var; otherwise assumes a `~/Iga` tree. |
+| `engine/dispatcher.py` | `_DEFAULT_STATE_PATH = "~/Iga/scratch/proactive-state.json"` | Default state path. Overridable via `$IGA_PROACTIVE_STATE`. Relies on `scratch/` being gitignored to keep `git status` clean. | |
+| `engine/__main__.py`, `engine/cli.py` | an absolute `cd <home>/Iga/skills/iga-proactive ...` example in the `-m` docstring / argparse epilog | Help-text example only. Not executed. | Cosmetic; genericize the absolute home path to `~/Iga/...` on publish. |
 
 ### App (Swift)
 
 | File | Line(s) | Hardcoded assumption | Note |
 |---|---|---|---|
-| `app/Sources/IgaMenuBar/ContractGuard.swift` | `skillDir()` → `"\(home)/Gaia/skills/iga-proactive"` and `documentedCommand`/`engineScanArgv` `cd ~/Gaia/skills/iga-proactive` | **LOAD-BEARING.** The single sanctioned engine-exec command path. Relocation must update this *and* the matching string in `ContractLitmusTests` (the test asserts the exact command). | |
-| `app/Sources/IgaMenuBar/LedgerReader.swift` | `"\(home)/Gaia/state/proactive.db"` default | Ledger path; overridable via `$IGA_PROACTIVE_DB`. | |
-| `app/Sources/IgaMenuBar/StateStore.swift` | `"\(home)/Gaia/scratch/proactive-state.json"` default | State path; overridable via `$IGA_PROACTIVE_STATE`. | |
+| `app/Sources/IgaMenuBar/ContractGuard.swift` | `skillDir()` → `"\(home)/Iga/skills/iga-proactive"` and `documentedCommand`/`engineScanArgv` `cd ~/Iga/skills/iga-proactive` | **LOAD-BEARING.** The single sanctioned engine-exec command path. Relocation must update this *and* the matching string in `ContractLitmusTests` (the test asserts the exact command). | |
+| `app/Sources/IgaMenuBar/LedgerReader.swift` | `"\(home)/Iga/state/proactive.db"` default | Ledger path; overridable via `$IGA_PROACTIVE_DB`. | |
+| `app/Sources/IgaMenuBar/StateStore.swift` | `"\(home)/Iga/scratch/proactive-state.json"` default | State path; overridable via `$IGA_PROACTIVE_STATE`. | |
 | `app/build.sh` | installs to `~/Applications/Iga.app` | Per-user install location; not repo-relative, so a skill relocation does not affect it. | |
 | `app/Tests/IgaMenuBarTests/ContractLitmusTests.swift` | asserts the exact `documentedCommand` string | Must change in lockstep with `ContractGuard`. | |
 

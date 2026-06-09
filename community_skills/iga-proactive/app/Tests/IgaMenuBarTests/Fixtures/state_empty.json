@@ -9,8 +9,8 @@
     "governor_denied": 0,
     "queue_alert": false,
     "errors": [
-      "~/Gaia/skills/example-skill-a/SKILL.md: schema error: no YAML frontmatter block found (--- ... --- fence)",
-      "~/Gaia/skills/example-skill-b/SKILL.md: schema error: no YAML frontmatter block found (--- ... --- fence)"
+      "~/Iga/skills/example-skill-a/SKILL.md: schema error: no YAML frontmatter block found (--- ... --- fence)",
+      "~/Iga/skills/example-skill-b/SKILL.md: schema error: no YAML frontmatter block found (--- ... --- fence)"
     ]
   },
   "queue": [],

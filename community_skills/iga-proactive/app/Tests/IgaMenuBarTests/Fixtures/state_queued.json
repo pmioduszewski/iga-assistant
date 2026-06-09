@@ -17,7 +17,7 @@
       "trigger_kind": "todoist",
       "action": "spawn_worker(prompt: research.md, depth: deep)",
       "action_name": "spawn_worker",
-      "prompt_path": "~/Gaia/skills/example-research/research.md",
+      "prompt_path": "~/Iga/skills/example-research/research.md",
       "model": "opus",
       "est_tokens": 120000,
       "deliver": "surface_next_brief",

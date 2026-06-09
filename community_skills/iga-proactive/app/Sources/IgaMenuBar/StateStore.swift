@@ -66,14 +66,14 @@ final class StateStore {
         }
     }
 
-    /// `$IGA_PROACTIVE_STATE` or `~/Gaia/scratch/proactive-state.json`.
+    /// `$IGA_PROACTIVE_STATE` or `~/Iga/scratch/proactive-state.json`.
     static func defaultStatePath() -> String {
         if let env = ProcessInfo.processInfo
             .environment["IGA_PROACTIVE_STATE"], !env.isEmpty {
             return (env as NSString).expandingTildeInPath
         }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return "\(home)/Gaia/scratch/proactive-state.json"
+        return "\(home)/Iga/scratch/proactive-state.json"
     }
 
     func start() {

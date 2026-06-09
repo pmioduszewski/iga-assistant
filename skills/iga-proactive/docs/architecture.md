@@ -27,7 +27,7 @@ infrastructure**.
 
 ## The sqlite ledger schema
 
-One sqlite db (`$IGA_PROACTIVE_DB` or `~/Gaia/state/proactive.db`, WAL mode,
+One sqlite db (`$IGA_PROACTIVE_DB` or `~/Iga/state/proactive.db`, WAL mode,
 gitignored via `*.db`). Two tables, defined once in `engine/ledger.py::_SCHEMA`
 and reused by the governor:
 
@@ -71,7 +71,7 @@ not retry-storm).
 
 `dispatcher.build_state` writes it; `surfacer.refresh_state` overlays a subset
 of the same schema. Path: `$IGA_PROACTIVE_STATE` or
-`~/Gaia/scratch/proactive-state.json` (`scratch/` is gitignored — keeps
+`~/Iga/scratch/proactive-state.json` (`scratch/` is gitignored — keeps
 `git status` clean by construction). Written atomically (`tmp` + `os.replace`)
 so a polling reader never sees a half-written file. `STATE_SCHEMA_VERSION = 1`.
 
@@ -172,7 +172,7 @@ Swift**. It is enforced two ways by `ContractLitmusTests` (run with
 `swift test --enable-xctest`):
 
 1. **Runtime:** `ContractGuard.documentedCommand` must be *exactly*
-   `cd ~/Gaia/skills/iga-proactive && PYTHONPATH=engine uv run python -m engine scan --json`,
+   `cd ~/Iga/skills/iga-proactive && PYTHONPATH=engine uv run python -m engine scan --json`,
    and must contain no write/mutate verb (`mark`, `claim`, `record`,
    `INSERT`, `UPDATE`, `DELETE`, `--write`).
 2. **Source grep:** every `Sources/*.swift` file (comments stripped) is

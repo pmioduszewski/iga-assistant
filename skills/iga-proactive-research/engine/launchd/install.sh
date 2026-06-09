@@ -23,7 +23,7 @@ fi
 chmod 755 "$WRAPPER"
 mkdir -p "$LOG_DIR"
 mkdir -p "$HOME/Library/LaunchAgents"
-mkdir -p "$HOME/Gaia/scratch"
+mkdir -p "$HOME/Iga/scratch"
 
 sed -e "s|<SKILL_DIR>|$SKILL_DIR|g" \
     -e "s|<HOME>|$HOME|g" \

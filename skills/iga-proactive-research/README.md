@@ -53,7 +53,7 @@ Switch via `IGA_RUN_MODE=inline|daemon`.
   "depth": "shallow",
   "source": "todoist",
   "source_id": "T123",
-  "worker_prompt_path": "~/Gaia/skills/iga-proactive-research/engine/worker.prompt.md"
+  "worker_prompt_path": "~/Iga/skills/iga-proactive-research/engine/worker.prompt.md"
 }
 ```
 
@@ -63,7 +63,7 @@ Switch via `IGA_RUN_MODE=inline|daemon`.
 # Smoke test — detection only, emits an empty WORKER_REQUEST list.
 IGA_PROACTIVE_SPAWN=0 \
 TODOIST_API_TOKEN=$(cat ~/.config/todoist/token) \
-python3 ~/Gaia/skills/iga-proactive-research/engine/scanner.py
+python3 ~/Iga/skills/iga-proactive-research/engine/scanner.py
 ```
 
 ### Environment
@@ -76,7 +76,7 @@ python3 ~/Gaia/skills/iga-proactive-research/engine/scanner.py
 | `IGA_PROACTIVE_RESEARCH=0` | no | Full killswitch — scanner exits 0 immediately, no queue file written. |
 | `IGA_PROACTIVE_SPAWN=0` | no | Detect + write queue, emit no `WORKER_REQUEST`s (inline) / spawn no subprocesses (daemon). |
 | `IGA_RESEARCH_DRY_RUN=1` | no | Alias for `IGA_PROACTIVE_SPAWN=0`. |
-| `IGA_RESEARCH_QUEUE_PATH` | no | Override the queue file path. Default: `~/Gaia/scratch/iga-research-queue.json`. |
+| `IGA_RESEARCH_QUEUE_PATH` | no | Override the queue file path. Default: `~/Iga/scratch/iga-research-queue.json`. |
 | `IGA_LOG_LEVEL` | no | Python logging level. Default `INFO`. |
 
 ### Exit codes
@@ -91,7 +91,7 @@ python3 ~/Gaia/skills/iga-proactive-research/engine/scanner.py
 
 ### Queue file schema
 
-`~/Gaia/scratch/iga-research-queue.json` is an array of entries:
+`~/Iga/scratch/iga-research-queue.json` is an array of entries:
 
 ```json
 {
@@ -127,7 +127,7 @@ fixed times even when Claude Code is closed. Not wired yet.
 ### Tests
 
 ```bash
-cd ~/Gaia/skills/iga-proactive-research
+cd ~/Iga/skills/iga-proactive-research
 python3 -m pytest tests/ -v
 ```
 

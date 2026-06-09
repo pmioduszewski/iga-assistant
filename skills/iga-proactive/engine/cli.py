@@ -319,7 +319,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "override the ledger/governor sqlite db (else $IGA_PROACTIVE_DB "
-            "or ~/Gaia/state/proactive.db)."
+            "or ~/Iga/state/proactive.db)."
         ),
     )
     sp.add_argument(
@@ -328,7 +328,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "override the JSON state-file path (else $IGA_PROACTIVE_STATE or "
-            "~/Gaia/scratch/proactive-state.json)."
+            "~/Iga/scratch/proactive-state.json)."
         ),
     )
     return p

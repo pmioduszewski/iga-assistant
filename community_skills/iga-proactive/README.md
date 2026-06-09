@@ -15,10 +15,10 @@
 
   Differences vs the live skill (sanitization only — zero logic change):
     - engine/__main__.py, engine/cli.py: help-text example path genericized
-      to use ~/Gaia/... instead of an absolute user home path (cosmetic; not executed)
+      to use ~/Iga/... instead of an absolute user home path (cosmetic; not executed)
     - app/Tests/.../Fixtures/state_queued.json, state_empty.json: hardcoded
       personal absolute paths + personal skill names replaced with generic
-      ~/Gaia/skills/example-* placeholders (test assertions do not depend on
+      ~/Iga/skills/example-* placeholders (test assertions do not depend on
       these string VALUES — only on counts / nullness, which are unchanged)
     - the personal research job (iga-proactive-research/proactive.yaml) is a
       SEPARATE personal skill and is intentionally NOT copied here; a sanitized
@@ -139,7 +139,7 @@ including zero candidates and a missing Todoist token.
 The one command the menu-bar app is allowed to exec is exactly:
 
 ```sh
-cd ~/Gaia/skills/iga-proactive && PYTHONPATH=engine uv run python -m engine scan --json
+cd ~/Iga/skills/iga-proactive && PYTHONPATH=engine uv run python -m engine scan --json
 ```
 
 ## Env vars & killswitches
@@ -148,8 +148,8 @@ cd ~/Gaia/skills/iga-proactive && PYTHONPATH=engine uv run python -m engine scan
 |---|---|
 | `IGA_PROACTIVE_RESEARCH=0` | **Killswitch.** Engine emits an explicit empty result, writes no state, mutates no ledger. Exit 0 (a disabled engine is not an error). Accepts `0/false/off/no`. |
 | `IGA_PROACTIVE_SPAWN=0` | Detect + dedup-preview but **do not** mutate the ledger and **do not** write state — identical to `--dry-run`. Accepts `0/false/off/no`. |
-| `IGA_PROACTIVE_DB` | Ledger + governor sqlite db path. Default `~/Gaia/state/proactive.db` (parent auto-created; gitignored via `*.db`). |
-| `IGA_PROACTIVE_STATE` | v1 JSON state-file path. Default `~/Gaia/scratch/proactive-state.json` (`scratch/` is gitignored, keeps `git status` clean by construction). |
+| `IGA_PROACTIVE_DB` | Ledger + governor sqlite db path. Default `~/Iga/state/proactive.db` (parent auto-created; gitignored via `*.db`). |
+| `IGA_PROACTIVE_STATE` | v1 JSON state-file path. Default `~/Iga/scratch/proactive-state.json` (`scratch/` is gitignored, keeps `git status` clean by construction). |
 | `IGA_MAX_SPAWN_PER_TICK` | Operational cap on queued candidates per tick (overrides the SKILL.md `engine_config:` value). Trimmed candidates keep their `claimed` row, so they defer — they don't lose the dedup guarantee. |
 | `TODOIST_API_TOKEN` / `~/.config/todoist/token` | Todoist auth for `todoist()` triggers. Absent → those triggers yield nothing (graceful, exit 0). |
 

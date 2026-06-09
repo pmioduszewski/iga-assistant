@@ -19,7 +19,7 @@ THE JSON STATE FILE (contract for the future menu-bar app)
 ----------------------------------------------------------
 ``build_dispatch`` also writes a single JSON state file that the future
 menu-bar app polls **read-only**. It is the stable engine→entrypoint contract.
-Default path: ``$IGA_PROACTIVE_STATE`` or ``~/Gaia/scratch/proactive-state.json``.
+Default path: ``$IGA_PROACTIVE_STATE`` or ``~/Iga/scratch/proactive-state.json``.
 
   WHY ``scratch/``: ``.gitignore`` ignores ``scratch/`` and ``*.db`` but does
   NOT ignore ``*.json`` repo-wide. Writing the state file under ``scratch/``
@@ -90,12 +90,12 @@ LOG = logging.getLogger("iga_proactive.dispatcher")
 
 STATE_SCHEMA_VERSION = 1
 
-_DEFAULT_STATE_PATH = "~/Gaia/scratch/proactive-state.json"
+_DEFAULT_STATE_PATH = "~/Iga/scratch/proactive-state.json"
 
 
 def default_state_path() -> Path:
     """``$IGA_PROACTIVE_STATE`` if set, else
-    ``~/Gaia/scratch/proactive-state.json`` (scratch/ is gitignored)."""
+    ``~/Iga/scratch/proactive-state.json`` (scratch/ is gitignored)."""
     env = os.environ.get("IGA_PROACTIVE_STATE")
     if env:
         return Path(env).expanduser()

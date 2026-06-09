@@ -50,7 +50,7 @@ You are allowed to:
 - MemPalace: search, list, `add_drawer` (writes only into
   `wing: projects/<inferred>`, `room: research`)
 - Linear / Jira / Slack — **read-only** search
-- Read-only filesystem on `~/Gaia` if needed
+- Read-only filesystem on `~/Iga` if needed
 
 You are NOT allowed to:
 
@@ -121,7 +121,7 @@ Skip entirely if `source != "todoist"`.
 
 After filing both, append `completed_at: <ISO timestamp>` to the queue
 entry by rewriting the entry in
-`~/Gaia/scratch/iga-research-queue.json`. If multiple entries share the
+`~/Iga/scratch/iga-research-queue.json`. If multiple entries share the
 same `topic_hash`, update the matching one. Do NOT remove other entries.
 
 ## Termination

@@ -92,7 +92,7 @@ final class HabitWidgetFixesTests: XCTestCase {
         // (c) overridability with a correct absolute DEFAULT (not empty).
         XCTAssertTrue(
             ContractGuard.habitTrackerSkillDir()
-                .hasSuffix("/Gaia/skills/habit-tracker"))
+                .hasSuffix("/Iga/skills/habit-tracker"))
         XCTAssertTrue(
             ContractGuard.habitRecordScriptPath().hasPrefix("/"))
     }
@@ -180,7 +180,7 @@ final class HabitWidgetFixesTests: XCTestCase {
         // (everything else absent — no PATH, no shell exports), exactly the
         // surface a Finder/Spotlight .app inherits. The IGA_HT_* values come
         // from the app's own absolute resolution, with the state dir pinned
-        // to the isolated root so the user's live ~/Gaia/state is untouched.
+        // to the isolated root so the user's live ~/Iga/state is untouched.
         func relay(_ op: ContractGuard.RecordOp) -> Int32 {
             let built = ContractGuard.habitRecordProcess(
                 habitId: "h-gym", date: "2026-05-16",

@@ -31,7 +31,7 @@ Environment variables:
     TODOIST_API_TOKEN         - Todoist REST API v2 token. Fallback:
                                 ``~/.config/todoist/token`` (single-line file).
     IGA_RESEARCH_QUEUE_PATH   - optional override for the queue file
-                                (default ``~/Gaia/scratch/iga-research-queue.json``)
+                                (default ``~/Iga/scratch/iga-research-queue.json``)
     IGA_RESEARCH_DRY_RUN=1    - same as IGA_PROACTIVE_SPAWN=0
 """
 
@@ -72,7 +72,7 @@ DEEP_KEYWORDS = (
     "finance forecast",
     "contract review",
 )
-DEFAULT_QUEUE_PATH = "~/Gaia/scratch/iga-research-queue.json"
+DEFAULT_QUEUE_PATH = "~/Iga/scratch/iga-research-queue.json"
 WORKER_PROMPT_PATH = "~/Gaia/skills/iga-proactive-research/engine/worker.prompt.md"
 VALID_RUN_MODES = ("inline", "daemon")
 ALLOWED_SOURCES = ("todoist", "mempalace")

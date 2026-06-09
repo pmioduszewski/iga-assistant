@@ -30,14 +30,14 @@ enum ContractGuard {
             return env
         }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return "\(home)/Gaia/skills/iga-proactive"
+        return "\(home)/Iga/skills/iga-proactive"
     }
 
     /// The EXACT, only engine command this app may run. Mirrors the command
     /// documented in the brief & SKILL.md. Any change here is a contract
     /// change and must be reviewed against the frozen decision.
     ///
-    ///   cd ~/Gaia/skills/iga-proactive \
+    ///   cd ~/Iga/skills/iga-proactive \
     ///     && PYTHONPATH=engine uv run python -m engine scan --json
     static let engineScanArgv: [String] = [
         "-c",
@@ -127,7 +127,7 @@ enum ContractGuard {
 
     /// Human-readable single line for the README / about box / tests.
     static let documentedCommand =
-        "cd ~/Gaia/skills/iga-proactive && "
+        "cd ~/Iga/skills/iga-proactive && "
         + "PYTHONPATH=engine uv run python -m engine scan --json"
 
     // MARK: - The ONLY sanctioned MUTATION entry point (Wave B habit record)
@@ -162,7 +162,7 @@ enum ContractGuard {
             return env
         }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return "\(home)/Gaia/skills/habit-tracker"
+        return "\(home)/Iga/skills/habit-tracker"
     }
 
     /// Absolute path to the frozen habit-tracker `record.py`. Resolved by the
@@ -183,7 +183,7 @@ enum ContractGuard {
             return env
         }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return "\(home)/Gaia/state"
+        return "\(home)/Iga/state"
     }
 
     /// Resolve an ABSOLUTE `uv` interpreter path. CRITICAL for the
@@ -625,7 +625,7 @@ enum ContractGuard {
             return env
         }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return "\(home)/Gaia/skills/mood-tracker"
+        return "\(home)/Iga/skills/mood-tracker"
     }
 
     /// Absolute path to the frozen mood-tracker `ingest.py` (resolved from
@@ -653,6 +653,21 @@ enum ContractGuard {
             + "com~apple~CloudDocs/Documents/Iga"
     }
 
+    /// Filename glob the ingest matches inside `moodWatchDir()`. Default =
+    /// the actual How We Feel export filename, so non-mood files dropped in
+    /// the same inbox (e.g. bank-statement CSVs) are never picked up. Mirror
+    /// of `moodWatchDir()`: override via `IGA_MOOD_EXPORT_GLOB` (OSS users
+    /// whose export is named differently point it elsewhere). Pure literal —
+    /// no engine logic. Replaces an earlier launchctl/LaunchAgent workaround
+    /// (prohibited — the whole point of this app is to avoid those).
+    static func moodExportGlob() -> String {
+        if let env = ProcessInfo.processInfo
+            .environment["IGA_MOOD_EXPORT_GLOB"], !env.isEmpty {
+            return env
+        }
+        return "HowWeFeelEmotions.csv"
+    }
+
     /// Build the (and only the) sanctioned mood-ingest subprocess. Same
     /// env-independent contract as the habit entry points: every input is an
     /// absolute literal resolved by Swift and passed via the explicit
@@ -665,7 +680,8 @@ enum ContractGuard {
             "cd \"$IGA_MT_SKILL_DIR\" || exit 90\n"
             + "\"$IGA_MT_UV\" run python "
             + "\"$IGA_MT_INGEST_PY\" --state-dir \"$IGA_MT_STATE_DIR\" "
-            + "--watch-dir \"$IGA_MOOD_WATCH_DIR\""
+            + "--watch-dir \"$IGA_MOOD_WATCH_DIR\" "
+            + "--glob \"$IGA_MOOD_EXPORT_GLOB\""
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/bin/zsh")
         p.arguments = ["-c", cmd]
@@ -675,6 +691,7 @@ enum ContractGuard {
         env["IGA_MT_UV"] = resolvedUvPath()
         env["IGA_MT_INGEST_PY"] = moodIngestScriptPath()
         env["IGA_MOOD_WATCH_DIR"] = moodWatchDir()
+        env["IGA_MOOD_EXPORT_GLOB"] = moodExportGlob()
         p.environment = env
         return p
     }
@@ -753,7 +770,7 @@ enum ContractGuard {
             return env
         }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return "\(home)/Gaia/skills/email/engine/launchd/iga-email-triage"
+        return "\(home)/Iga/skills/email/engine/launchd/iga-email-triage"
     }
 
     /// Build the (and only the) sanctioned email-triage subprocess. The

@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - Read-only skill / widget discovery
 //
-// Scans `~/Gaia/skills/*/SKILL.md` frontmatter for two opt-in blocks:
+// Scans `~/Iga/skills/*/SKILL.md` frontmatter for two opt-in blocks:
 //   * `proactive:` — the skill registers background jobs (engine territory).
 //   * `widgets:`    — the skill registers one or more render-only widgets.
 //
@@ -43,14 +43,14 @@ struct DiscoveredSkill: Equatable, Identifiable {
 
 enum SkillDiscovery {
 
-    /// `~/Gaia/skills` (sibling of the iga-proactive skill dir). Honors the
+    /// `~/Iga/skills` (sibling of the iga-proactive skill dir). Honors the
     /// same layout the engine uses.
     static func skillsDir() -> URL {
         let home = FileManager.default.homeDirectoryForCurrentUser
-        return home.appendingPathComponent("Gaia/skills")
+        return home.appendingPathComponent("Iga/skills")
     }
 
-    /// Expand a leading `~` and `~/Gaia/...` style path to absolute.
+    /// Expand a leading `~` and `~/Iga/...` style path to absolute.
     static func expand(_ path: String) -> String {
         if path == "~" {
             return FileManager.default
@@ -225,7 +225,7 @@ enum SkillDiscovery {
         let fm = FileManager.default
         let dir = skillsDir()
         let home = fm.homeDirectoryForCurrentUser.path
-        let defaultDataDir = "\(home)/Gaia/state/widgets"
+        let defaultDataDir = "\(home)/Iga/state/widgets"
 
         guard let children = try? fm.contentsOfDirectory(
             at: dir, includingPropertiesForKeys: [.isDirectoryKey],

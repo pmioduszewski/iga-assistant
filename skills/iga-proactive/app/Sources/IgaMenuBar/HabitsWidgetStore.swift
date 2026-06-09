@@ -108,7 +108,7 @@ final class HabitsWidgetStore {
         let stateDir = ProcessInfo.processInfo
             .environment["IGA_STATE_DIR"].flatMap {
                 $0.isEmpty ? nil : $0
-            } ?? "\(home)/Gaia/state"
+            } ?? "\(home)/Iga/state"
         return "\(stateDir)/widgets/habit-tracker-habits.json"
     }
 

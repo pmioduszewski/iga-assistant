@@ -124,6 +124,26 @@ skills/email/
 skills/trainer/
 
 # =============================================================================
+# Personal / not-yet-generalized skills — never ship as-is.
+#   artilio-pm   : names the user + Artilio business strategy.
+#   nutrition    : personal health (allergies, weight).
+#   health-coach : personal coach (OSS candidate — generalize to
+#                  community_skills/ later, without personal content).
+#   palace-guard : OSS-valuable mechanism, but vocab.json is a roster of the
+#                  user's REAL contacts/companies mined from the live palace.
+#                  Generalize to community_skills/ later WITHOUT vocab.json.
+# =============================================================================
+skills/artilio-pm/
+skills/nutrition/
+skills/health-coach/
+skills/palace-guard/
+
+# =============================================================================
+# community_skills/email/dist/ — compiled build output. Ship source, not dist.
+# =============================================================================
+community_skills/email/dist/
+
+# =============================================================================
 # OS / editor
 # =============================================================================
 .DS_Store
@@ -138,3 +158,6 @@ skills/trainer/
 
 # Claude Code Agent-tool isolated worktrees (harness-managed, transient)
 .claude/worktrees/
+
+# Brainstorming design specs — may carry personal context; never track
+docs/superpowers/specs/

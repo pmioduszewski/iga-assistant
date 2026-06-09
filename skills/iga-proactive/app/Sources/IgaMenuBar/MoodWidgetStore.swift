@@ -171,14 +171,14 @@ final class MoodWidgetStore {
     }
 
     /// Resolve the data file the same way HabitsWidgetStore does: an
-    /// explicit override, else `$IGA_STATE_DIR`, else `~/Gaia/state`.
+    /// explicit override, else `$IGA_STATE_DIR`, else `~/Iga/state`.
     nonisolated static func dataPath() -> String {
         let env = ProcessInfo.processInfo.environment
         if let f = env["IGA_MOOD_DATA_FILE"], !f.isEmpty { return f }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         let stateDir = env["IGA_STATE_DIR"].flatMap {
             $0.isEmpty ? nil : $0
-        } ?? "\(home)/Gaia/state"
+        } ?? "\(home)/Iga/state"
         return "\(stateDir)/widgets/mood-tracker-mood.json"
     }
 

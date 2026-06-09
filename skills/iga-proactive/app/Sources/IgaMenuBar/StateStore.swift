@@ -66,17 +66,17 @@ final class StateStore {
         }
     }
 
-    /// `$IGA_PROACTIVE_STATE` or `~/Gaia/scratch/proactive-state.json`.
+    /// `$IGA_PROACTIVE_STATE` or `~/Iga/scratch/proactive-state.json`.
     static func defaultStatePath() -> String {
         if let env = ProcessInfo.processInfo
             .environment["IGA_PROACTIVE_STATE"], !env.isEmpty {
             return (env as NSString).expandingTildeInPath
         }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return "\(home)/Gaia/scratch/proactive-state.json"
+        return "\(home)/Iga/scratch/proactive-state.json"
     }
 
-    /// `$IGA_PROACTIVE_CANCEL` or `~/Gaia/scratch/proactive-cancel.json`
+    /// `$IGA_PROACTIVE_CANCEL` or `~/Iga/scratch/proactive-cancel.json`
     /// (sibling of the state file). The engine drains this at the start of
     /// every scan tick and marks each key sticky-cancelled in the ledger.
     static func defaultCancelPath() -> String {

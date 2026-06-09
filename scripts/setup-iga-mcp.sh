@@ -61,8 +61,8 @@ say "IgaMCP entrypoint: $BIN"
 
 # --- IgaMemory detection (the warm memory server — a SEPARATE process by
 #     design; see iga_mcp/README.md "topology"). Path derived from IGA_HOME
-#     (default ~/Gaia) — never hardcoded; skipped cleanly if absent. ------------
-IGA_HOME_DIR="${IGA_HOME:-$HOME/Gaia}"
+#     (default ~/Iga) — never hardcoded; skipped cleanly if absent. ------------
+IGA_HOME_DIR="${IGA_HOME:-$HOME/Iga}"
 MEM_BIN=""
 for cand in "$IGA_HOME_DIR/mempalace/.venv/bin/mempalace-mcp" \
             "$REPO_ROOT/mempalace/.venv/bin/mempalace-mcp"; do

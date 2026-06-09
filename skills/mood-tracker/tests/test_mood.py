@@ -256,7 +256,7 @@ def test_pipeline_never_touches_real_state(tmp_path, monkeypatch):
         existed, mtime, data = snap[w]
         if existed:
             assert w.exists() and w.stat().st_mtime == mtime, (
-                f"{w}: REAL ~/Gaia/state changed — isolation breach")
+                f"{w}: REAL ~/Iga/state changed — isolation breach")
             assert w.read_bytes() == data
         else:
             assert not w.exists(), f"{w}: created under real state"
@@ -350,7 +350,7 @@ def test_record_never_touches_real_state(tmp_path):
         existed, mtime, data = snap[w]
         if existed:
             assert w.exists() and w.stat().st_mtime == mtime, (
-                f"{w}: REAL ~/Gaia/state changed — isolation breach")
+                f"{w}: REAL ~/Iga/state changed — isolation breach")
             assert w.read_bytes() == data
         else:
             assert not w.exists(), f"{w}: created under real state"
@@ -413,7 +413,7 @@ def test_ingest_never_touches_real_state(tmp_path):
         existed, mtime, data = snap[w]
         if existed:
             assert w.exists() and w.stat().st_mtime == mtime, (
-                f"{w}: REAL ~/Gaia/state changed — isolation breach")
+                f"{w}: REAL ~/Iga/state changed — isolation breach")
             assert w.read_bytes() == data
         else:
             assert not w.exists(), f"{w}: created under real state"

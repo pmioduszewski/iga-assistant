@@ -9,7 +9,7 @@ CATEGORIES = [
 
 # Curated wings carry signal; the sessions wing is verbatim transcript noise.
 SOURCE_WINGS = {
-    "user", "people", "projects", "gaia", "wing_gaia", "iga", "wing_iga",
+    "user", "people", "projects", "iga", "wing_iga",
     "vault", "vault-dev-libs", "reference",
 }
 EXCLUDED_WINGS = {"sessions"}

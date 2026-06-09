@@ -20,7 +20,7 @@ This module IS that entry point for the habit substrate. It:
   * is **``$IGA_STATE_DIR``-rooted with a MANDATORY ``--state-dir``** — there
     is deliberately NO implicit real-state default in the CLI, exactly like
     ``import_habitkit`` / ``export_habitkit``; a careless invocation can never
-    write the user's live ``~/Gaia/state``;
+    write the user's live ``~/Iga/state``;
   * after the mutation, **re-emits the derived widget JSON** via
     ``widget_projection`` so the polling app sees the new grid/streak/goal
     immediately. The projection is pure Wave-A code — this entry point consumes it,
@@ -298,7 +298,7 @@ def main(argv: list[str] | None = None) -> int:
         required=True,
         help="REQUIRED substrate state root ($IGA_STATE_DIR). There is NO "
         "implicit real-state default — pass an explicit dir so the user's "
-        "live ~/Gaia/state can never be clobbered by a careless run.",
+        "live ~/Iga/state can never be clobbered by a careless run.",
     )
     ap.add_argument(
         "--reproject",

@@ -1,7 +1,7 @@
 """SYNTHETIC HabitKit-shaped fixtures the tests author themselves.
 
 PRIVACY (binding): tests NEVER read the real export and NEVER touch the real
-``~/Gaia/state``. Every name here is neutral ("Reading", "Water", ...). These
+``~/Iga/state``. Every name here is neutral ("Reading", "Water", ...). These
 dicts mirror the HabitKit export *shape* (field names + types) exactly so the
 importer/exporter/stats are exercised against a faithful structure without any
 private data ever entering the repo.

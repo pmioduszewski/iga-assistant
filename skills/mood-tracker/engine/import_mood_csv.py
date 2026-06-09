@@ -3,7 +3,7 @@
 Anti-lock-in, exactly like the habit-tracker's HabitKit importer: this
 reads the source app's own export so the user is never trapped. It is
 ``$IGA_STATE_DIR``-rooted with a MANDATORY ``--state-dir`` (NO implicit
-real-state default — a careless run can never clobber live ~/Gaia/state),
+real-state default — a careless run can never clobber live ~/Iga/state),
 idempotent (a stable per-row id → re-import updates in place, never
 duplicates), and LOSSLESS (every source column is preserved verbatim in
 ``attrs['src']`` so export→import is an exact fixpoint, while the modelled

@@ -67,7 +67,7 @@ DEFAULT_MIN_STREAMS = 3
 DEFAULT_MIN_MESSAGES = 8
 SCHEMA_VERSION = 1
 # scratch/ is gitignored (verified) — keeps `git status` clean by construction.
-DEFAULT_OFFER_PATH = "~/Gaia/scratch/newsletter-unhooked-offer.json"
+DEFAULT_OFFER_PATH = "~/Iga/scratch/newsletter-unhooked-offer.json"
 # Process-local salt: the cluster key is stable WITHIN a run/state file but
 # the raw identity is never recoverable from the persisted hash.
 _SALT = "iga-newsletter-unhooked-v1"

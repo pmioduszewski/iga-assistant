@@ -13,8 +13,8 @@ prerequisites:
     check: cmd(python3)
     severity: error
   - name: state-dir-writable
-    description: The producer reads ~/Gaia/state/habits/<name>.log and writes ~/Gaia/state/widgets/habit-tracker-habit-grid.json. The ~/Gaia tree must be writable.
-    check: file(~/Gaia)
+    description: The producer reads ~/Iga/state/habits/<name>.log and writes ~/Iga/state/widgets/habit-tracker-habit-grid.json. The ~/Iga tree must be writable.
+    check: file(~/Iga)
     severity: warning
 triggers:
   - kind: cli
@@ -23,7 +23,7 @@ widgets:
   - id: habit-grid
     type: contribution-grid
     title: Habit streak
-    data_source: ~/Gaia/state/widgets/habit-tracker-habit-grid.json
+    data_source: ~/Iga/state/widgets/habit-tracker-habit-grid.json
     refresh: 60
     coach:
       tone: encouraging
@@ -54,7 +54,7 @@ pure viewer.
 
 ## What it does
 
-- Reads an append-only habits log: `~/Gaia/state/habits/<name>.log`, one ISO
+- Reads an append-only habits log: `~/Iga/state/habits/<name>.log`, one ISO
   date (`YYYY-MM-DD`) per line = a day the habit was done. Blank lines and
   duplicates are tolerated.
 - Computes the last ~120 days as a `contribution-grid`: one cell per day with a
@@ -64,7 +64,7 @@ pure viewer.
   streak length, or days since last done → an encouraging or gentle-nudge
   sentence).
 - Emits the v1 widget data-file JSON atomically (tmp + `os.replace`) to
-  `~/Gaia/state/widgets/habit-tracker-habit-grid.json`.
+  `~/Iga/state/widgets/habit-tracker-habit-grid.json`.
 
 ## Widget data-file schema (v1, shared with the app)
 
@@ -99,13 +99,13 @@ python3 skills/habit-tracker/engine/producer.py --name reading --days 120
 To log a day, append the date to the log (idempotent — duplicates ignored):
 
 ```
-echo "$(date +%F)" >> ~/Gaia/state/habits/example.log
+echo "$(date +%F)" >> ~/Iga/state/habits/example.log
 ```
 
 ### State-root override — `IGA_STATE_DIR` (data-loss isolation)
 
 By default the producer reads + writes the user's **live** state under
-`~/Gaia/state` (habit logs in `state/habits/`, widget JSON in
+`~/Iga/state` (habit logs in `state/habits/`, widget JSON in
 `state/widgets/`). Tests, the app deletion-invariant test, and any
 sandboxed run **must not** clobber that live data. Set `IGA_STATE_DIR` to
 redirect the **entire** state tree somewhere safe:
@@ -117,8 +117,8 @@ IGA_STATE_DIR=/tmp/sandbox python3 skills/habit-tracker/engine/producer.py
 ```
 
 Precedence: `$IGA_STATE_DIR` (explicit state root) > `$IGA_HOME`/state
-(repo-root override) > `~/Gaia/state` (default — live data, unchanged).
-When `$IGA_STATE_DIR` is set, **nothing** under the real `~/Gaia/state`
+(repo-root override) > `~/Iga/state` (default — live data, unchanged).
+When `$IGA_STATE_DIR` is set, **nothing** under the real `~/Iga/state`
 is read or written. Every producer/habit test and the Swift
 deletion-invariant test sets this to a temp dir; a guard test
 (`test_isolation_guard_real_state_untouched_by_producer`) asserts the
@@ -171,7 +171,7 @@ uv run python skills/habit-tracker/engine/export_habitkit.py \
   Timezone semantics preserved exactly (HabitKit's UTC-stored local-midnight
   instant + `timezoneOffsetInMinutes` → the local civil day the user meant).
   `--state-dir` is **mandatory**: no implicit real-state default in the CLI,
-  so a careless run can never write the user's live `~/Gaia/state`.
+  so a careless run can never write the user's live `~/Iga/state`.
 - **Exporter** rebuilds HabitKit-compatible JSON. Round-trip property:
   `import(export(S))` data-equals `S` for the supported field set, and
   `import∘export` is an idempotent fixpoint — the user is never locked in.
@@ -294,7 +294,7 @@ reads this (directly or shelled from `/gm`) and reasons FROM it — never
 guesses habit state. Mutates nothing.
 
 ```
-IGA_STATE_DIR=~/Gaia/state uv run python \
+IGA_STATE_DIR=~/Iga/state uv run python \
   skills/habit-tracker/engine/summary.py [--today YYYY-MM-DD] [--json]
 ```
 
@@ -352,4 +352,4 @@ fixpoint** (`import(export(S)) == S`), the streak/goal engine (table-driven:
 inverse, multi-completion days, mid-history goal changes, week/month goals,
 `allow_exceed`, archived exclusion, tz-edge), the derived widget projection,
 and a combined data-loss + privacy guard (no real export referenced; real
-`~/Gaia/state` byte/mtime-unchanged across the full pipeline).
+`~/Iga/state` byte/mtime-unchanged across the full pipeline).

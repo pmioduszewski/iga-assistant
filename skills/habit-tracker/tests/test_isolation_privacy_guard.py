@@ -3,10 +3,10 @@
 Mirrors the v2 producer guard pattern. Asserts:
 
   1. With $IGA_STATE_DIR set, EVERY resolved substrate/widget path is under
-     the isolation root and NONE under the real ~/Gaia/state.
+     the isolation root and NONE under the real ~/Iga/state.
   2. Running import -> export -> project -> stats fully isolated does NOT
      create/modify/mtime-touch the user's REAL live widget JSON or any real
-     ~/Gaia/state file.
+     ~/Iga/state file.
   3. PRIVACY: no source/test/fixture file references the real HabitKit export
      path, and the synthetic fixture contains only neutral names.
 """
@@ -30,7 +30,7 @@ _REAL_EXPORT = str(Path.home() / "Downloads" / "habitkit_export.json")
 
 
 def _real_state_root() -> Path:
-    """The genuine ~/Gaia/state, ignoring ALL env overrides on purpose."""
+    """The genuine ~/Iga/state, ignoring ALL env overrides on purpose."""
     return Path.home() / "Iga" / "state"
 
 
@@ -58,7 +58,7 @@ def test_all_paths_redirected_under_isolation_root(tmp_path, monkeypatch):
 
 
 # --------------------------------------------------------------------------- #
-# 2. real ~/Gaia/state untouched across a full Wave-A pipeline run
+# 2. real ~/Iga/state untouched across a full Wave-A pipeline run
 # --------------------------------------------------------------------------- #
 def test_full_pipeline_does_not_touch_real_state(tmp_path, monkeypatch):
     widget = _real_widget_json()
@@ -92,14 +92,14 @@ def test_full_pipeline_does_not_touch_real_state(tmp_path, monkeypatch):
         if existed:
             assert p.exists(), f"{label}: real file deleted"
             assert p.stat().st_mtime == mtime, (
-                f"{label}: REAL ~/Gaia/state mtime changed — data loss"
+                f"{label}: REAL ~/Iga/state mtime changed — data loss"
             )
             assert p.read_bytes() == data, (
-                f"{label}: REAL ~/Gaia/state bytes changed — data loss"
+                f"{label}: REAL ~/Iga/state bytes changed — data loss"
             )
         else:
             assert not p.exists(), (
-                f"{label}: created a file under the real ~/Gaia/state "
+                f"{label}: created a file under the real ~/Iga/state "
                 f"despite IGA_STATE_DIR isolation"
             )
 

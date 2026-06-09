@@ -27,7 +27,7 @@ from pathlib import Path
 
 # Re-use the same IGA_HOME resolution logic as server.py (no import cycle:
 # server imports skills, not the reverse).
-IGA_HOME = Path(os.environ.get("IGA_HOME", str(Path.home() / "Gaia"))).expanduser()
+IGA_HOME = Path(os.environ.get("IGA_HOME", str(Path.home() / "Iga"))).expanduser()
 
 # How long (seconds) to wait for an engine subprocess before giving up.
 _DEFAULT_TIMEOUT = 30

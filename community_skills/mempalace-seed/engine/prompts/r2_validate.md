@@ -18,7 +18,7 @@ Examples:
 - If `tools_stack` lists 5 tools but the palace mentions 8, backfill the 3 that were dropped.
 
 **Action**: For each category, scan the palace for facts that:
-- Appear in curated wings (user, people, projects, gaia, iga, vault, reference)
+- Appear in curated wings (user, people, projects, iga, vault, reference)
 - Have current status (not marked abandoned)
 - Are NOT in seed.v1 for that category
 - Would be relevant to a person-assistant using this seed

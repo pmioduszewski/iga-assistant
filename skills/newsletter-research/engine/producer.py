@@ -110,7 +110,7 @@ DEFAULT_MAX_PER_TICK = 3
 # short enough that a transient MCP failure self-heals next day. Independent
 # of the consumer's 72h spawn cooldown.
 PRODUCER_COOLDOWN_SECONDS = 24 * 3600
-DEFAULT_HOOKS_GLOB = "~/Gaia/rules/hooks/*.md"
+DEFAULT_HOOKS_GLOB = "~/Iga/rules/hooks/*.md"
 
 
 # --------------------------------------------------------------------------- #

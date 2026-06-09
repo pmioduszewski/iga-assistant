@@ -1,7 +1,7 @@
 """Derived widget projection: substrate  ->  the v2 contribution-grid JSON.
 
 The running v2 menu-bar app polls
-``~/Gaia/state/widgets/habit-tracker-habit-grid.json`` (schema_version 1,
+``~/Iga/state/widgets/habit-tracker-habit-grid.json`` (schema_version 1,
 contribution-grid cells). That contract MUST NOT change in Wave A. This module
 renders exactly that v1 payload as a DERIVED projection of the substrate, so
 the app keeps rendering unchanged whether the data came from the old

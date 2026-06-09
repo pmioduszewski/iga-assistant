@@ -208,7 +208,7 @@ newly-filed findings, idempotent, best-effort, never the dedup authority.
 ## Step 6 — Update the findings JSON (board surface)
 
 Append/refresh the board data file
-`~/Gaia/state/widgets/newsletter-research-findings.json`. It is the
+`~/Iga/state/widgets/newsletter-research-findings.json`. It is the
 schema-v1 `message` widget contract the generic menu-bar WidgetHost already
 renders. Write it atomically (tmp + rename). Shape:
 
@@ -236,7 +236,7 @@ Allowed: the iga-email `read` MCP tool (`mcp__iga-email__read`, read-only;
 legacy `manage_email read` if that is what's wired), `WebFetch` (≤ 5 URLs
 total), `WebSearch` (≤ 2 queries), MemPalace search/list/`add_drawer`/
 `check_duplicate` (writes ONLY into the resolved (WING, ROOM) from Step 5),
-read-only `~/Gaia` filesystem, the single atomic write of the findings JSON
+read-only `~/Iga` filesystem, the single atomic write of the findings JSON
 above, the Step 5b sink deliveries — the `sinks` sqlite CLI
 (`python -m sinks append`, idempotent, `$IGA_STATE_DIR`-rooted) and, ONLY
 if a `todoist` sink with a project is present, Todoist

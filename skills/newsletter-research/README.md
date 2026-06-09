@@ -63,7 +63,7 @@ SKILL.md). No code edit flips it either way — the gate is data.
 ## Board surface (zero Swift)
 
 `SKILL.md` declares a `widgets:` block (`type: message`,
-`data_source: ~/Gaia/state/widgets/newsletter-research-findings.json`). The
+`data_source: ~/Iga/state/widgets/newsletter-research-findings.json`). The
 generic menu-bar `WidgetHost` (`SkillDiscovery` + `WidgetHostStore` +
 `WidgetHostView`) already discovers and renders `message` widgets read-only
 and tolerates an absent data file (shows "waiting for newsletter-research").

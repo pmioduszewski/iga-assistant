@@ -9,7 +9,7 @@ frozen ``stats.py`` computes them, with zero habit logic in the entry point itse
 Privacy/isolation (binding): every test is synthetic-only and runs under an
 ``IGA_STATE_DIR`` tmp root; ``test_record_refuses_without_state_dir`` proves
 the CLI has NO implicit real-state default;
-``test_record_never_touches_real_state`` proves the real ~/Gaia/state
+``test_record_never_touches_real_state`` proves the real ~/Iga/state
 substrate + both widget JSONs are byte/mtime-unchanged across a full run.
 """
 
@@ -310,7 +310,7 @@ def test_record_cli_isolated_roundtrip(tmp_path):
 
 def test_record_never_touches_real_state(tmp_path, monkeypatch):
     """A full entry point run (CLI + programmatic) must leave the user's REAL
-    ~/Gaia/state substrate AND both widget JSONs byte/mtime-unchanged."""
+    ~/Iga/state substrate AND both widget JSONs byte/mtime-unchanged."""
     real_root = _real_state_root()
     watched = [
         real_root / "substrates" / "habit-tracker.json",
@@ -337,14 +337,14 @@ def test_record_never_touches_real_state(tmp_path, monkeypatch):
         if existed:
             assert p.exists(), f"{p}: real file deleted by the entry point"
             assert p.stat().st_mtime == mtime, (
-                f"{p}: REAL ~/Gaia/state mtime changed — entry point wrote live data"
+                f"{p}: REAL ~/Iga/state mtime changed — entry point wrote live data"
             )
             assert p.read_bytes() == data, (
-                f"{p}: REAL ~/Gaia/state bytes changed — data loss"
+                f"{p}: REAL ~/Iga/state bytes changed — data loss"
             )
         else:
             assert not p.exists(), (
-                f"{p}: entry point created a file under the real ~/Gaia/state "
+                f"{p}: entry point created a file under the real ~/Iga/state "
                 f"despite IGA_STATE_DIR isolation"
             )
 

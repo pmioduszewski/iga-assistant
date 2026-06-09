@@ -18,7 +18,7 @@ prerequisites:
     severity: warning
   - name: proactive-engine
     description: This skill's proactive.yaml is discovered/gated by the generic skills/iga-proactive engine. Without it nothing runs.
-    check: file(~/Gaia/skills/iga-proactive/engine/runtime.py)
+    check: file(~/Iga/skills/iga-proactive/engine/runtime.py)
     severity: warning
 triggers:
   - kind: hook
@@ -35,7 +35,7 @@ widgets:
   - id: newsletter-findings
     type: message
     title: Newsletter R&D
-    data_source: ~/Gaia/state/widgets/newsletter-research-findings.json
+    data_source: ~/Iga/state/widgets/newsletter-research-findings.json
     refresh: 300
     coach:
       tone: neutral

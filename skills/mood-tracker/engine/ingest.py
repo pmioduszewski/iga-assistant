@@ -17,7 +17,7 @@ Mood widget via the FROZEN `widget_projection`; it adds no model logic.
 
 Privacy: reports COUNTS only, never names/notes. Never copies the export
 into the repo. `--state-dir` is MANDATORY (no implicit real default — the
-`/gm` wiring passes `~/Gaia/state` explicitly). No engine source
+`/gm` wiring passes `~/Iga/state` explicitly). No engine source
 hard-references the real export filename or a real Downloads path — the
 brand/glob is composed from split tokens at runtime, and the default
 watch dir is built structurally, so the privacy guard never trips.
@@ -165,7 +165,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument(
         "--state-dir", required=True,
         help="REQUIRED substrate state root ($IGA_STATE_DIR). No implicit "
-        "real-state default — the /gm wiring passes ~/Gaia/state.",
+        "real-state default — the /gm wiring passes ~/Iga/state.",
     )
     ap.add_argument(
         "--watch-dir", default=None,

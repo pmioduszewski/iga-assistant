@@ -29,12 +29,12 @@ with the state directory resolved server-side — no SKILL.md reading, no guessi
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `IGA_HOME` | `~/Gaia` | Iga orchestration home directory. Skills live under `$IGA_HOME/skills/`. |
+| `IGA_HOME` | `~/Iga` | Iga orchestration home directory. Skills live under `$IGA_HOME/skills/`. |
 | `IGA_STATE_DIR` | `$IGA_HOME/state` | Substrate state root. Override in tests to a temp dir for isolation. |
 | `IGA_SESSION_ID` | read from `$IGA_HOME/.iga-session-id` | UUID of the persistent Iga session. |
 | `IGA_CLAUDE_BIN` | `claude` (on PATH) | Path to the `claude` CLI binary. |
 | `IGA_TIMEOUT` | `120` | Per-call timeout in seconds for `iga_ask`. |
-| `IGA_MCP_STYLE` | `gaia-compact` | Output style name. Set to `""` to inherit session default. |
+| `IGA_MCP_STYLE` | `iga-compact` | Output style name. Set to `""` to inherit session default. |
 | `IGA_MCP_MODEL` | *(inherit)* | Model override for MCP calls, e.g. `claude-sonnet-4-6`. |
 
 ## Installation
@@ -113,7 +113,7 @@ The `.mcp.json` at the repo root already contains the generic template (with
 
 ```bash
 # Create the session ID file (one-time bootstrap):
-uuidgen > ~/Gaia/.iga-session-id
+uuidgen > ~/Iga/.iga-session-id
 ```
 
 Optionally set `IGA_STATE_DIR` in your shell profile to point to a non-default
@@ -126,4 +126,4 @@ PYTHONPATH=iga_mcp/src python3 -m unittest discover iga_mcp/tests
 ```
 
 Tests use a `TemporaryDirectory` as `IGA_STATE_DIR` and assert that
-`~/Gaia/state` is never written.
+`~/Iga/state` is never written.

@@ -6,10 +6,10 @@ Design:
   - stdlib unittest only (no pytest).
   - IGA_HOME is pointed at the repo root so real engine scripts are used.
   - IGA_STATE_DIR is set to a fresh TemporaryDirectory for each test so the
-    user's live ~/Gaia/state is NEVER touched.
+    user's live ~/Iga/state is NEVER touched.
   - Habit substrate is seeded via the REAL creation path: the HabitKit
     importer (import_habitkit.py). We do NOT hand-write substrate internals.
-  - After each test we assert that nothing was written under ~/Gaia/state.
+  - After each test we assert that nothing was written under ~/Iga/state.
 
 Run:
   python3 -m unittest discover iga_mcp/tests
@@ -38,8 +38,8 @@ _SRC = str(REPO_ROOT / "iga_mcp" / "src")
 if _SRC not in sys.path:
     sys.path.insert(0, _SRC)
 
-# REAL ~/Gaia/state — we assert this is never written.
-_REAL_STATE = Path.home() / "Gaia" / "state"
+# REAL ~/Iga/state — we assert this is never written.
+_REAL_STATE = Path.home() / "Iga" / "state"
 
 _IMPORTER = (
     REPO_ROOT / "skills" / "habit-tracker" / "engine" / "import_habitkit.py"
@@ -145,7 +145,7 @@ class HabitToolsTest(unittest.TestCase):
         self.assertIn("h-9f3a2c", ids)
 
     def test_state_isolation_habit(self) -> None:
-        """Nothing should be written under ~/Gaia/state during this test."""
+        """Nothing should be written under ~/Iga/state during this test."""
         self._skills.habit_log(habit="Push-ups", op="add", date="today")
         if _REAL_STATE.exists():
             before_mtime = _REAL_STATE.stat().st_mtime
@@ -153,7 +153,7 @@ class HabitToolsTest(unittest.TestCase):
             self.assertEqual(
                 _REAL_STATE.stat().st_mtime,
                 before_mtime,
-                "Real ~/Gaia/state was modified — state isolation failure.",
+                "Real ~/Iga/state was modified — state isolation failure.",
             )
         tmp_path = Path(self._tmp.name)
         self.assertTrue(
@@ -195,7 +195,7 @@ class MoodToolsTest(unittest.TestCase):
         self.assertEqual(r["emotion"], "anxious")
 
     def test_state_isolation_mood(self) -> None:
-        """Nothing should be written under ~/Gaia/state during this test."""
+        """Nothing should be written under ~/Iga/state during this test."""
         self._skills.mood_log(emotion="curious")
         if _REAL_STATE.exists():
             before_mtime = _REAL_STATE.stat().st_mtime
@@ -203,7 +203,7 @@ class MoodToolsTest(unittest.TestCase):
             self.assertEqual(
                 _REAL_STATE.stat().st_mtime,
                 before_mtime,
-                "Real ~/Gaia/state was modified — state isolation failure.",
+                "Real ~/Iga/state was modified — state isolation failure.",
             )
         tmp_path = Path(self._tmp.name)
         self.assertTrue(

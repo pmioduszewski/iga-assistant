@@ -13,12 +13,12 @@ It reads a plain append-only habits log and emits the v1 widget data-file
 JSON (schema below) atomically, so a polling reader never sees a half-written
 file.
 
-INPUT  : ~/Gaia/state/habits/<name>.log   (one ISO date per line, dups OK)
-OUTPUT : ~/Gaia/state/widgets/habit-tracker-habit-grid.json
+INPUT  : ~/Iga/state/habits/<name>.log   (one ISO date per line, dups OK)
+OUTPUT : ~/Iga/state/widgets/habit-tracker-habit-grid.json
 
 STATE-ROOT OVERRIDE (test / sandbox isolation — DATA-LOSS GUARD)
 ---------------------------------------------------------------
-By default the producer reads + writes under the real ``~/Gaia/state``
+By default the producer reads + writes under the real ``~/Iga/state``
 tree, so the live widget keeps working. Tests, the app deletion-invariant
 test, and any sandboxed run MUST NOT clobber the user's live data. Set
 ``$IGA_STATE_DIR`` to redirect the ENTIRE state tree (both the habit log
@@ -28,8 +28,8 @@ dir and the widget output) somewhere safe (e.g. a pytest ``tmp_path``):
                                       widget: /some/tmp/state/widgets/...
 
 Precedence: ``$IGA_STATE_DIR`` (explicit state root) > ``$IGA_HOME``/state
-(repo-root override) > ``~/Gaia/state`` (default — live data, unchanged).
-When ``$IGA_STATE_DIR`` is set, NOTHING under the real ``~/Gaia/state`` is
+(repo-root override) > ``~/Iga/state`` (default — live data, unchanged).
+When ``$IGA_STATE_DIR`` is set, NOTHING under the real ``~/Iga/state`` is
 read or written.
 
 WIDGET DATA-FILE SCHEMA (v1) — must stay byte-compatible with the Swift
@@ -81,7 +81,7 @@ INTENSITY_WINDOW = 7
 # Paths
 # --------------------------------------------------------------------------- #
 def _iga_root() -> Path:
-    """Repo / state root. ``$IGA_HOME`` overrides; else ``~/Gaia``."""
+    """Repo / state root. ``$IGA_HOME`` overrides; else ``~/Iga``."""
     env = os.environ.get("IGA_HOME")
     if env:
         return Path(env).expanduser()
@@ -95,9 +95,9 @@ def state_root() -> Path:
       1. ``$IGA_STATE_DIR``  — explicit state-root override (tests/sandbox).
          Used verbatim; the ``state/`` segment is the override itself.
       2. ``$IGA_HOME``/state — repo-root override.
-      3. ``~/Gaia/state``    — default; the user's LIVE data, unchanged.
+      3. ``~/Iga/state``    — default; the user's LIVE data, unchanged.
 
-    When (1) is set, nothing under the real ``~/Gaia/state`` is touched.
+    When (1) is set, nothing under the real ``~/Iga/state`` is touched.
     """
     env = os.environ.get("IGA_STATE_DIR")
     if env:
@@ -362,7 +362,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument(
         "--name",
         default="example",
-        help="habit log name (~/Gaia/state/habits/<name>.log)",
+        help="habit log name (~/Iga/state/habits/<name>.log)",
     )
     ap.add_argument(
         "--days",

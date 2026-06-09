@@ -338,7 +338,7 @@ def test_cli_export_writes_file(tmp_path, monkeypatch):
 
 
 def test_manage_never_touches_real_state(tmp_path, monkeypatch):
-    """The real ~/Gaia/state substrate + widget JSONs must be byte/mtime
+    """The real ~/Iga/state substrate + widget JSONs must be byte/mtime
     unchanged across rename + delete + set-goal under an isolated root."""
     real = Path.home() / "Iga" / "state"
     watched = [
@@ -366,7 +366,7 @@ def test_manage_never_touches_real_state(tmp_path, monkeypatch):
         existed, mtime, datab = snap[p]
         if existed:
             assert p.exists() and p.stat().st_mtime == mtime, (
-                f"{p}: REAL ~/Gaia/state changed — isolation breach"
+                f"{p}: REAL ~/Iga/state changed — isolation breach"
             )
             assert p.read_bytes() == datab
         else:

@@ -53,7 +53,7 @@ CONTRACT GUARANTEES
   records are key-sorted and lists are sorted by a deterministic key so the
   on-disk bytes are reproducible and diff-friendly.
 * **$IGA_STATE_DIR isolation** — REUSES ``producer.state_root()`` verbatim, so
-  the privacy/data-loss guard that protects the user's live ``~/Gaia/state``
+  the privacy/data-loss guard that protects the user's live ``~/Iga/state``
   is shared, not re-implemented.
 
 This module is the GENERIC contract *and* the habit-tracker instance. A future

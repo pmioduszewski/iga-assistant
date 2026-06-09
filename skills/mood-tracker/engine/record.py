@@ -28,7 +28,7 @@ This module IS that entry point for the mood substrate. It:
   * is **`$IGA_STATE_DIR`-rooted with a MANDATORY `--state-dir`** — there
     is deliberately NO implicit real-state default, exactly like
     import/export; a careless invocation can never write the live
-    `~/Gaia/state`;
+    `~/Iga/state`;
   * after the mutation, **re-emits the derived widget JSON** via
     `widget_projection` so the polling Mood grid refreshes immediately.
 
@@ -212,7 +212,7 @@ def main(argv: list[str] | None = None) -> int:
         "--state-dir", required=True,
         help="REQUIRED substrate state root ($IGA_STATE_DIR). No implicit "
         "real-state default — pass an explicit dir so the user's live "
-        "~/Gaia/state can never be clobbered by a careless run.",
+        "~/Iga/state can never be clobbered by a careless run.",
     )
     ap.add_argument(
         "--reproject", action="store_true",

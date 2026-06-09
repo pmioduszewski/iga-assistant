@@ -31,8 +31,8 @@ A JSON object arrives on stdin — the rendered candidate context from
    app + /gm use):
 
    ```
-   IGA_STATE_DIR=$HOME/Gaia/state uv run python \
-     $HOME/Gaia/skills/habit-tracker/engine/summary.py \
+   IGA_STATE_DIR=$HOME/Iga/state uv run python \
+     $HOME/Iga/skills/habit-tracker/engine/summary.py \
      --today <drawer.target_date> --json
    ```
 

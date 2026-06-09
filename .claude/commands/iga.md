@@ -125,7 +125,7 @@ upstream_branch: main                     # default
 # Per-pack overrides (optional) — useful when mixing packs from different sources
 overrides:
   notion: yourname/your-notion-extras
-  jira: company-internal/gaia-rules
+  jira: company-internal/iga-rules
 ```
 
 Per-pack `source` in frontmatter takes precedence over `overrides`, which takes precedence over the global `upstream`.

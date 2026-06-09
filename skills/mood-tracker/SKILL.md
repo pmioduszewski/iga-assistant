@@ -14,7 +14,7 @@ prerequisites:
     severity: error
 triggers:
   - kind: cli
-    spec: "PRIMARY conversational path = the `iga_mood_log` MCP tool (emotion `;`-joined primary-first for multi-feeling — ONE call per moment, never two). It wraps `engine/record.py --state-dir ~/Gaia/state --emotion <name[;name2]> --at <YYYY-MM-DDTHH:MM> [--note .. --people .. --places .. --events ..]`, the sanctioned chat log entry point (bash fallback only if the MCP is down). `engine/widget_projection.py [--days N]` rebuilds the Mood grid. `engine/summary.py` is the read-only Iga digest. `engine/import_mood_csv.py --input <csv> --state-dir <dir>` imports a mood-app export. `engine/ingest.py --state-dir ~/Gaia/state` is the idempotent backfill (newest export in the configurable watch folder iff changed)."
+    spec: "PRIMARY conversational path = the `iga_mood_log` MCP tool (emotion `;`-joined primary-first for multi-feeling — ONE call per moment, never two). It wraps `engine/record.py --state-dir ~/Iga/state --emotion <name[;name2]> --at <YYYY-MM-DDTHH:MM> [--note .. --people .. --places .. --events ..]`, the sanctioned chat log entry point (bash fallback only if the MCP is down). `engine/widget_projection.py [--days N]` rebuilds the Mood grid. `engine/summary.py` is the read-only Iga digest. `engine/import_mood_csv.py --input <csv> --state-dir <dir>` imports a mood-app export. `engine/ingest.py --state-dir ~/Iga/state` is the idempotent backfill (newest export in the configurable watch folder iff changed)."
 substrate:
   - kind: mood-tracker
     version: 1
@@ -62,7 +62,7 @@ uv run python skills/mood-tracker/engine/export_mood_csv.py \
   source row is kept verbatim in `attrs['src']`, so `import(export(S))`
   data-equals `S` — an exact round-trip fixpoint). `--state-dir` is
   **mandatory**: no implicit real-state default; a careless run can never
-  clobber the user's live `~/Gaia/state`. No engine source hard-references
+  clobber the user's live `~/Iga/state`. No engine source hard-references
   the real export path (privacy guard, tested).
 - **Exporter** rebuilds a source-app-format CSV; never writes the state
   tree. The user is never locked in.
@@ -94,7 +94,7 @@ emotions, the context that co-occurs with rough logs (to explore, not
 blame), last entry, and a gentle-coaching cue when the trend is declining.
 
 ```
-IGA_STATE_DIR=~/Gaia/state uv run python \
+IGA_STATE_DIR=~/Iga/state uv run python \
   skills/mood-tracker/engine/summary.py [--today YYYY-MM-DD] [--days N] [--json]
 ```
 
@@ -126,7 +126,7 @@ entry point directly):
 
 ```
 uv run python skills/mood-tracker/engine/record.py \
-  --state-dir ~/Gaia/state \
+  --state-dir ~/Iga/state \
   --emotion "Overwhelmed;Sad" --at 2026-05-17T14:30 \
   --note "before the demo" --people "Boss" --events "Deadline"
 ```
@@ -154,7 +154,7 @@ Behavioral contract for Iga:
   clean. The engine normalises case for lexicon lookup and `emotion_key`
   stays lowercase, but the human-facing display name is Title Case.
 - `at` is the user's local civil timestamp **now** (Iga supplies it; the
-  engine reads no clock). State dir is ALWAYS `~/Gaia/state` (the MCP
+  engine reads no clock). State dir is ALWAYS `~/Iga/state` (the MCP
   tool resolves it; never pass a different one).
 - Map context they mention into `--people/--places/--events` (comma
   lists); put the verbatim phrase in `--note` only if they'd want it kept.
@@ -169,7 +169,7 @@ the "boring chat", Iga logs and later coaches from the same place.
 ## Privacy (binding)
 
 Mood notes/reflections/takeaways are deeply intimate. Real data lives
-ONLY in the gitignored `~/Gaia/state`. Every test is synthetic. The
+ONLY in the gitignored `~/Iga/state`. Every test is synthetic. The
 exporter never writes the state tree; the importer requires an explicit
 `--state-dir`; no engine source hard-references the real export path. OSS
 ships zero personal emotion data, ever.
@@ -187,5 +187,5 @@ deterministic stats/summary, the dense `mood-grid` projection (per-day
 dominant quadrant + colour), the record entry point (importer-equivalent
 modelling, idempotency, non-mutating `--reproject`), and the isolation +
 privacy guard (no real export path referenced; `--state-dir` mandatory;
-real `~/Gaia/state` byte/mtime-unchanged across the whole pipeline incl.
+real `~/Iga/state` byte/mtime-unchanged across the whole pipeline incl.
 record).

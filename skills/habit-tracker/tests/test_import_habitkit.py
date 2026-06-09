@@ -1,7 +1,7 @@
 """Importer: every HabitKit field mapped, idempotent re-import, tz semantics.
 
 Uses ONLY the synthetic fixture. Never reads the real export, never touches
-the real ~/Gaia/state.
+the real ~/Iga/state.
 """
 
 from __future__ import annotations

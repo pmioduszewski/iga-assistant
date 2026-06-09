@@ -7,7 +7,7 @@ except the atomic-write round-trip tests which use tmp_path.
 DATA-LOSS ISOLATION (binding): every test that runs the producer's I/O
 (``produce``/``main``) MUST point ``$IGA_STATE_DIR`` at a pytest
 ``tmp_path`` and assert it wrote THERE. No test may read or write the
-user's real ``~/Gaia/state`` tree. ``test_isolation_guard_*`` proves the
+user's real ``~/Iga/state`` tree. ``test_isolation_guard_*`` proves the
 real widget JSON is byte- and mtime-untouched across producer runs.
 """
 
@@ -210,7 +210,7 @@ def test_build_widget_data_empty_log_graceful():
 
 def test_produce_writes_atomic_valid_json(tmp_path, monkeypatch):
     # Isolation: redirect the ENTIRE state tree into tmp_path and assert
-    # the producer wrote THERE (never under the real ~/Gaia/state).
+    # the producer wrote THERE (never under the real ~/Iga/state).
     monkeypatch.setenv("IGA_STATE_DIR", str(tmp_path))
     log = tmp_path / "habits" / "example.log"
     log.parent.mkdir(parents=True)
@@ -262,7 +262,7 @@ def test_produce_via_main_cli_is_isolated(tmp_path, monkeypatch):
 
 def test_state_root_precedence(tmp_path, monkeypatch):
     # IGA_STATE_DIR wins over IGA_HOME; IGA_HOME/state is the fallback;
-    # default (neither set) is the real ~/Gaia/state — unchanged behaviour.
+    # default (neither set) is the real ~/Iga/state — unchanged behaviour.
     monkeypatch.setenv("IGA_HOME", str(tmp_path / "iga"))
     monkeypatch.setenv("IGA_STATE_DIR", str(tmp_path / "explicit"))
     assert producer.state_root() == tmp_path / "explicit"
@@ -279,7 +279,7 @@ def _real_state_widget_json() -> Path:
     """Resolve the user's REAL live widget JSON with NO env overrides.
 
     Deliberately ignores IGA_STATE_DIR / IGA_HOME so we always point at
-    the genuine ~/Gaia/state path the live widget reads.
+    the genuine ~/Iga/state path the live widget reads.
     """
     return (
         Path.home()
@@ -294,7 +294,7 @@ def test_isolation_guard_real_state_untouched_by_producer(
     tmp_path, monkeypatch
 ):
     """Running the producer with IGA_STATE_DIR set must NOT create, modify,
-    or even stat-touch anything under the real ~/Gaia/state tree.
+    or even stat-touch anything under the real ~/Iga/state tree.
 
     Snapshots the real widget JSON's existence + mtime + bytes before, runs
     the producer (CLI + API) fully isolated, and asserts the real file is
@@ -326,15 +326,15 @@ def test_isolation_guard_real_state_untouched_by_producer(
     if existed_before:
         assert real.exists(), "producer must not delete the real state file"
         assert real.stat().st_mtime == mtime_before, (
-            "REAL ~/Gaia/state widget JSON mtime changed — the producer "
+            "REAL ~/Iga/state widget JSON mtime changed — the producer "
             "wrote to live data despite IGA_STATE_DIR isolation"
         )
         assert real.read_bytes() == bytes_before, (
-            "REAL ~/Gaia/state widget JSON bytes changed — data loss"
+            "REAL ~/Iga/state widget JSON bytes changed — data loss"
         )
     else:
         assert not real.exists(), (
-            "producer created a file under the real ~/Gaia/state tree "
+            "producer created a file under the real ~/Iga/state tree "
             "despite IGA_STATE_DIR isolation"
         )
 

@@ -187,7 +187,7 @@ gmail_query: <the query that matched>   # optional
 `engine/unhooked.py` is a sibling detector: it counts high-value newsletter
 streams in labeled mail **not covered by any `rules/hooks/*.md`** and, when a
 threshold is crossed, writes exactly ONE `surface_next_brief` offer to the
-gitignored `~/Gaia/scratch/newsletter-unhooked-offer.json` (override:
+gitignored `~/Iga/scratch/newsletter-unhooked-offer.json` (override:
 `$IGA_NL_UNHOOKED_OFFER`). Cluster identities are **salted-SHA1 hashed** —
 no sender/domain/subject ever reaches disk or the surfaced text (PII
 contract). Honours `IGA_PROACTIVE_RESEARCH=0` / `IGA_PROACTIVE_SPAWN=0`

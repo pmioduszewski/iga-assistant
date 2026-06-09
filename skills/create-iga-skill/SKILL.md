@@ -269,7 +269,7 @@ Body of `.local.md` can be free-form. Iga reads the engine rule first, then the 
 
 - ❌ Mentioning the user by real name in engine body or frontmatter
 - ❌ Listing specific email accounts, project names, business names
-- ❌ Hardcoding local file paths beyond `~/.config/`, `~/Gaia/`, repo-relative paths
+- ❌ Hardcoding local file paths beyond `~/.config/`, `~/Iga/`, repo-relative paths
 - ❌ Referring to OTHER skills by their `name:` slug (couples packs together) — describe the integration in prose so users with different skill choices aren't broken
 - ✅ Use placeholders like `<your email>` or document override surface in a `## Override` section pointing at `.local.md`
 

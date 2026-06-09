@@ -181,7 +181,7 @@ Safety defaults: `triage.dryRun = true`. Destructive ops require `confirm: true`
 ## Composability self-check (per create-iga-skill checklist)
 
 - [x] Frontmatter complete: name, description, intent_triggers, prerequisites, triggers, mempalace_wings, mcp_dependencies, status
-- [x] All prereqs declared in `prerequisites:` — `/gaia status` will find them
+- [x] All prereqs declared in `prerequisites:` — `/iga status` will find them
 - [x] All triggers declared
 - [x] `intent_triggers` set — the user can auto-invoke by natural phrase
 - [x] CLAUDE.md does not name this skill — generic discovery only

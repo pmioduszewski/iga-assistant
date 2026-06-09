@@ -22,7 +22,7 @@ CATEGORY_MAP = {
     "family": ("people", "family"),
     "work_projects": ("projects", "general"),
     "tools_stack": ("user", "tooling"),
-    "preferences": ("gaia", "rules"),
+    "preferences": ("iga", "rules"),
     "health": ("user", "health"),
     "finance": ("user", "finance"),
     "schedule": ("user", "schedule"),

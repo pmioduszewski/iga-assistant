@@ -4,9 +4,9 @@ A personal AI assistant that runs **inside [Claude Code](https://claude.com/clau
 
 > Status: **early, single-maintainer, pre-1.0.** Public so the architecture and the `iga-assistant` namespace are out in the open. Expect sharp edges; APIs and pack layouts can still move.
 
-### Naming & status (read this before you judge the `iga` you'll see)
+### Naming
 
-The assistant was originally **Iga** and is being renamed to **Iga**. The rename is **deliberately staged, not finished**: the brand, repo, skills, docs and the macOS app are already `Iga`, but the internal command namespace is still `/iga …`, the memory MCP is still `IgaMemory`, and some engine identifiers/env vars still read `iga`. That's tracked, coordinated work — `/iga` is the *current, working* command and is treated as a legacy alias until the sweep lands. If you see `iga` in code/commands, it's mid-migration, not abandoned.
+The assistant is **Iga** throughout — identity, brand, repo (`iga-assistant`), skills, docs, the macOS app, the command namespace (`/iga …`), the memory MCP (`IgaMemory`), and the engine identifiers/env vars (`IGA_*`). The home directory is `~/Iga`.
 
 ## What it actually is
 
@@ -48,7 +48,6 @@ brew install ggshield        # or your platform's package manager
 claude
 
 # 3. In-session, check health and see what's installed
-#    (/iga is the current command namespace — legacy, rename to /iga in progress)
 /iga status
 /iga rules
 ```
@@ -63,14 +62,13 @@ Install a community pack:
 
 ## Security & privacy
 
-- **No secrets in the tree.** Credentials live in `~/.config/<svc>`, env vars, and the gitignored state dir (`$IGA_HOME/state`, default `~/Gaia/state` — the home dir keeps its legacy name until the staged cutover; see *Naming & status*). The repo ships **synthetic data only**.
+- **No secrets in the tree.** Credentials live in `~/.config/<svc>`, env vars, and the gitignored state dir (`$IGA_HOME/state`, default `~/Iga/state`). The repo ships **synthetic data only**.
 - `.githooks/{pre-commit,pre-push}` run `ggshield` (same engine as the server-side GitGuardian check) **before** a commit object exists. Triaged false positives are documented per-entry in `.gitguardian.yaml` — the scanner is never disabled.
 - `*.local.md` (personal rule overrides) and `state/` are gitignored and never published upstream.
 
 ## Roadmap (honest — these are *intentions*, not shipped)
 
 - **Harness-agnostic / more headless.** Today conversational Iga is coupled to Claude Code. Anthropic's 2026-06-15 billing split makes programmatic `claude -p`/Agent-SDK paths metered, which is hostile to autonomous OSS use. The plan: a small **provider-abstraction entry point** over the headless paths so backends are swappable (Claude API, **Codex / GPT**, **Gemini**, local). Conversational use stays on whatever harness is cheapest. *Status: analysis done, direction not yet locked, entry point not built.*
-- Finishing the `iga → iga` identifier/command/MCP sweep (see Naming & status).
 
 ## How it compares
 

@@ -64,7 +64,7 @@ Every HabitKit field is either a first-class substrate field or preserved in
 
 CLI: ``--input <export.json> --state-dir <dir>``  (``--state-dir`` is
 REQUIRED — there is deliberately NO implicit real-state default in this CLI,
-so a careless invocation can never write the user's live ``~/Gaia/state``.)
+so a careless invocation can never write the user's live ``~/Iga/state``.)
 """
 
 from __future__ import annotations

@@ -7,7 +7,7 @@
 # Policy: we DO NOT disable the scanner or blanket-ignore detectors. Every
 # entry below is an individually triaged FALSE POSITIVE with a written
 # reason. Real secrets never live in this tree (they live in
-# ~/.config/<svc>, env vars, and gitignored ~/Gaia/state — see CLAUDE.md).
+# ~/.config/<svc>, env vars, and gitignored ~/Iga/state — see CLAUDE.md).
 version: 2
 
 secret:

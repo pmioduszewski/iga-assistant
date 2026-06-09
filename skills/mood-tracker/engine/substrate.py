@@ -15,7 +15,7 @@ reflection / takeaway. `attrs` is a round-trip bag for any source field we
 don't model first-class, so import→export is a fixpoint.
 
 PRIVACY (binding): mood notes/reflections are intimate. Real data lives
-ONLY in the gitignored `~/Gaia/state`; every test is synthetic; no engine
+ONLY in the gitignored `~/Iga/state`; every test is synthetic; no engine
 source hard-references the real export path. Stdlib only.
 """
 
@@ -41,7 +41,7 @@ def _iga_root() -> Path:
 def state_root() -> Path:
     """Isolation-aware state root (identical resolver order to the
     habit-tracker producer): ``$IGA_STATE_DIR`` > ``$IGA_HOME``/state >
-    ``~/Gaia/state``. Tests/sandbox set ``$IGA_STATE_DIR`` so the user's
+    ``~/Iga/state``. Tests/sandbox set ``$IGA_STATE_DIR`` so the user's
     live data is never touched."""
     env = os.environ.get("IGA_STATE_DIR")
     if env:

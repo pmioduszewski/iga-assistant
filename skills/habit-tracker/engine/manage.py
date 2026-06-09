@@ -18,7 +18,7 @@ substrate in Wave A/B and to the record click in Wave B) is unchanged here:
   * it is **``$IGA_STATE_DIR``-rooted with a MANDATORY ``--state-dir``** —
     there is deliberately NO implicit real-state default, exactly like
     ``record.py`` / ``import_habitkit`` / ``export_habitkit``; a careless
-    invocation can never write (or export) the user's live ``~/Gaia/state``;
+    invocation can never write (or export) the user's live ``~/Iga/state``;
   * after any MUTATION it **re-emits the derived widget JSON** via the
     FROZEN ``widget_projection`` so the polling app refreshes immediately
     (export is a pure read — no re-emit).
@@ -396,7 +396,7 @@ def main(argv: list[str] | None = None) -> int:
         required=True,
         help="REQUIRED substrate state root ($IGA_STATE_DIR). There is NO "
         "implicit real-state default — pass an explicit dir so the user's "
-        "live ~/Gaia/state can never be clobbered (or exported) by a "
+        "live ~/Iga/state can never be clobbered (or exported) by a "
         "careless run.",
     )
     grp = ap.add_mutually_exclusive_group(required=True)

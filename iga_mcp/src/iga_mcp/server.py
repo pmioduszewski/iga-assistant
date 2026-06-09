@@ -10,13 +10,13 @@ persistence layer.
 
 Configuration via environment variables:
 
-    IGA_HOME        Iga's orchestration home directory (default: ~/Gaia)
+    IGA_HOME        Iga's orchestration home directory (default: ~/Iga)
     IGA_SESSION_ID  UUID of the Iga session (default: read from $IGA_HOME/.iga-session-id)
     IGA_CLAUDE_BIN  Path to the `claude` binary (default: "claude" on PATH)
     IGA_TIMEOUT     Per-call timeout in seconds (default: 300; max IGA_TIMEOUT_MAX=900)
     IGA_MCP_STYLE   Output style name for MCP-driven calls. References a Claude
                      Code output style installed at ~/.claude/output-styles/<name>.md.
-                     Default: "gaia-compact". Set to "" to disable style override
+                     Default: "iga-compact". Set to "" to disable style override
                      and inherit whatever the underlying session is configured to use.
     IGA_MCP_MODEL   Model id for MCP-driven calls (e.g., "claude-opus-4-6", "sonnet").
                      Default: empty (inherit from session settings).
@@ -45,10 +45,9 @@ from mcp.server.fastmcp import FastMCP
 from iga_mcp import skills as _skills
 
 
-# Default home stays "Gaia" and the default style stays "gaia-compact" on
-# purpose: the ~/Gaia home directory and the installed output-style file are
-# renamed by the separate memory/output-style cutover, not by this code rename.
-IGA_HOME = Path(os.environ.get("IGA_HOME", str(Path.home() / "Gaia"))).expanduser()
+# Home defaults to ~/Iga; the output style to "iga-compact" (installed at
+# ~/.claude/output-styles/iga-compact.md). Both are overridable via env.
+IGA_HOME = Path(os.environ.get("IGA_HOME", str(Path.home() / "Iga"))).expanduser()
 IGA_CLAUDE_BIN = os.environ.get("IGA_CLAUDE_BIN", "claude")
 # Per-call timeout. Heavy iga_ask tasks (multi-ticket Todoist + calendar
 # updates, /gm, research) routinely exceed 2 minutes, so the default is 300s.
@@ -68,7 +67,7 @@ IGA_TIMEOUT_MAX = _int_env("IGA_TIMEOUT_MAX", 900)
 # Clamp the configured default into [30, IGA_TIMEOUT_MAX] so EVERY call path
 # (default and per-call timeout_s) respects the documented bounds.
 IGA_TIMEOUT = max(30, min(_int_env("IGA_TIMEOUT", 300), IGA_TIMEOUT_MAX))
-IGA_MCP_STYLE = os.environ.get("IGA_MCP_STYLE", "gaia-compact")
+IGA_MCP_STYLE = os.environ.get("IGA_MCP_STYLE", "iga-compact")
 IGA_MCP_MODEL = os.environ.get("IGA_MCP_MODEL", "").strip()
 
 _call_lock = Lock()

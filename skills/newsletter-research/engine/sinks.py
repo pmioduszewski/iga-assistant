@@ -23,7 +23,7 @@ Design rules:
   * Stdlib only. No network here. The Todoist write is an MCP call the LLM
     worker makes; this module just resolves/validates its config.
   * `$IGA_STATE_DIR` isolation: tests/sandbox set it and nothing under the
-    real `~/Gaia/state` is touched.
+    real `~/Iga/state` is touched.
 
 CLI (so the worker writes sqlite deterministically, never free-hand SQL):
 
@@ -47,11 +47,11 @@ from typing import Any
 # --------------------------------------------------------------------------- #
 # state root — REUSES the habit/mood substrate precedence verbatim so there is
 # ONE mental model (see docs/state-storage-convention.md):
-#   $IGA_STATE_DIR  >  $IGA_HOME/state  >  ~/Gaia/state
+#   $IGA_STATE_DIR  >  $IGA_HOME/state  >  ~/Iga/state
 # --------------------------------------------------------------------------- #
 def _iga_root() -> Path:
     home = os.environ.get("IGA_HOME")
-    return Path(home).expanduser() if home else Path.home() / "Gaia"
+    return Path(home).expanduser() if home else Path.home() / "Iga"
 
 
 def state_root() -> Path:
@@ -63,7 +63,7 @@ def state_root() -> Path:
 
 def findings_db_path() -> Path:
     """`$IGA_FINDINGS_DB` override, else `<state_root>/findings.db` — born
-    compliant with the single-root convention (never a `~/Gaia` literal)."""
+    compliant with the single-root convention (never a `~/Iga` literal)."""
     env = os.environ.get("IGA_FINDINGS_DB")
     if env:
         return Path(env).expanduser()

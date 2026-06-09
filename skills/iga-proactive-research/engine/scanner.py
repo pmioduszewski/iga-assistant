@@ -73,7 +73,7 @@ DEEP_KEYWORDS = (
     "contract review",
 )
 DEFAULT_QUEUE_PATH = "~/Iga/scratch/iga-research-queue.json"
-WORKER_PROMPT_PATH = "~/Gaia/skills/iga-proactive-research/engine/worker.prompt.md"
+WORKER_PROMPT_PATH = "~/Iga/skills/iga-proactive-research/engine/worker.prompt.md"
 VALID_RUN_MODES = ("inline", "daemon")
 ALLOWED_SOURCES = ("todoist", "mempalace")
 

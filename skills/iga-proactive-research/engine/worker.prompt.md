@@ -23,6 +23,12 @@ A JSON object will arrive on stdin with this shape:
 Parse stdin first. If parsing fails, exit immediately with a one-line
 error — do NOT improvise a research topic.
 
+**Headless robustness (when run via `iga-research-dispatch` / `claude -p`):**
+the IgaMemory MCP server has a slow first connect (embedding-model init). If a
+`mempalace_*` tool reports "still connecting" / not yet available, WAIT and
+retry it (up to ~5 attempts across turns) before giving up — do not abandon the
+drawer filing just because the first tool call raced the MCP connect.
+
 ## Model
 
 - `depth: shallow` → use Claude Sonnet (this default).

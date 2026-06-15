@@ -1,0 +1,63 @@
+#!/bin/zsh
+# iga-research-dispatch — proactive-research dispatcher (headless `claude -p`).
+#
+# Mirrors the PROVEN email-triage pattern (skills/email/engine/launchd/iga-email-triage):
+# a self-contained wrapper that the always-on MenuBar app (or cron, or a human)
+# can fire. It:
+#   1. runs the generic engine scan (atomic ledger claim + governor gate + dedup),
+#   2. runs each governor-approved WORKER_REQUEST through headless `claude -p`
+#      (the user's Claude MAX subscription → zero per-call billing, same as email triage),
+#      which does the deep research and files the drawer via the IgaMemory MCP.
+#
+# The app only TRIGGERS this; the engine decides WHAT (ledger/governor own
+# admission). This wrapper never writes the ledger/state itself.
+#
+# SAFETY — why this can't blow the quota the way the in-session worker did:
+#   * The engine governor (default 8/5h, 20/24h, 2M est-tok/5h) + the atomic
+#     sqlite ledger (one claim per stable key, cooldown) already CAP and DEDUP
+#     what `scan --json` emits. The queue handed to this wrapper is already gated.
+#   * A headless run canNOT see the interactive `Claude.ai usage` line, so we add
+#     a hard per-run dispatch cap (IGA_RESEARCH_MAX_DISPATCH, default 2) as
+#     belt-and-suspenders on top of the governor.
+#   * Killswitch: IGA_PROACTIVE_RESEARCH=0 → no-op.
+#
+# Manual use:   ~/Iga/skills/iga-proactive-research/engine/iga-research-dispatch
+# Dry run:      IGA_RESEARCH_DRY_RUN=1 <same>   (scan + show plan, spawn nothing)
+set -u
+
+SKILL_DIR="$(cd "$(dirname "$0")/.." && pwd)"            # .../iga-proactive-research
+PROACTIVE_DIR="$HOME/Iga/skills/iga-proactive"           # generic engine
+MEMPALACE_PY="$HOME/Iga/mempalace/.venv/bin/python"      # only env where mempalace imports
+PALACE="$HOME/Iga/mempalace/.mempalace/palace"
+WORKER_PROMPT="$SKILL_DIR/engine/worker.prompt.md"
+LOG_DIR="$HOME/Library/Logs/iga"
+CLAUDE_BIN="${IGA_CLAUDE_BIN:-$HOME/.local/bin/claude}"
+MAX_DISPATCH="${IGA_RESEARCH_MAX_DISPATCH:-2}"
+DRY_RUN="${IGA_RESEARCH_DRY_RUN:-0}"
+
+# LaunchServices-launched .app inherits a minimal env; set PATH so claude/uv resolve.
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+mkdir -p "$LOG_DIR"
+DATE=$(date +%Y-%m-%d)
+LOG="$LOG_DIR/research-dispatch-$DATE.json"
+
+if [[ "${IGA_PROACTIVE_RESEARCH:-1}" == "0" ]]; then
+  print '{"skipped":"IGA_PROACTIVE_RESEARCH=0"}' | tee "$LOG"; exit 0
+fi
+[[ -x "$CLAUDE_BIN" ]]   || { print "FATAL: claude not found at $CLAUDE_BIN" >&2; exit 90; }
+[[ -x "$MEMPALACE_PY" ]] || { print "FATAL: mempalace venv python not found at $MEMPALACE_PY" >&2; exit 90; }
+[[ -f "$WORKER_PROMPT" ]]|| { print "FATAL: worker prompt not found at $WORKER_PROMPT" >&2; exit 90; }
+
+# 1. REAL scan → claims candidates atomically + governor-gates → queue JSON.
+#    NOTE: importing mempalace redirects sys.stdout (CoreML embedding init), so
+#    the engine's JSON payload lands on STDERR after a 2-line preamble. We merge
+#    2>&1 and the parser below extracts from the first '{'. (Verified 2026-06-15.)
+SCAN=$(cd "$PROACTIVE_DIR" && MEMPALACE_PALACE_PATH="$PALACE" PYTHONPATH=engine \
+        "$MEMPALACE_PY" -m engine scan --json 2>&1)
+[[ -n "$SCAN" ]] || { print "FATAL: empty scan output" >&2; exit 91; }
+
+# 2. Iterate the (already-gated) queue, capped, dispatching headless claude -p.
+#    The parser lives in dispatch_runner.py (a sibling module) so the script and
+#    the piped scan data don't both fight for python's stdin.
+print -r -- "$SCAN" | "$MEMPALACE_PY" "$SKILL_DIR/engine/dispatch_runner.py" \
+  "$WORKER_PROMPT" "$CLAUDE_BIN" "$MAX_DISPATCH" "$LOG" "$DRY_RUN"

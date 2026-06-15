@@ -26,7 +26,10 @@ proactive:
     trigger: todoist(label:iga-research, due:<7d)
     condition: not exists drawer for task
     action: spawn_worker(prompt: engine/worker.prompt.md, depth: deep)
-    idempotency_key: research::{{task.id}}::{{task.due}}
+    # NOTE: key intentionally omits {{task.due}} — a Todoist reschedule must NOT
+    # mint a new key and re-research a task already done. One research per task.id.
+    # (Generic correctness fix, not personalization: due-in-key re-fires for any user.)
+    idempotency_key: research::{{task.id}}
     budget:
       model: claude-opus-4-7[1m]
       wall_min: 30

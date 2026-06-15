@@ -51,6 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var moodWidget: MoodWidgetStore!
     private var moodIngest: MoodIngestWatcher!
     private var emailTriage: EmailTriageWatcher!
+    private var researchDispatch: ResearchDispatchWatcher!
     private var panel: PanelController!
     private var statusItemController: StatusItemController!
     private var settings: SettingsWindowController!
@@ -82,6 +83,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // email skill's proven triage wrapper once/day (≥06:00 local).
         let etw = EmailTriageWatcher()
         emailTriage = etw
+        // Out-of-session proactive research: fires the research-dispatch
+        // wrapper once/day (≥06:00 local), so `/gm` stays surfacing-only.
+        let rdw = ResearchDispatchWatcher()
+        researchDispatch = rdw
 
         // ONE panel hosting BOTH columns. It never touches the engine entry point —
         // pure UI plumbing (contract-safe).
@@ -118,5 +123,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mw.start()
         miw.start()
         etw.start()
+        rdw.start()
     }
 }

@@ -891,4 +891,90 @@ enum ContractGuard {
             : (false, "osascript exit \(code)"
                 + (err.isEmpty ? "" : ": \(err.prefix(160))"))
     }
+
+    // MARK: - The research-dispatch trigger entry point (7th)
+    //
+    // Proactive-research dispatch — same shape as email-triage: the always-on
+    // app fires the skill's OWN self-contained wrapper
+    // (skills/iga-proactive-research/engine/iga-research-dispatch) on a daily
+    // cadence. The wrapper runs the engine scan (atomic ledger claim + governor
+    // gate + dedup) then dispatches each governor-approved WORKER_REQUEST via
+    // headless `claude -p` (MAX subscription), which files the research drawer
+    // via the IgaMemory MCP. ZERO research logic in Swift — the app only
+    // TRIGGERS; the engine + wrapper decide everything. This keeps proactive
+    // research OUT of the interactive `/gm` session.
+
+    /// Absolute path to the research-dispatch wrapper. Overridable via
+    /// `IGA_RESEARCH_DISPATCH_SCRIPT` (sandboxed runs/tests); the default is
+    /// the correct absolute install path (a Finder/Spotlight-launched .app
+    /// inherits no shell env).
+    static func researchDispatchScript() -> String {
+        if let env = ProcessInfo.processInfo
+            .environment["IGA_RESEARCH_DISPATCH_SCRIPT"], !env.isEmpty {
+            return env
+        }
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        return "\(home)/Iga/skills/iga-proactive-research/engine/iga-research-dispatch"
+    }
+
+    /// Build the (and only the) sanctioned research-dispatch subprocess. The
+    /// wrapper is self-contained (its own PATH/cwd/logging); invoked by
+    /// ABSOLUTE path through /bin/zsh with a guarded executable check so a
+    /// missing/renamed wrapper is a LOUD `exit 90`, never a silent no-op.
+    static func researchDispatchProcess() -> Process {
+        let cmd =
+            "[ -x \"$IGA_RESEARCH_DISPATCH\" ] || exit 90\n"
+            + "exec \"$IGA_RESEARCH_DISPATCH\""
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/bin/zsh")
+        p.arguments = ["-c", cmd]
+        var env = ProcessInfo.processInfo.environment
+        env["IGA_RESEARCH_DISPATCH"] = researchDispatchScript()
+        p.environment = env
+        return p
+    }
+
+    /// Execute one sanctioned research dispatch. Blocking; callers dispatch
+    /// off-main. Generous timeout: the wrapper may run up to 2 topics × ~40 min
+    /// of headless `claude -p` deep research.
+    static func runResearchDispatch(
+        timeout: TimeInterval = 5400
+    ) -> ScanOutcome {
+        let started = Date()
+        let proc = researchDispatchProcess()
+        let outPipe = Pipe()
+        let errPipe = Pipe()
+        proc.standardOutput = outPipe
+        proc.standardError = errPipe
+        do {
+            try proc.run()
+        } catch {
+            return ScanOutcome(
+                ok: false, exitCode: -1, stdout: "",
+                stderr: "failed to launch research-dispatch entry point: \(error)",
+                startedAt: started, finishedAt: Date())
+        }
+        let outData = drain(outPipe.fileHandleForReading)
+        let errData = drain(errPipe.fileHandleForReading)
+        let deadline = Date().addingTimeInterval(timeout)
+        while proc.isRunning && Date() < deadline {
+            usleep(50_000)
+        }
+        if proc.isRunning {
+            proc.terminate()
+            return ScanOutcome(
+                ok: false, exitCode: -2, stdout: "",
+                stderr: "research-dispatch entry point timed out after "
+                    + "\(Int(timeout))s",
+                startedAt: started, finishedAt: Date())
+        }
+        let code = proc.terminationStatus
+        return ScanOutcome(
+            ok: code == 0,
+            exitCode: code,
+            stdout: String(data: outData, encoding: .utf8) ?? "",
+            stderr: String(data: errData, encoding: .utf8) ?? "",
+            startedAt: started,
+            finishedAt: Date())
+    }
 }

@@ -58,11 +58,16 @@ def main() -> int:
     tmpl = open(worker_prompt_path).read()
     home = os.path.expanduser("~/Iga")
 
-    model_override = os.environ.get("IGA_RESEARCH_MODEL")  # cost lever / validation
+    # COST SAFETY: autonomous runs default to Sonnet, NOT the job's budget.model
+    # (which is Opus deep). A scheduled daily dispatcher running Opus deep
+    # research (~300k tok/topic × cap) is exactly the quota burn this whole
+    # out-of-session move exists to avoid. Opus is opt-in via IGA_RESEARCH_MODEL.
+    model_override = os.environ.get("IGA_RESEARCH_MODEL")
+    DEFAULT_SAFE_MODEL = "claude-sonnet-4-6"
 
     results = []
     for entry in batch:
-        model = model_override or entry.get("model") or "claude-sonnet-4-6"
+        model = model_override or DEFAULT_SAFE_MODEL
         prompt = (
             tmpl
             + "\n\n## WORKER_REQUEST (your job context — treat as the stdin JSON)\n"

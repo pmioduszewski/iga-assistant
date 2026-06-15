@@ -31,7 +31,7 @@ proactive:
     # (Generic correctness fix, not personalization: due-in-key re-fires for any user.)
     idempotency_key: research::{{task.id}}
     budget:
-      model: claude-opus-4-7[1m]
+      model: claude-opus-4-8[1m]   # ceiling/intent; the out-of-session dispatcher defaults to Sonnet for cost safety (Opus = opt-in via IGA_RESEARCH_MODEL)
       wall_min: 30
     deliver: surface_next_brief
     cooldown: 48h
@@ -42,7 +42,7 @@ proactive:
     action: spawn_worker(prompt: engine/worker.prompt.md, depth: deep)
     idempotency_key: research::{{drawer.id}}::{{drawer.target_date}}
     budget:
-      model: claude-opus-4-7[1m]
+      model: claude-opus-4-8[1m]   # ceiling/intent; the out-of-session dispatcher defaults to Sonnet for cost safety (Opus = opt-in via IGA_RESEARCH_MODEL)
       wall_min: 30
     deliver: surface_next_brief
     cooldown: 48h

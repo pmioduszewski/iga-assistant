@@ -41,21 +41,25 @@ def test_topic_hash_ignores_case_whitespace_emoji_punct():
     assert h1 == h2 == h3 == h4
 
 
-def test_topic_hash_changes_with_date():
-    assert topic_hash("X", "2026-05-20") != topic_hash("X", "2026-05-21")
+def test_topic_hash_ignores_date():
+    # target_date is deliberately NOT part of the identity: rescheduling a
+    # Todoist task must not mint a new hash and re-trigger research that's
+    # already filed. (Regression guard for the "researched 3x in 2 weeks" bug.)
+    assert topic_hash("X", "2026-05-20") == topic_hash("X", "2026-05-21")
 
 
 def test_normalize_title_preserves_diacritics():
-    # Diacritics are preserved on purpose — "Łukasz" ≠ "Lukasz".
-    assert normalize_title("Spotkanie z Łukaszem!") == "spotkanie z łukaszem"
+    # Diacritics are preserved on purpose — "café" ≠ "cafe".
+    assert normalize_title("Café RÉSUMÉ!") == "café résumé"
 
 
 # ---------- dedup -------------------------------------------------------
 
 
-def _fake_mempalace(drawers):
+def _fake_mempalace(drawers, search_results=None):
     mod = types.SimpleNamespace()
     mod.tool_list_drawers = lambda **_: {"drawers": list(drawers)}
+    mod.tool_search = lambda **_: {"results": list(search_results or [])}
     mod.tool_add_drawer = mock.Mock(return_value={"id": "new"})
     mod.tool_update_drawer = mock.Mock(return_value={"ok": True})
     return mod
@@ -76,21 +80,63 @@ def test_is_duplicate_returns_true_for_fresh_drawer():
     assert is_duplicate(mod, cand, now=now) is True
 
 
-def test_is_duplicate_returns_false_for_stale_drawer():
+def test_is_duplicate_dedupes_drawer_days_old():
+    # A 3-day-old research answer is NOT stale — it must still dedupe. The old
+    # 48-hour window re-ran anything older than 2 days, which is the core bug.
     now = datetime(2026, 5, 14, 12, 0, tzinfo=timezone.utc)
     h = topic_hash("Foo", "2026-05-20")
     drawers = [
         {
             "id": "d1",
             "content": f"RESEARCH:{h}|2026-05-20|depth:shallow|★★★",
-            "metadata": {
-                "last_updated": (now - timedelta(hours=72)).isoformat()
-            },
+            "metadata": {"last_updated": (now - timedelta(hours=72)).isoformat()},
         }
     ]
     mod = _fake_mempalace(drawers)
     cand = Candidate(h, "todoist", "T1", "Foo", "", "2026-05-20", "shallow")
+    assert is_duplicate(mod, cand, now=now) is True
+
+
+def test_is_duplicate_allows_refresh_past_staleness_horizon():
+    # Genuinely old research (>90 days) may be refreshed → not a duplicate.
+    now = datetime(2026, 5, 14, 12, 0, tzinfo=timezone.utc)
+    h = topic_hash("Foo", "2026-05-20")
+    drawers = [
+        {
+            "id": "d1",
+            "content": f"RESEARCH:{h}|2026-05-20|depth:shallow|★★★",
+            "metadata": {"last_updated": (now - timedelta(days=100)).isoformat()},
+        }
+    ]
+    mod = _fake_mempalace(drawers)  # tool_search returns no hits
+    cand = Candidate(h, "todoist", "T1", "Foo", "", "2026-05-20", "shallow")
     assert is_duplicate(mod, cand, now=now) is False
+
+
+def test_is_duplicate_semantic_fallback_catches_defunct_hash():
+    # The same topic filed under an OLD hash (target_date used to be in the
+    # hash) has a different topic_hash, so the prefix path misses it — the
+    # semantic fallback must still catch it and skip the re-research.
+    now = datetime(2026, 5, 14, 12, 0, tzinfo=timezone.utc)
+    drawers = [
+        {
+            "id": "d_old",
+            "content": "RESEARCH:deadbeefdeadbeef|2026-04-01|depth:shallow|★★★",
+            "metadata": {"last_updated": (now - timedelta(days=5)).isoformat()},
+        }
+    ]
+    search_results = [
+        {
+            "drawer_id": "d_old",
+            "distance": 0.12,
+            "metadata": {"last_updated": (now - timedelta(days=5)).isoformat()},
+        }
+    ]
+    mod = _fake_mempalace(drawers, search_results=search_results)
+    cand = Candidate(
+        topic_hash("Foo", "2026-05-20"), "todoist", "T1", "Foo", "", "2026-05-20", "shallow"
+    )
+    assert is_duplicate(mod, cand, now=now) is True
 
 
 def test_is_duplicate_no_match_returns_false():

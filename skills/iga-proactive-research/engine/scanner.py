@@ -59,7 +59,19 @@ LOG = logging.getLogger("iga_research_scanner")
 # --- Config (mirrors skills/iga-proactive-research/SKILL.md > Config) ----
 
 LOOKAHEAD_DAYS = 7
-DEDUP_WINDOW_HOURS = 48
+# A filed research drawer is a FACT, not a cache entry — it does not go stale
+# in hours. Re-research only when the existing answer is older than this many
+# days (a genuine refresh), never just because a day or two passed. The old
+# 48-HOUR window meant anything researched >2 days ago was re-run every tick.
+DEDUP_STALE_AFTER_DAYS = int(os.environ.get("IGA_RESEARCH_STALE_AFTER_DAYS", "90"))
+# Semantic-dedup distance threshold (cosine, 0=identical). Catches topics
+# already researched under a now-defunct topic_hash (target_date used to be
+# part of the hash, so each reschedule minted a new id) or a marker that
+# carries the source_id instead of the hash. Calibrated on real data: genuine
+# same-topic matches measured ≤0.53 (observed 0.34–0.45) while the nearest
+# UNRELATED drawer was 0.80 — 0.50 sits in that empty valley, catching real
+# dupes without suppressing genuinely new-but-adjacent topics.
+DEDUP_SEMANTIC_MAX_DISTANCE = float(os.environ.get("IGA_RESEARCH_DEDUP_DISTANCE", "0.50"))
 MAX_SPAWN_PER_TICK = 3
 QUEUE_ALERT_THRESHOLD = 10
 TODOIST_LABEL = "iga-research"
@@ -122,8 +134,8 @@ def _is_emoji(ch: str) -> bool:
 def normalize_title(title: str) -> str:
     """Lowercase, strip emoji + punctuation, collapse whitespace.
 
-    Diacritics are preserved on purpose: ``Łukasz`` and ``Lukasz`` are
-    different people.
+    Diacritics are preserved on purpose: ``é`` is not flattened to ``e``
+    (e.g. ``café`` and ``cafe`` stay distinct).
     """
     if not title:
         return ""
@@ -134,8 +146,15 @@ def normalize_title(title: str) -> str:
 
 
 def topic_hash(title: str, target_date: str) -> str:
-    """Deterministic 16-char SHA1 prefix over normalized title + date."""
-    key = f"{normalize_title(title)}|{target_date}"
+    """Deterministic 16-char SHA1 prefix over the normalized title ONLY.
+
+    ``target_date`` is intentionally EXCLUDED from the identity (it is kept in
+    the signature for call-site compatibility). A research topic is the same
+    topic whether its Todoist due date is the 12th or the 29th — baking the
+    date into the hash meant every reschedule minted a brand-new id that dedup
+    could never match, so the same topic got researched again and again.
+    """
+    key = normalize_title(title)
     return hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
 
 
@@ -268,38 +287,88 @@ def mark_flag_triggered(mempalace_mod, drawer_id: str) -> None:
 # --- Dedup --------------------------------------------------------------
 
 
+def _drawer_is_fresh(row: dict[str, Any], *, stale_cutoff: datetime) -> bool:
+    """True if a drawer is newer than the staleness cutoff (or undated)."""
+    meta = row.get("metadata") or {}
+    ts_raw = meta.get("last_updated") or meta.get("created_at")
+    if not ts_raw:
+        return True  # no timestamp → assume fresh, treat as a real duplicate
+    try:
+        ts = datetime.fromisoformat(str(ts_raw).replace("Z", "+00:00"))
+    except ValueError:
+        return True
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    return ts > stale_cutoff
+
+
 def is_duplicate(
     mempalace_mod,
     candidate: Candidate,
     *,
     now: datetime,
-    dedup_window_hours: int = DEDUP_WINDOW_HOURS,
+    stale_after_days: int = DEDUP_STALE_AFTER_DAYS,
+    semantic_max_distance: float = DEDUP_SEMANTIC_MAX_DISTANCE,
 ) -> bool:
-    """Return True if a recent research drawer for this topic_hash exists."""
+    """Return True if this topic already has a non-stale research drawer.
+
+    Two independent match paths, because historical drawers were filed under
+    now-defunct hashes (``target_date`` used to be part of ``topic_hash``):
+
+      1. **Exact** ``RESEARCH:<topic_hash>`` content-prefix match — matches
+         drawers filed under the current (title-only) hash scheme.
+      2. **Semantic** match against the ``research`` room — catches the same
+         topic filed under an old hash or a slightly reworded title.
+
+    A match only counts when the existing drawer is younger than
+    ``stale_after_days``; genuinely old research may legitimately be refreshed.
+    NOTE: ``tool_list_drawers`` returns ``content_preview`` (NOT ``content``) —
+    reading the wrong key here was a silent bug that disabled dedup entirely.
+    """
     try:
         result = mempalace_mod.tool_list_drawers(room="research", limit=200)
     except Exception as exc:  # noqa: BLE001
         raise RuntimeError(f"MemPalace dedup query failed: {exc}") from exc
 
     drawers = result.get("drawers", []) if isinstance(result, dict) else []
+    stale_cutoff = now - timedelta(days=stale_after_days)
+
+    # 1. exact topic_hash prefix match (read content_preview, with fallbacks)
     needle = f"RESEARCH:{candidate.topic_hash}"
-    cutoff = now - timedelta(hours=dedup_window_hours)
     for d in drawers:
-        content = d.get("content", "") or ""
-        if not content.startswith(needle):
-            continue
-        ts_raw = (d.get("metadata") or {}).get("last_updated") or (
-            d.get("metadata") or {}
-        ).get("created_at")
-        if not ts_raw:
-            return True  # documented gap: name-only dedup
-        try:
-            ts = datetime.fromisoformat(ts_raw.replace("Z", "+00:00"))
-        except ValueError:
+        content = d.get("content_preview") or d.get("content") or ""
+        if content.startswith(needle) and _drawer_is_fresh(d, stale_cutoff=stale_cutoff):
+            LOG.info("Dedup (hash) skip: %s", candidate.title)
             return True
-        if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
-        if ts > cutoff:
+
+    # 2. semantic fallback — catches drawers filed under old/defunct hashes
+    # (and drawers whose RESEARCH: marker carries the source_id, not the hash).
+    # The bare title is the cleanest signal: the drawers are terse AAAK
+    # findings, so adding the task context only injects noise and widens the
+    # distance. Threshold is calibrated against real same-topic distances.
+    try:
+        sres = mempalace_mod.tool_search(
+            query=candidate.title,
+            room="research",
+            limit=3,
+            max_distance=semantic_max_distance,
+        )
+    except Exception as exc:  # noqa: BLE001 - non-fatal, hash match still stands
+        LOG.warning("Dedup semantic search failed (%s); hash match only", exc)
+        return False
+
+    hits = sres.get("results", []) if isinstance(sres, dict) else []
+    for h in hits:
+        dist = h.get("distance")
+        if dist is None or dist > semantic_max_distance:
+            continue
+        if _drawer_is_fresh(h, stale_cutoff=stale_cutoff):
+            LOG.info(
+                "Dedup (semantic d=%.3f) skip: %s -> %s",
+                dist,
+                candidate.title,
+                h.get("drawer_id"),
+            )
             return True
     return False
 

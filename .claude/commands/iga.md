@@ -17,7 +17,7 @@ Match $ARGUMENTS against these first (case-insensitive):
   3. **Installed rules** — files in `rules/*.md` (skip `.iga.yml` and dotfiles). For each, show provenance frontmatter if present (`source`, `source_commit`, `installed_at`); otherwise mark "local-only".
   4. **Installed skills** — directories under `skills/*/` with `SKILL.md`. Show `name` + `status` from frontmatter.
   5. **Available community packs** — files in `community_rules/` AND directories in `community_skills/` that are NOT yet installed in `rules/` or `skills/`. Filter by name match.
-  6. **Prerequisite scan** — read frontmatter of every `rules/*.md` AND every `skills/*/SKILL.md`. For each `prerequisites:` entry, evaluate its `check:` clause (see CLAUDE.md "Check clause DSL"). Surface unsatisfied prereqs, one line per item: `⚠️ <pack-name>: <prereq-name> — <description> — guide: <guide-path-if-any>`. Group by severity: `error` (block) → `warning` → `info`. After listing, if any unsatisfied prereqs have a `guide:` field, use `AskUserQuestion` to ask: *"Want me to walk you through fixing the missing prerequisite(s) now?"* — on yes, step through each guide interactively (read the guide file, do safe file writes / commands automatically, confirm any sudo step before running).
+  6. **Prerequisite scan** — read frontmatter of every `rules/*.md` AND every `skills/*/SKILL.md`. For each `prerequisites:` entry, evaluate its `check:` clause (see "Prereq frontmatter + check DSL" at the bottom of this file). Surface unsatisfied prereqs, one line per item: `⚠️ <pack-name>: <prereq-name> — <description> — guide: <guide-path-if-any>`. Group by severity: `error` (block) → `warning` → `info`. After listing, if any unsatisfied prereqs have a `guide:` field, use `AskUserQuestion` to ask: *"Want me to walk you through fixing the missing prerequisite(s) now?"* — on yes, step through each guide interactively (read the guide file, do safe file writes / commands automatically, confirm any sudo step before running).
   7. **Time-awareness hook** — verify `~/.claude/settings.json` AND `.claude/settings.local.json` for a `UserPromptSubmit` hook whose command starts with `date`. If neither has it, flag as a missing prerequisite — Iga needs accurate wall-clock time for calendar/scheduling work.
   8. **Update check** — for each installed pack with `source_commit` frontmatter, do `gh api repos/<source>/commits?path=<source_path>&per_page=1` to fetch upstream HEAD. If HEAD `sha[:7]` ≠ `source_commit`, report `N packs have updates available (run /iga check-updates for details)`. If `gh` is not on PATH, fall back to `git ls-remote` or `WebFetch` against `https://raw.githubusercontent.com/<source>/<branch>/<source_path>`. Do NOT skip this step unless an actual error occurs — name the error if so.
   9. **Other flags** — broken MCP, empty palace, missing hooks, anything else the scan surfaces.
@@ -108,7 +108,7 @@ If $ARGUMENTS does not match any admin command above:
 
 1. Read `rules/commands.md` — look for a section matching `## /$ARGUMENTS` (e.g., `## /gm`)
 2. If found: follow the steps defined there
-3. If not found: check CLAUDE.md for a default definition of that command under "Iga Commands"
+3. If not found: check `community_rules/daily_commands.md` for a default definition of that command
 4. If still not found: tell the user this command is not defined and suggest `iga help`
 
 When executing a user-defined command, also check for any `rules/<tool>.md` files that might apply (e.g., `rules/todoist.md` for task-related commands).
@@ -129,3 +129,29 @@ overrides:
 ```
 
 Per-pack `source` in frontmatter takes precedence over `overrides`, which takes precedence over the global `upstream`.
+
+## Prereq frontmatter + check DSL
+
+Any rule pack (`rules/<pack>.md`) or skill (`skills/<name>/SKILL.md`) can declare:
+
+```yaml
+prerequisites:
+  - name: <short-slug>                                 # e.g. todoist-api-token
+    description: <one line; why this is needed>
+    check: <declarative clause Iga interprets>         # see DSL below
+    guide: <path-relative-to-Iga-root>                 # optional, omit if no setup needed
+    severity: warning | error | info                   # default: warning
+```
+
+Check clauses are interpreted by Iga, not by a strict parser. Match by intent:
+
+- `env(VAR_NAME)`: environment variable set and non-empty
+- `file(<path>)`: file exists and is readable
+- `file(<path>, mode=0600)`: file exists with that permission mode
+- `cmd(<command>)`: command exists on `$PATH`
+- `mcp(<server-name>)`: MCP server connected this session
+- `any(<check1>, <check2>, ...)`: short-circuit OR
+- `all(<check1>, <check2>, ...)`: AND
+- Anything more exotic: plain natural language, Iga is the runtime
+
+Severity: `error` blocks until fixed (rare, e.g. broken MCP), `warning` is surfaced with a fix offer, `info` shows only in verbose status. Guides resolve relative to the declaring pack: rules guides are repo-rooted, skill guides are relative to the skill directory.

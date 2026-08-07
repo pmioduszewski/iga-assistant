@@ -161,3 +161,33 @@ community_skills/email/dist/
 
 # Brainstorming design specs — may carry personal context; never track
 docs/superpowers/specs/
+
+# =============================================================================
+# Codex CLI local config — machine-specific MCP paths AND live API keys
+# (.codex/config.toml holds provider tokens in plaintext). Never track.
+# =============================================================================
+.codex/
+
+# =============================================================================
+# Claude Code hooks — personal: absolute machine paths, real repo locations,
+# the user's name and business context. The generic hook mechanism is
+# documented; the installed hooks themselves are the personal layer.
+# =============================================================================
+.claude/hooks/
+
+# =============================================================================
+# Playwright MCP session artifacts — transient page/console dumps.
+# =============================================================================
+.playwright-mcp/
+
+# =============================================================================
+# Plugin-installed skills (caveman plugin) — externally managed, same class
+# as skills/find-skills above. Not iga-assistant skills.
+# =============================================================================
+skills/caveman
+skills/caveman-commit
+skills/caveman-compress
+skills/caveman-help
+skills/caveman-review
+skills/caveman-stats
+skills/cavecrew

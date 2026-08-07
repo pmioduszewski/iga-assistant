@@ -167,7 +167,7 @@ Tunables live in this file (not hardcoded):
 
 ## Prerequisites
 
-Declared in this file's frontmatter and picked up by `/iga status` generic prereq scan. See `CLAUDE.md` → `/iga status` for the schema. Summary:
+Declared in this file's frontmatter and picked up by `/iga status` generic prereq scan. See `.claude/commands/iga.md` ("Prereq frontmatter + check DSL") for the schema. Summary:
 
 - **`todoist-api-token`** (severity: warning) — Todoist-triggered research won't fire without it; MemPalace-flag triggers continue working. Guide: [`docs/setup-todoist-token.md`](docs/setup-todoist-token.md).
 

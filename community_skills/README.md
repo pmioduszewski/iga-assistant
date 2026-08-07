@@ -3,7 +3,7 @@
 Upstream source for installable Iga **skills** (capabilities Iga performs).
 Mirror of `community_rules/`, which holds installable **rules** (tool/behavior preferences).
 
-See the "Skills vs Rules — the architecture" section of `CLAUDE.md` for the conceptual split. Short version:
+See `skills/create-iga-skill/SKILL.md` for the conceptual split. Short version:
 
 - A **skill** is something Iga *does* (an engine, a workflow, an automation). It lives as a directory.
 - A **rule** is a preference for *how* Iga uses a tool or behaves in a context. It lives as a single `.md` file.

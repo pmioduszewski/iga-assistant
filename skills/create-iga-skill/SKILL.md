@@ -92,7 +92,7 @@ intent_triggers:                           # natural-language phrases that auto-
 prerequisites:                             # picked up by /iga status prereq scan
   - name: <prereq-slug>
     description: <one line, why needed>
-    check: <DSL clause — see CLAUDE.md /iga status>
+    check: <DSL clause, see .claude/commands/iga.md>
     guide: <path relative to the skill dir, e.g. docs/setup-X.md>
     severity: warning | error | info       # default: warning
 triggers:                                  # picked up by future /iga list-triggers
@@ -193,7 +193,7 @@ The user types e.g. `/new-skill track my caffeine intake and tell me when I've h
 **Anti-pattern (do NOT do this):**
 
 ```markdown
-# In CLAUDE.md
+# In .claude/commands/iga.md
 /iga status — ... step 5: check if iga-proactive-research has a Todoist token...
 ```
 
@@ -202,7 +202,7 @@ That couples a generic command to a specific skill. Next time the skill renames,
 **Correct pattern:**
 
 ```markdown
-# In CLAUDE.md
+# In .claude/commands/iga.md
 /iga status — ... step 5: read every rules/*.md and skills/*/SKILL.md frontmatter; for each prerequisites: entry, evaluate the check: clause and surface unsatisfied ones.
 
 # In skills/iga-proactive-research/SKILL.md frontmatter
@@ -525,7 +525,7 @@ Default: ship a skill as on-demand first. Add launchd only when there's evidence
 
 ## Connects to
 
-- CLAUDE.md `community_rules/` + `community_skills/` system (`iga install <pack>`)
+- `.claude/commands/iga.md` `community_rules/` + `community_skills/` system (`iga install <pack>`)
 - MemPalace `iga/architecture/skills-inventory` (canonical skill list)
 - All existing skill tasks (Quote, Scripture, Trainer, Proactive Research, Knowledge Vault, etc.)
 - `community_skills/` + `community_rules/` future contributions

@@ -7,7 +7,7 @@ rationale, not an oversight.
 
 ## The repo's three-layer model (recap)
 
-Per `CLAUDE.md` ("Generic vs personalized layer", `community_skills/`):
+Per `skills/create-iga-skill/SKILL.md` ("OSS publication path", `community_skills/`):
 
 | Layer | Where | Owned by | `iga update` touches it? |
 |---|---|---|---|

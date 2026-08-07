@@ -42,6 +42,21 @@ ask()  { # ask "question" -> returns 0 for yes
   case "$a" in y|Y|yes|YES) return 0 ;; *) return 1 ;; esac
 }
 
+# --- 0. Local privacy guard -------------------------------------------------
+# git does NOT auto-enable a hooks directory, so a fresh clone runs with NO
+# guard until someone reads the README and sets this by hand. That is how a
+# private agent-session URL reached the public repo on 2026-08-07. Wire it here
+# so "fresh clone → set up" cannot leave the guard off. Cheap and idempotent.
+# The server-side check (.github/workflows/privacy-guard.yml) is the backstop
+# for anyone who never runs this script at all.
+if [ -d "$REPO_ROOT/.githooks" ] && git -C "$REPO_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+  current="$(git -C "$REPO_ROOT" config --get core.hooksPath || true)"
+  if [ "$current" != ".githooks" ]; then
+    say "Enabling the local privacy guard (core.hooksPath=.githooks)"
+    run "git -C '$REPO_ROOT' config core.hooksPath .githooks"
+  fi
+fi
+
 # --- 1. Python venv + editable install -------------------------------------
 PY="$VENV/bin/python"
 if [ ! -x "$PY" ]; then

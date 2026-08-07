@@ -1,0 +1,24 @@
+# Fixed-shape agent-session artifacts that must never reach a public repo.
+#
+# ONE extended-regex (ERE) per line. Blank lines and #-comments ignored.
+# Consumed by BOTH .githooks/iga-guard.sh (local, pre-commit/pre-push) and
+# .github/workflows/privacy-guard.yml (server-side, unbypassable). Single
+# source of truth on purpose: two copies of a security rule drift, and the
+# stale one is the one that matters.
+#
+# WHAT BELONGS HERE — all three must hold:
+#   1. emitted automatically by a tool, not typed by a human;
+#   2. an unmistakable literal form (a URL shape, a trailer key);
+#   3. never legitimately publishable in this repo.
+# Everything judgement-shaped (names, clients, finances, health) stays with
+# the LLM judge. This is NOT a PII dictionary and must not become one.
+#
+# NOTE: this file is EXCLUDED from the scans that read it — otherwise adding a
+# pattern here would block its own commit.
+
+# Per-conversation agent session URLs
+claude\.ai/code/session_
+chatgpt\.com/c/[0-9a-f-]{36}
+
+# Harness-injected commit trailers (also stripped by strip-agent-trailers.sh)
+^(Claude|Codex|Session)-(Session|Link):

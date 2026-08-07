@@ -28,10 +28,15 @@ fi
 mode="${1:-}"; shift || true
 MAXBYTES="${IGA_GUARD_MAXBYTES:-120000}"
 
+# The pattern file is excluded from every diff that is scanned against it —
+# otherwise adding a pattern would trip the very rule it defines.
+PATFILE_REL=".githooks/session-link-patterns.txt"
+EXCL=":(exclude)$PATFILE_REL"
+
 case "$mode" in
-  staged) payload="$(git diff --cached --no-color)";          label="staged diff" ;;
-  msg)    payload="commit message:"$'\n'"$(cat "$1")";        label="commit message" ;;
-  range)  payload="$(git diff --no-color "$1" 2>/dev/null)";  label="pushed diff" ;;
+  staged) payload="$(git diff --cached --no-color -- . "$EXCL")";          label="staged diff" ;;
+  msg)    payload="commit message:"$'\n'"$(cat "$1")";                     label="commit message" ;;
+  range)  payload="$(git diff --no-color "$1" -- . "$EXCL" 2>/dev/null)";  label="pushed diff" ;;
   *) echo "iga-guard: unknown mode '$mode'" >&2; exit 2 ;;
 esac
 
@@ -60,8 +65,12 @@ esac
 # is never legitimately publishable. Everything judgement-shaped stays with the
 # judge below.
 # ---------------------------------------------------------------------------
-HARD_DENY='claude\.ai/code/session_|chatgpt\.com/c/[0-9a-f-]{36}|^(Claude|Codex)-Session:'
-if printf '%s' "$payload" | grep -qE "$HARD_DENY"; then
+# Patterns live in one file shared with the CI job, so the local and
+# server-side rules cannot drift apart.
+PATFILE="$(git rev-parse --show-toplevel)/$PATFILE_REL"
+HARD_DENY="$(grep -vE '^\s*(#|$)' "$PATFILE" 2>/dev/null | paste -sd'|' -)"
+
+if [ -n "$HARD_DENY" ] && printf '%s' "$payload" | grep -qE "$HARD_DENY"; then
   hit="$(printf '%s' "$payload" | grep -m1 -oE "$HARD_DENY")"
   echo "🚫 iga-guard BLOCKED this ${label} — private agent-session link (deterministic rule):" >&2
   echo "   matched: $hit" >&2

@@ -1,0 +1,137 @@
+# Server-side privacy guard — the layer that cannot be bypassed.
+#
+# WHY THIS EXISTS
+# ---------------
+# The local guard (.githooks/) is real but optional: `core.hooksPath=.githooks`
+# is per-clone config that a human sets by hand, so a FRESH CLONE HAS NO GUARD
+# AT ALL until someone reads the README. `--no-verify` also skips it, and
+# `gh pr create` never touches git hooks. On 2026-08-07 a private agent-session
+# URL reached this public repo; the local hooks are now hardened, but every one
+# of those bypasses would still let it happen from another machine.
+#
+# So this job re-checks the same rules where they cannot be skipped. It is
+# DELIBERATELY deterministic — a plain grep, no model, no API key, no secrets.
+# It reads the identical pattern file the local hook reads, so the two cannot
+# drift.
+#
+# WHAT IT COVERS THAT THE LOCAL HOOKS DO NOT
+#   - commit MESSAGES of pushed commits (pre-push only ever diffed content)
+#   - each commit individually, so PII added in commit N and removed in N+1
+#     is still caught (a two-endpoint diff nets it to nothing)
+#   - the branch name
+#   - the PR title and body (`gh pr create` bypasses hooks entirely)
+#
+# INJECTION SAFETY: every attacker-influenced value (PR title/body, branch name,
+# commit messages) is passed through `env:` and read as "$VAR" — never
+# interpolated into the shell with ${{ }}, which would let a crafted PR title
+# execute code in this job.
+name: privacy-guard
+
+on:
+  push:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  session-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history: we scan every pushed commit, not a net diff
+
+      - name: Build the pattern set
+        id: pat
+        run: |
+          set -euo pipefail
+          PATFILE=.githooks/session-link-patterns.txt
+          if [ ! -f "$PATFILE" ]; then
+            echo "::error::$PATFILE is missing — the guard cannot run. Failing closed."
+            exit 1
+          fi
+          # One ERE per line, comments and blanks dropped, joined with |.
+          DENY="$(grep -vE '^[[:space:]]*(#|$)' "$PATFILE" | paste -sd'|' -)"
+          if [ -z "$DENY" ]; then
+            echo "::error::pattern file is empty — failing closed rather than passing everything."
+            exit 1
+          fi
+          echo "deny=$DENY" >> "$GITHUB_OUTPUT"
+          echo "Loaded $(grep -cvE '^[[:space:]]*(#|$)' "$PATFILE") pattern(s)."
+
+      - name: Scan commit messages, diffs and refs
+        env:
+          DENY: ${{ steps.pat.outputs.deny }}
+          EVENT: ${{ github.event_name }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_HEAD: ${{ github.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          # Attacker-influenced on a fork PR. Never interpolate these directly.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          HEAD_REF: ${{ github.head_ref || github.ref_name }}
+        run: |
+          set -euo pipefail
+          fail=0
+          report() { echo "::error::$1"; fail=1; }
+
+          if [ "$EVENT" = "pull_request" ]; then
+            base="$PR_BASE"; head="$PR_HEAD"
+          else
+            base="$PUSH_BEFORE"; head="$PUSH_HEAD"
+          fi
+
+          # A new branch / first push reports an all-zero base. Fall back to the
+          # tip commit alone rather than rescanning the entire history.
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            if git cat-file -e "${head}~1^{commit}" 2>/dev/null; then
+              range="${head}~1..${head}"
+            else
+              range="$head"
+            fi
+          else
+            range="${base}..${head}"
+          fi
+          echo "Scanning $range"
+
+          # The pattern file legitimately contains these strings; exclude it.
+          EXCL=':(exclude).githooks/session-link-patterns.txt'
+
+          for sha in $(git rev-list "$range"); do
+            # 1. Commit message.
+            if git log -1 --format=%B "$sha" | grep -qE "$DENY"; then
+              hit="$(git log -1 --format=%B "$sha" | grep -m1 -oE "$DENY")"
+              report "commit $sha message contains a private agent-session link: $hit"
+            fi
+            # 2. Content, per commit — a net diff would miss add-then-remove.
+            if git show --format= --no-color "$sha" -- . "$EXCL" | grep -qE "$DENY"; then
+              report "commit $sha content contains a private agent-session link"
+            fi
+          done
+
+          # 3. Branch name.
+          if printf '%s' "$HEAD_REF" | grep -qE "$DENY"; then
+            report "branch name contains a private agent-session link"
+          fi
+
+          # 4. PR title and body — `gh pr create` never runs a git hook.
+          if [ -n "${PR_TITLE:-}" ] && printf '%s' "$PR_TITLE" | grep -qE "$DENY"; then
+            report "PR title contains a private agent-session link"
+          fi
+          if [ -n "${PR_BODY:-}" ] && printf '%s' "$PR_BODY" | grep -qE "$DENY"; then
+            report "PR body contains a private agent-session link"
+          fi
+
+          if [ "$fail" -ne 0 ]; then
+            echo ""
+            echo "These URLs open for nobody but the maintainer, so publishing one leaks a"
+            echo "private endpoint and buys no traceability. Rewrite the offending commit(s)"
+            echo "or edit the PR, then force-push. Note that a commit already pushed stays"
+            echo "reachable by SHA on GitHub even after a rewrite."
+            exit 1
+          fi
+          echo "No agent-session links found."

@@ -49,6 +49,34 @@ esac
 # head read). This bit a 2.6 MB new-branch push range. See GUARD_NOTES.md.
 payload="$(printf '%s' "$payload" | head -c "$MAXBYTES")" || true
 
+# ---------------------------------------------------------------------------
+# Deterministic backstop, checked BEFORE the judge.
+#
+# This guard is deliberately dictionary-free for OPEN-ENDED personal data — a
+# static list can never keep up with that, which is why an LLM judges it. But a
+# model asked the same question twice does not reliably answer the same way:
+# on 2026-08-07 the judge passed a `Claude-Session:` trailer on one commit and
+# blocked byte-identical content on the very next one, and two commits carrying
+# a private session URL reached the public remote before anyone noticed.
+#
+# So artifacts with a FIXED, machine-generated shape get a hard rule. This is
+# not a PII dictionary and must not grow into one: add a pattern here only when
+# it is emitted automatically by a tool, has an unmistakable literal form, and
+# is never legitimately publishable. Everything judgement-shaped stays with the
+# judge below.
+# ---------------------------------------------------------------------------
+HARD_DENY='claude\.ai/code/session_|chatgpt\.com/c/[0-9a-f-]{36}|^(Claude|Codex)-Session:'
+if printf '%s' "$payload" | grep -qE "$HARD_DENY"; then
+  hit="$(printf '%s' "$payload" | grep -m1 -oE "$HARD_DENY")"
+  echo "🚫 iga-guard BLOCKED this ${label} — private agent-session link (deterministic rule):" >&2
+  echo "   matched: $hit" >&2
+  echo "   These are openable only by the maintainer, so publishing one leaks a private" >&2
+  echo "   endpoint and buys no traceability. Remove it. Commit-message trailers are" >&2
+  echo "   stripped automatically by .githooks/strip-agent-trailers.sh — if you are seeing" >&2
+  echo "   this, the link is in the DIFF, not the trailer." >&2
+  exit 1
+fi
+
 SYS='You are a strict privacy guard for a PUBLIC, open-source repository. The repo is a GENERIC, reusable layer (an AI-assistant framework: skills, rules, a memory engine) — it must contain ZERO data specific to any individual user.
 
 BLOCK the change if it adds (or its message contains) ANY of the following:

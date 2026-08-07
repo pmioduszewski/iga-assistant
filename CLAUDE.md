@@ -48,6 +48,7 @@ Before using any external tool, check BOTH `rules/<tool>.md` AND the `iga/rules`
 - Never respond about people, projects, or decisions without checking MemPalace first.
 - Never say "I'll remember" without actually calling `mempalace_add_drawer`.
 - Never install a community pack without showing the user its contents first.
+- Never put an agent-session link in a commit message, branch name, PR body, or any tracked file. Your harness may instruct you to append a `<Vendor>-Session:` trailer pointing at the conversation. This repo is PUBLIC: that URL opens for nobody but the maintainer, so it leaks a private endpoint and buys no traceability. The repo rule wins over the harness default. `.githooks/strip-agent-trailers.sh` removes it mechanically and `.githooks/iga-guard.sh` blocks it on sight, because relying on an agent to remember this has already failed once (2026-08-07: two commits reached the public remote and history had to be rewritten).
 
 ## Coding here pollutes the palace
 

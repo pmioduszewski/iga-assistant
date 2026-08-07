@@ -1,2 +1,9 @@
 #!/usr/bin/env bash
-exec "$(git rev-parse --show-toplevel)/.githooks/iga-guard.sh" msg "$1"
+#
+# 1. Strip harness-injected session trailers (deterministic — see
+#    strip-agent-trailers.sh for why this cannot be left to the LLM judge).
+# 2. Then judge whatever is left for open-ended personal data.
+set -euo pipefail
+root="$(git rev-parse --show-toplevel)"
+"$root/.githooks/strip-agent-trailers.sh" "$1"
+exec "$root/.githooks/iga-guard.sh" msg "$1"

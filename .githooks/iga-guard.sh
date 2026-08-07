@@ -43,14 +43,9 @@ esac
 # pipeline returns non-zero → a `|| exit 0` would SILENTLY skip the judge. A plain
 # empty check is O(1) and sufficient (a real git diff is never whitespace-only).
 [ -z "$payload" ] && exit 0
-# Truncate to MAXBYTES. `head -c` closes the pipe early when payload > MAXBYTES,
-# which SIGPIPEs printf; under `set -o pipefail` + `set -e` that would abort the
-# whole guard (exit 141) — so `|| true` absorbs it (payload still gets the bytes
-# head read). This bit a 2.6 MB new-branch push range. See GUARD_NOTES.md.
-payload="$(printf '%s' "$payload" | head -c "$MAXBYTES")" || true
 
 # ---------------------------------------------------------------------------
-# Deterministic backstop, checked BEFORE the judge.
+# Deterministic backstop, checked BEFORE the judge — and BEFORE truncation.
 #
 # This guard is deliberately dictionary-free for OPEN-ENDED personal data — a
 # static list can never keep up with that, which is why an LLM judges it. But a
@@ -75,6 +70,21 @@ if printf '%s' "$payload" | grep -qE "$HARD_DENY"; then
   echo "   stripped automatically by .githooks/strip-agent-trailers.sh — if you are seeing" >&2
   echo "   this, the link is in the DIFF, not the trailer." >&2
   exit 1
+fi
+
+# Truncate to MAXBYTES. `head -c` closes the pipe early when payload > MAXBYTES,
+# which SIGPIPEs printf; under `set -o pipefail` + `set -e` that would abort the
+# whole guard (exit 141) — so `|| true` absorbs it (payload still gets the bytes
+# head read). This bit a 2.6 MB new-branch push range. See GUARD_NOTES.md.
+#
+# ONLY the judge is truncated — HARD_DENY above ran on the full payload. A
+# deterministic rule that silently stops looking after 120 KB is worse than no
+# rule, because it reads as coverage. The judge still has this blind spot: a
+# payload over MAXBYTES is only partly examined, so the tail goes unjudged.
+if [ "${#payload}" -gt "$MAXBYTES" ]; then
+  echo "iga-guard: ⚠️  ${label} is ${#payload} bytes; only the first ${MAXBYTES} are judged." >&2
+  echo "   The deterministic rules saw all of it, the LLM judge did not. Eyeball the rest." >&2
+  payload="$(printf '%s' "$payload" | head -c "$MAXBYTES")" || true
 fi
 
 SYS='You are a strict privacy guard for a PUBLIC, open-source repository. The repo is a GENERIC, reusable layer (an AI-assistant framework: skills, rules, a memory engine) — it must contain ZERO data specific to any individual user.

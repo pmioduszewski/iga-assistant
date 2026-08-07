@@ -51,9 +51,11 @@ skills/find-skills
 # =============================================================================
 # Three-layer config model (see CLAUDE.md) — personal overrides never ship
 # =============================================================================
-CLAUDE.local.md
-rules/*.local.md
-skills/*/SKILL.local.md
+# Depth-anchored on purpose: `skills/*/SKILL.local.md` missed
+# `community_skills/<skill>/SKILL.local.md`, so a personal override written
+# beside a SHIPPED skill was one `git add -A` from being published. Any
+# `*.local.md` at any depth is the personal layer and never ships.
+**/*.local.md
 
 # The installed-rules layer is user-personalized; OSS contributors install
 # from community_rules/ via `/iga install <pack>`. We ship community_rules/,

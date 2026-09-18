@@ -43,7 +43,9 @@ scripts/setup-iga-mcp.sh
 ```
 
 It creates the venv, editable-installs `iga_mcp`, registers `iga` with
-**Claude Code** at user scope, and **detects VS Code / Cursor** and
+**Claude Code** at user scope, does the same for **Codex CLI** when it is
+installed (and links the `iga` admin skill for it), and **detects VS Code /
+Cursor** and
 offers to add a user-level `mcp.json` entry (asks first; merge-only,
 never clobbers other servers). Re-runnable any time. Flags:
 `--dry-run`, `--yes`, `--venv DIR`. Full manual steps:

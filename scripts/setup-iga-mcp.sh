@@ -5,6 +5,8 @@
 # Fresh clone → working IgaMCP. Creates the venv, installs the package, and
 # registers the server with whichever MCP clients you actually have:
 #   • Claude Code  (user scope, via `claude mcp add`)
+#   • Codex CLI    (user scope, via `codex mcp add`), plus the `iga` admin
+#                  skill linked into this clone's .agents/skills
 #   • VS Code      (user-level mcp.json — detected; you are asked first)
 #   • Cursor       (user-level mcp.json — detected; you are asked first)
 #
@@ -107,6 +109,43 @@ reg_claude() { # name, then command + args
 }
 reg_claude iga "'$BIN'"
 [ -n "$MEM_BIN" ] && reg_claude IgaMemory "'$MEM_BIN' -- --palace '$MEM_PALACE'"
+
+# --- 2b. Codex CLI (user scope): same two servers, plus the `iga` skill ------
+# Codex has no `/iga` slash command, so the admin commands ship as a skill.
+# Both .agents/ and .codex/ are gitignored here (they hold machine config), so
+# the tracked source lives in scripts/codex/ and is symlinked in: repo scope
+# only, and `git pull` keeps it current.
+reg_codex() { # name, then command + args
+  local id="$1"; shift
+  if ! command -v codex >/dev/null 2>&1; then
+    say "Codex CLI not found, skipping '$id'"; return 0
+  fi
+  if codex mcp get "$id" >/dev/null 2>&1; then
+    say "Codex: '$id' already registered, skipping"; return 0
+  fi
+  ask "Register '$id' with Codex CLI at USER scope (all sessions)?" \
+    || { say "Codex: '$id' skipped"; return 0; }
+  run "codex mcp add $id -- $*"
+  say "Codex: '$id' registered (restart Codex sessions to connect)"
+}
+link_codex_skill() {
+  command -v codex >/dev/null 2>&1 || return 0
+  local src="$REPO_ROOT/scripts/codex/skills/iga" dst="$REPO_ROOT/.agents/skills/iga"
+  [ -f "$src/SKILL.md" ] || return 0
+  if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
+    say "Codex: 'iga' skill already linked, skipping"; return 0
+  fi
+  if [ -e "$dst" ] || [ -L "$dst" ]; then
+    say "Codex: $dst exists and is not this script's link, leaving it alone"; return 0
+  fi
+  ask "Link the 'iga' admin skill into this clone for Codex (.agents/skills/iga)?" \
+    || { say "Codex: 'iga' skill skipped"; return 0; }
+  run "mkdir -p '$REPO_ROOT/.agents/skills' && ln -s '$src' '$dst'"
+  say "Codex: 'iga' skill linked (in Codex, run from this clone: \$iga status)"
+}
+reg_codex iga "'$BIN'"
+[ -n "$MEM_BIN" ] && reg_codex IgaMemory "'$MEM_BIN' --palace '$MEM_PALACE'"
+link_codex_skill
 
 # --- 3. VS Code / Cursor (user-level mcp.json) -----------------------------
 # Merge-only writer: adds/updates ONLY the named server, preserves the rest.

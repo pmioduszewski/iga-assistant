@@ -114,31 +114,19 @@ evals/calibration/contested-cases.jsonl
 .iga-session-id
 
 # =============================================================================
-# skills/email/ — contains PII in test fixtures (user emails + real names).
-# Audit + anonymize before un-ignoring.
+# skills/ is an ALLOWLIST. Everything under it is ignored unless it is named
+# below, so a personal or not-yet-generalized skill can never be committed by
+# accident, and this public file never has to name or describe one.
+# Publishing a skill is a deliberate act: add its `!skills/<name>/` line here.
 # =============================================================================
-skills/email/
-
-# =============================================================================
-# skills/trainer/ — entirely personal (body state, health info, schedule).
-# Lives only in the user's local tree; not shipped.
-# =============================================================================
-skills/trainer/
-
-# =============================================================================
-# Personal / not-yet-generalized skills — never ship as-is.
-#   artilio-pm   : names the user + Artilio business strategy.
-#   nutrition    : personal health (allergies, weight).
-#   health-coach : personal coach (OSS candidate — generalize to
-#                  community_skills/ later, without personal content).
-#   palace-guard : OSS-valuable mechanism, but vocab.json is a roster of the
-#                  user's REAL contacts/companies mined from the live palace.
-#                  Generalize to community_skills/ later WITHOUT vocab.json.
-# =============================================================================
-skills/artilio-pm/
-skills/nutrition/
-skills/health-coach/
-skills/palace-guard/
+skills/*
+!skills/create-iga-skill/
+!skills/habit-tracker/
+!skills/iga-proactive/
+!skills/iga-proactive-research/
+!skills/mempalace-seed/
+!skills/mood-tracker/
+!skills/newsletter-research/
 
 # =============================================================================
 # community_skills/email/dist/ — compiled build output. Ship source, not dist.

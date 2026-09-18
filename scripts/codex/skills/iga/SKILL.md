@@ -8,8 +8,9 @@ metadata:
 # iga (Codex entry point)
 
 Claude Code exposes these commands as the `/iga` slash command. Codex has no
-project slash commands, so this skill is the same entry point. There is ONE
-source of truth for the command behaviour and it is not this file.
+project slash command files, so this skill is the same entry point: the Codex
+desktop app lists it in its `/` menu as `/iga`, and Codex CLI invokes it as
+`$iga`. There is ONE source of truth for the command behaviour and it is not this file.
 
 ## What to do
 

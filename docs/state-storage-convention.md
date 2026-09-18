@@ -11,7 +11,7 @@ Status: **proposed**, not adopted. This is the audit deliverable for the
 | Proactive run state (json) | `~/Iga/scratch/proactive-state.json` | dispatcher | `$IGA_PROACTIVE_STATE` else `~/Iga/scratch` |
 | Habit substrate + log + widgets | `~/Iga/state/habits/`,`/widgets/` | habit-tracker | **`$IGA_STATE_DIR`** else `~/Iga/state` ✅ clean |
 | Mood substrate | `~/Iga/state/mood/` | mood-tracker | **`$IGA_STATE_DIR`** else `~/Iga/state` ✅ clean |
-| Finance | `~/Iga/finance.db` (repo root) | finance tooling | none (repo root) |
+| Finance | `~/Iga/state/finance.db` (moved out of the repo root 2026-09-18) | finance tooling | `$IGA_FINANCE_DB` else **`$IGA_STATE_DIR`** else `~/Iga/state` ✅ clean |
 | Rize cache | `~/Iga/rize_data.db` (repo root) | rize tooling | none (repo root) |
 | MemPalace | `~/Iga/mempalace/.mempalace/palace/*.sqlite3` | mempalace pkg | own subsystem |
 | Swift build | `*/app/.build/build.db` | SwiftPM | artifact (ignore) |
@@ -35,7 +35,7 @@ stale file. Tracked as a follow-up decision.
 2. **Every persistent store lives under it**, namespaced by domain:
    - `state/proactive.db` (ledger+governor) — kill the `~/Iga` fork
    - `state/findings.db` (NEW — the sqlite finding sink, see #1)
-   - `state/finance.db`, `state/rize.db` (move from repo root, later)
+   - `state/finance.db` (done 2026-09-18), `state/rize.db` (move from repo root, later)
    - `state/habits/`, `state/mood/`, `state/widgets/` (already correct)
    - `state/scratch/` for run-state json (fold `~/Iga/scratch` in, later)
 3. **MemPalace is an explicit exception** — separate subsystem, keeps

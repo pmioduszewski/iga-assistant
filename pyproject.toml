@@ -7,8 +7,8 @@ authors = [{ name = "Paweł Mioduszewski" }]
 license = { text = "MIT" }
 readme = "README.md"
 
-# Runtime deps: the top-level scripts (load_finance.py, load_ksef.py, load_rize.py)
-# use only stdlib. Skills declare their own optional dep groups below.
+# Runtime deps: none at the top level (stdlib only). Skills declare their own
+# optional dep groups below.
 dependencies = []
 
 [project.optional-dependencies]

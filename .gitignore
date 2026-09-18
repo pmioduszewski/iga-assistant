@@ -66,18 +66,12 @@ rules/
 # =============================================================================
 # Personal data stores
 # =============================================================================
-finance.db
-rize_data.db
+# Personal data never lives in the repo root. Databases go under state/ and a
+# personal tool lives in its own skills/<name>/ directory. Both are ignored as
+# a whole (see state/ and the skills/ allowlist), so this public file never has
+# to name a personal file. The patterns below are only a safety net.
 *.db
-finance_rules.yml
-queries.sql
-projects.sql
-FINANCE.md
-
-# Personal one-off scripts (generalize before shipping)
-load_finance.py
-load_ksef.py
-load_rize.py
+*.sql
 
 # =============================================================================
 # Scratch / ephemeral

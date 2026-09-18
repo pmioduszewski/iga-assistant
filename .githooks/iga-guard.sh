@@ -106,6 +106,7 @@ BLOCK the change if it adds (or its message contains) ANY of the following:
 - credentials, API keys, tokens, secrets;
 - an absolute home path revealing a username (e.g. /Users/<name>, /home/<name>);
 - private URLs, calendar entries, health, family, or relationship details;
+- a description of ONE SPECIFIC user setup instead of the product: which personal tools, apps, scripts, data files or databases that individual has or uses, their personal file names, or dated notes about what they did on their own machine. Conventions must be stated generically (for example: a user store goes under state/<domain>/), never by listing what one person has. Documentation is NOT exempt from this rule;
 - anything that is clearly one specific person'"'"'s private/personal data rather than generic reusable code or docs.
 
 ALLOW: generic placeholders (e.g. Acme, "the user", /Users/you), and the maintainer'"'"'s own authorship. Text that merely DESCRIBES these categories (documentation, this guard'"'"'s own instructions, example placeholders) is NOT a violation — only ACTUAL personal data is. When genuinely unsure, BLOCK.

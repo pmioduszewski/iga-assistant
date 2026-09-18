@@ -160,8 +160,8 @@ def iga_ask(prompt: str, timeout_s: int | None = None) -> str:
       - Storing a fact ("remember that X happened today")
       - Anything you'd type into an interactive Iga session
 
-    Note: each call uses your Claude Max subscription. Steady-state cost is
-    roughly one cache-hit message per call.
+    Note: each call is billed however your `claude` CLI is billed. Steady-state
+    cost is roughly one cache-hit message per call.
 
     timeout_s: optional per-call timeout in seconds, clamped to
     [30, IGA_TIMEOUT_MAX] (defaults to IGA_TIMEOUT). Raise it for heavy

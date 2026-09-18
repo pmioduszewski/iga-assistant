@@ -5,9 +5,10 @@
 # a self-contained wrapper that the always-on MenuBar app (or cron, or a human)
 # can fire. It:
 #   1. runs the generic engine scan (atomic ledger claim + governor gate + dedup),
-#   2. runs each governor-approved WORKER_REQUEST through headless `claude -p`
-#      (the user's Claude MAX subscription → zero per-call billing, same as email triage),
-#      which does the deep research and files the drawer via the IgaMemory MCP.
+#   2. runs each governor-approved WORKER_REQUEST through a headless agent
+#      (backend chosen by IGA_PROVIDER, default `claude -p`; billing depends on
+#      that backend and your plan), which does the deep research and files the
+#      drawer via the IgaMemory MCP.
 #
 # The app only TRIGGERS this; the engine decides WHAT (ledger/governor own
 # admission). This wrapper never writes the ledger/state itself.
@@ -44,7 +45,16 @@ LOG="$LOG_DIR/research-dispatch-$DATE.json"
 if [[ "${IGA_PROACTIVE_RESEARCH:-1}" == "0" ]]; then
   print '{"skipped":"IGA_PROACTIVE_RESEARCH=0"}' | tee "$LOG"; exit 0
 fi
-[[ -x "$CLAUDE_BIN" ]]   || { print "FATAL: claude not found at $CLAUDE_BIN" >&2; exit 90; }
+# Research is an AGENT job: only CLI backends can run it. Fail BEFORE the scan,
+# because the scan atomically claims topics and a bad provider would burn them.
+case "${IGA_PROVIDER:-claude-cli}" in
+  claude-cli|codex-cli) ;;
+  *) print "FATAL: IGA_PROVIDER='${IGA_PROVIDER}' cannot run agent jobs (use claude-cli or codex-cli)" >&2; exit 90 ;;
+esac
+# claude is only required when it is the selected backend (iga_llm default).
+if [[ "${IGA_PROVIDER:-claude-cli}" == "claude-cli" ]]; then
+  [[ -x "$CLAUDE_BIN" ]] || { print "FATAL: claude not found at $CLAUDE_BIN" >&2; exit 90; }
+fi
 [[ -x "$MEMPALACE_PY" ]] || { print "FATAL: mempalace venv python not found at $MEMPALACE_PY" >&2; exit 90; }
 [[ -f "$WORKER_PROMPT" ]]|| { print "FATAL: worker prompt not found at $WORKER_PROMPT" >&2; exit 90; }
 

@@ -27,6 +27,7 @@ proactive-research = [
 testpaths = [
   "evals/test",
   "skills",
+  "iga_llm",
 ]
 pythonpath = [
   "skills/iga-proactive-research/engine",

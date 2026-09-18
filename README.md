@@ -68,7 +68,7 @@ Install a community pack:
 
 ## Roadmap (honest — these are *intentions*, not shipped)
 
-- **Harness-agnostic / more headless.** Today conversational Iga is coupled to Claude Code. Anthropic's 2026-06-15 billing split makes programmatic `claude -p`/Agent-SDK paths metered, which is hostile to autonomous OSS use. The plan: a small **provider-abstraction entry point** over the headless paths so backends are swappable (Claude API, **Codex / GPT**, **Gemini**, local). Conversational use stays on whatever harness is cheapest. *Status: analysis done, direction not yet locked, entry point not built.*
+- **Harness-agnostic / more headless.** Today conversational Iga is coupled to Claude Code. Anthropic's 2026-06-15 billing split makes programmatic `claude -p`/Agent-SDK paths metered, which is hostile to autonomous OSS use. The plan: a small **provider-abstraction entry point** over the headless paths so backends are swappable (Claude API, **Codex / GPT**, **Gemini**, local). Conversational use stays on whatever harness is cheapest. *Status: entry point built ([`iga_llm/`](iga_llm/README.md): `claude-cli`, `codex-cli`, `anthropic`, `openai`, `ollama`; select with `IGA_PROVIDER`). The email classifier, the research dispatcher and the proactive runtime go through it. Still Claude Code only: the `iga` MCP session server, the prompt hooks, and the `/iga` commands.*
 
 ## How it compares
 

@@ -1,8 +1,12 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import {
+  buildInvocation,
   buildPrompt,
   classifyBatched,
+  igaLlmRoot,
   tryParseClassifications,
 } from "../src/classifier.js";
 import type { GmailMessage, TaxonomyConfig } from "../src/types.js";
@@ -123,5 +127,57 @@ describe("classifyBatched", () => {
     });
     assert.equal(results.length, 25);
     assert.equal(batchCalls, 3, "25 msgs / batch 10 = 3 batches");
+  });
+});
+
+describe("provider seam", () => {
+  const KEYS = ["IGA_PROVIDER", "IGA_MODEL", "IGA_MODEL_CHEAP", "IGA_THINKING", "IGA_PYTHON", "IGA_LLM_ROOT"];
+  const withEnv = (env: Record<string, string>, fn: () => void) => {
+    const saved = Object.fromEntries(KEYS.map((k) => [k, process.env[k]]));
+    for (const k of KEYS) delete process.env[k];
+    Object.assign(process.env, env);
+    try { fn(); } finally {
+      for (const k of KEYS) {
+        if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k];
+      }
+    }
+  };
+
+  it("defaults to a direct `claude -p` spawn with the sonnet alias", () => {
+    withEnv({}, () => {
+      const inv = buildInvocation({ batchSize: 10 });
+      assert.equal(inv.bin, "claude");
+      assert.deepEqual(inv.args, ["-p", "--model", "sonnet", "--output-format", "text"]);
+      assert.equal(inv.cwd, undefined);
+    });
+  });
+
+  it("keeps IGA_MODEL, claudeBin and thinking on the claude path", () => {
+    withEnv({ IGA_MODEL: "claude-haiku-4-5" }, () => {
+      const inv = buildInvocation({ batchSize: 10, claudeBin: "/x/claude", thinking: "low" });
+      assert.equal(inv.bin, "/x/claude");
+      assert.deepEqual(inv.args, [
+        "-p", "--model", "claude-haiku-4-5", "--output-format", "text", "--max-thinking-tokens", "2000",
+      ]);
+    });
+  });
+
+  it("routes any other provider through python3 -m iga_llm, no model unless overridden", () => {
+    withEnv({ IGA_PROVIDER: "codex-cli" }, () => {
+      const inv = buildInvocation({ batchSize: 10, timeoutMs: 30_000 });
+      assert.equal(inv.bin, "python3");
+      assert.deepEqual(inv.args, ["-m", "iga_llm", "--tier", "cheap", "--timeout", "30"]);
+      assert.equal(inv.cwd, igaLlmRoot());
+    });
+    withEnv({ IGA_PROVIDER: "openai", IGA_MODEL_CHEAP: "my-mini" }, () => {
+      const inv = buildInvocation({ batchSize: 10 });
+      assert.deepEqual(inv.args.slice(-2), ["--model", "my-mini"]);
+    });
+  });
+
+  it("igaLlmRoot points at the repo root that holds the iga_llm package", () => {
+    withEnv({}, () => {
+      assert.ok(existsSync(join(igaLlmRoot(), "iga_llm", "__main__.py")), igaLlmRoot());
+    });
   });
 });

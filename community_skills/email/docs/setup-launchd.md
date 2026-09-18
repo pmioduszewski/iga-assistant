@@ -68,7 +68,7 @@ If the most recent log isn't from today, the morning job didn't fire. Causes to 
 
 ## Cost notes
 
-Each daily run: ~30-60 sec wallclock. ~10 calls to `claude -p` (4 accounts × ~25 unread / 15 batch size, minus pre-filter hits). Uses your MAX subscription quota, not API billing. Negligible cost.
+Each daily run: ~30-60 sec wallclock. ~10 calls to `claude -p` (4 accounts × ~25 unread / 15 batch size, minus pre-filter hits). Cost depends on the backend (`IGA_PROVIDER`, default `claude -p`) and your plan; at this volume it is small.
 
 ## Uninstall
 

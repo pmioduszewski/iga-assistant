@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Dispatch runner for iga-research-dispatch (headless `claude -p`).
+"""Dispatch runner for iga-research-dispatch (headless agent via iga_llm).
 
 Reads the engine `scan --json` payload on stdin (the engine prints it to
 stderr after a preamble because importing mempalace redirects sys.stdout, so
 the wrapper merges 2>&1 and we extract from the first '{'), then runs each
-governor-approved WORKER_REQUEST through headless `claude -p`.
+governor-approved WORKER_REQUEST through `iga_llm.run_agent` (backend chosen by
+IGA_PROVIDER; default claude-cli, i.e. headless `claude -p`).
 
 Usage (called by the iga-research-dispatch zsh wrapper):
     print -r -- "$SCAN" | python dispatch_runner.py \
@@ -19,8 +20,14 @@ from __future__ import annotations
 import datetime
 import json
 import os
-import subprocess
 import sys
+from pathlib import Path
+
+# Repo root on sys.path so the shared provider entry point resolves when this
+# file is run as a script by the zsh wrapper.
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+
+from iga_llm import AGENT_PROVIDERS, LLMError, resolve, run_agent  # noqa: E402
 
 # Minimal, research-appropriate tool surface. Drawer filing is via the
 # IgaMemory MCP; web tools for the research itself; Read for local context.
@@ -56,18 +63,30 @@ def main() -> int:
     queue = scan.get("queue", [])
     batch = queue[:max_dispatch]
     tmpl = open(worker_prompt_path).read()
-    home = os.path.expanduser("~/Iga")
+    home = os.environ.get("IGA_HOME") or os.path.expanduser("~/Iga")
+    env = dict(os.environ)
+    env.setdefault("IGA_CLAUDE_BIN", claude_bin)
 
-    # COST SAFETY: autonomous runs default to Sonnet, NOT the job's budget.model
-    # (which is Opus deep). A scheduled daily dispatcher running Opus deep
-    # research (~300k tok/topic × cap) is exactly the quota burn this whole
-    # out-of-session move exists to avoid. Opus is opt-in via IGA_RESEARCH_MODEL.
-    model_override = os.environ.get("IGA_RESEARCH_MODEL")
-    DEFAULT_SAFE_MODEL = "claude-sonnet-4-6"
+    # COST SAFETY: autonomous runs use the CHEAP tier, NOT the job's
+    # budget.model (the smart tier). A scheduled daily dispatcher running deep
+    # research on the smart tier (~300k tok/topic × cap) is exactly the quota
+    # burn this whole out-of-session move exists to avoid. A bigger model is
+    # opt-in via IGA_RESEARCH_MODEL.
+    try:
+        provider, model = resolve(
+            "cheap", model=os.environ.get("IGA_RESEARCH_MODEL"), env=env
+        )
+        if provider not in AGENT_PROVIDERS:
+            raise LLMError(f"provider {provider!r} cannot run agents; use one of {AGENT_PROVIDERS}")
+    except LLMError as ex:
+        out = {"ts": datetime.datetime.now().isoformat(), "fatal": str(ex), "queue_total": len(queue)}
+        with open(log_path, "w") as fh:
+            json.dump(out, fh, indent=2)
+        print(json.dumps(out, indent=2))
+        return 92
 
     results = []
     for entry in batch:
-        model = model_override or DEFAULT_SAFE_MODEL
         prompt = (
             tmpl
             + "\n\n## WORKER_REQUEST (your job context — treat as the stdin JSON)\n"
@@ -77,40 +96,34 @@ def main() -> int:
             results.append({
                 "job_id": entry.get("job_id"),
                 "idempotency_key": entry.get("idempotency_key"),
+                "provider": provider,
                 "model": model,
                 "would_dispatch": True,
             })
             continue
-        # Prompt goes via STDIN, NOT as a positional arg: `--allowedTools` is a
-        # variadic flag and will swallow a trailing positional prompt
-        # (verified 2026-06-15). --max-turns is generous because deep research
-        # makes many tool calls AND the IgaMemory MCP needs connect time on the
-        # first call.
-        argv = [
-            claude_bin, "-p",
-            "--model", model,
-            "--permission-mode", "acceptEdits",
-            "--max-turns", "80",
-            "--allowedTools", ALLOWED_TOOLS,
-            "--add-dir", home,
-        ]
+        # --max-turns is generous because deep research makes many tool calls
+        # AND the IgaMemory MCP needs connect time on the first call. Backends
+        # without an allowed-tools/max-turns concept ignore both.
         try:
-            proc = subprocess.run(
-                argv, input=prompt, capture_output=True, text=True,
-                timeout=PER_TOPIC_TIMEOUT_S, cwd=home,
+            res = run_agent(
+                prompt, model=model, provider=provider, cwd=home, add_dirs=[home],
+                allowed_tools=ALLOWED_TOOLS, max_turns=80, read_only=True,
+                timeout=PER_TOPIC_TIMEOUT_S, env=env,
             )
             results.append({
                 "job_id": entry.get("job_id"),
                 "idempotency_key": entry.get("idempotency_key"),
+                "provider": provider,
                 "model": model,
-                "exit": proc.returncode,
-                "stdout_tail": proc.stdout[-800:],
-                "stderr_tail": proc.stderr[-400:],
+                "exit": res.exit,
+                "stdout_tail": res.stdout[-800:],
+                "stderr_tail": res.stderr[-400:],
             })
         except Exception as ex:  # noqa: BLE001 — one topic failing must not abort the rest
             results.append({
                 "job_id": entry.get("job_id"),
                 "idempotency_key": entry.get("idempotency_key"),
+                "provider": provider,
                 "model": model,
                 "error": repr(ex),
             })

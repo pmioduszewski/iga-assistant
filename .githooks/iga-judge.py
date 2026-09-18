@@ -28,6 +28,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 
@@ -37,6 +38,12 @@ payload = sys.stdin.read()
 
 _VERDICT = re.compile(rb"(?im)^\s*(OK|BLOCK)\b.*$")
 
+# Run every backend from an empty directory. An agent CLI started inside the
+# repo loads that project's instruction files and memory, and the judge then
+# reasons about the session around it instead of the payload in front of it
+# (verdicts that cite files outside the diff, or contradict themselves).
+NEUTRAL_CWD = tempfile.mkdtemp(prefix="iga-judge-")
+
 
 def run_capped(cmd, env=None, stdin_data=None):
     """Run cmd in its own session. Return stdout once a verdict line appears, or
@@ -45,6 +52,7 @@ def run_capped(cmd, env=None, stdin_data=None):
         proc = subprocess.Popen(
             cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL, env=env, start_new_session=True,
+            cwd=NEUTRAL_CWD,
         )
     except FileNotFoundError:
         return ""
@@ -128,4 +136,5 @@ if shutil.which("claude"):
         print(v)
         sys.exit(0)
 
+shutil.rmtree(NEUTRAL_CWD, ignore_errors=True)
 # No verdict → empty stdout → caller fails closed.

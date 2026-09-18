@@ -79,3 +79,21 @@ numbered `bash -x` FIRST, before touching the model/CLI.**
 - A pre-commit privacy hook judging from inside a Claude Code session is awkward
   (nested CLI quirks). If reliability ever regresses, consider moving the judge
   out-of-band, or a pre-commit framework.
+
+## Three judge blind spots fixed (2026-09-18)
+1. **New branches were never really judged.** `pre-push` diffed a new branch
+   against the empty tree, so the payload was the whole repo (megabytes) and the
+   judge, which reads a bounded prefix, never reached the actual change. It now
+   diffs against the merge-base with the remote default branch. The
+   "only the first N bytes are judged" warning on an ordinary push means this
+   regressed.
+2. **The prompt had no rule for "describes one user's setup".** It listed PII
+   categories and exempted documentation, so a doc line that inventoried one
+   person's tools and data files passed. There is now an explicit rule, and docs
+   are not exempt from it. Control test on the same payload: old prompt gave
+   OK once and BLOCK once (for an unrelated reason), new prompt gave BLOCK twice
+   for the right reason. Small sample; the judge is still a model.
+3. **The judge ran inside the repo.** An agent CLI started there loads the
+   project's instruction files and memory, which produced verdicts that cited
+   files outside the diff or contradicted themselves. Backends now run from an
+   empty temp directory.

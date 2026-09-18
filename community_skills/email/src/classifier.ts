@@ -1,10 +1,11 @@
 /**
- * LLM classifier — batched Sonnet 4.6 calls via `claude -p` (headless mode).
+ * LLM classifier: batched cheap-tier calls through a swappable backend.
  *
- * Why headless `claude -p` instead of direct API: the user is on a Claude MAX
- * subscription, so `claude -p` calls hit his subscription quota with zero
- * per-call billing. The API key path is a v2 problem when this engine is
- * orchestrated by the Anthropic Agent SDK runtime.
+ * Backend is chosen by IGA_PROVIDER (see iga_llm/README.md). The default,
+ * `claude-cli`, spawns headless `claude -p` directly, exactly as before. Any
+ * other provider (codex-cli, anthropic, openai, ollama) goes through the
+ * shared `python3 -m iga_llm` entry point, so this file never learns about
+ * vendors.
  *
  * Constraints:
  *   - batch 10-20 messages per call
@@ -16,13 +17,17 @@
  */
 
 import { spawn } from "node:child_process";
+import { dirname, resolve as resolvePath } from "node:path";
+import { fileURLToPath } from "node:url";
 import { ClassificationArraySchema, type Classification, type GmailMessage, type TaxonomyConfig, type ThinkingLevel } from "./types.js";
 
 const ROUGH_CHARS_PER_TOKEN = 4;
 const MAX_INPUT_TOKENS_PER_CALL = 3000;
 const MAX_INPUT_CHARS = MAX_INPUT_TOKENS_PER_CALL * ROUGH_CHARS_PER_TOKEN;
 
-export const DEFAULT_MODEL = "claude-sonnet-4-6";
+/** claude-cli alias, not a versioned id, so it does not rot on model rotation. */
+export const DEFAULT_MODEL = "sonnet";
+export const DEFAULT_PROVIDER = "claude-cli";
 
 const THINKING_BUDGETS: Record<Exclude<ThinkingLevel, "off">, number> = {
   low: 2000,
@@ -44,8 +49,22 @@ export interface ClassifyOptions {
   thinking?: ThinkingLevel;
 }
 
+export function resolveProvider(): string {
+  return (process.env.IGA_PROVIDER ?? "").trim() || DEFAULT_PROVIDER;
+}
+
+/** Explicit model override, if any. Undefined means "let the tier map decide". */
+export function modelOverride(opt?: string): string | undefined {
+  return opt ?? process.env.IGA_MODEL ?? process.env.IGA_MODEL_CHEAP ?? undefined;
+}
+
 export function resolveModel(opt?: string): string {
-  return opt ?? process.env.IGA_MODEL ?? DEFAULT_MODEL;
+  return modelOverride(opt) ?? DEFAULT_MODEL;
+}
+
+/** Repo root (holds the `iga_llm` package): src|dist -> email -> *skills -> root. */
+export function igaLlmRoot(): string {
+  return process.env.IGA_LLM_ROOT ?? resolvePath(dirname(fileURLToPath(import.meta.url)), "../../..");
 }
 
 export function resolveThinking(opt?: ThinkingLevel): ThinkingLevel {
@@ -205,21 +224,16 @@ export function tryParseClassifications(raw: string): Classification[] | null {
   }
 }
 
-async function invokeClaudeOnce(prompt: string, opts: ClassifyOptions): Promise<string> {
-  const bin = opts.claudeBin ?? "claude";
-  const timeoutMs = opts.timeoutMs ?? 60_000;
-  const model = resolveModel(opts.model);
-  const thinking = resolveThinking(opts.thinking);
-  const budget = thinkingBudget(thinking);
-  const args = ["-p", "--model", model, "--output-format", "text"];
-  if (budget !== null) args.push("--max-thinking-tokens", String(budget));
-  return await new Promise<string>((resolve, reject) => {
-    const proc = spawn(bin, args, { stdio: ["pipe", "pipe", "pipe"] });
+function spawnWithStdin(
+  bin: string, args: string[], prompt: string, timeoutMs: number, label: string, cwd?: string,
+): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const proc = spawn(bin, args, { stdio: ["pipe", "pipe", "pipe"], cwd });
     let stdout = "";
     let stderr = "";
     const timer = setTimeout(() => {
       proc.kill("SIGKILL");
-      reject(new Error(`claude -p timed out after ${timeoutMs}ms`));
+      reject(new Error(`${label} timed out after ${timeoutMs}ms`));
     }, timeoutMs);
     proc.stdout.on("data", (d) => { stdout += d.toString(); });
     proc.stderr.on("data", (d) => { stderr += d.toString(); });
@@ -228,7 +242,7 @@ async function invokeClaudeOnce(prompt: string, opts: ClassifyOptions): Promise<
       clearTimeout(timer);
       if (code !== 0) {
         const tail = stderr.trim().slice(-500) || "(empty stderr)";
-        reject(new Error(`claude -p exited ${code}: ${tail}`));
+        reject(new Error(`${label} exited ${code}: ${tail}`));
       } else {
         resolve(stdout);
       }
@@ -236,6 +250,28 @@ async function invokeClaudeOnce(prompt: string, opts: ClassifyOptions): Promise<
     proc.stdin.write(prompt);
     proc.stdin.end();
   });
+}
+
+/** Build the spawn for the active provider. Exported for tests. */
+export function buildInvocation(opts: ClassifyOptions): { bin: string; args: string[]; label: string; cwd?: string } {
+  const timeoutMs = opts.timeoutMs ?? 60_000;
+  if (resolveProvider() === DEFAULT_PROVIDER) {
+    const budget = thinkingBudget(resolveThinking(opts.thinking));
+    const args = ["-p", "--model", resolveModel(opts.model), "--output-format", "text"];
+    if (budget !== null) args.push("--max-thinking-tokens", String(budget));
+    return { bin: opts.claudeBin ?? "claude", args, label: "claude -p" };
+  }
+  const args = ["-m", "iga_llm", "--tier", "cheap", "--timeout", String(Math.ceil(timeoutMs / 1000))];
+  const model = modelOverride(opts.model);
+  if (model) args.push("--model", model);
+  return { bin: process.env.IGA_PYTHON ?? "python3", args, label: "iga_llm", cwd: igaLlmRoot() };
+}
+
+async function invokeClaudeOnce(prompt: string, opts: ClassifyOptions): Promise<string> {
+  const { bin, args, label, cwd } = buildInvocation(opts);
+  const timeoutMs = opts.timeoutMs ?? 60_000;
+  // iga_llm enforces the timeout itself; a small grace lets its error message win.
+  return await spawnWithStdin(bin, args, prompt, cwd ? timeoutMs + 2_000 : timeoutMs, label, cwd);
 }
 
 async function invokeClaude(prompt: string, opts: ClassifyOptions): Promise<string> {

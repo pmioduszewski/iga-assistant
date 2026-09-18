@@ -293,13 +293,35 @@ def eval_condition(condition: str | None, ns: dict[str, str]) -> bool:
 # --------------------------------------------------------------------------- #
 # budget extraction
 # --------------------------------------------------------------------------- #
-_DEFAULT_MODEL = "claude-opus-4-7[1m]"
+_FALLBACK_MODEL = "opus"  # only when the iga_llm package is not importable
 _DEFAULT_EST_TOKENS = 200_000
+
+
+def _default_model() -> str:
+    """Smart-tier model of the configured provider (``IGA_PROVIDER``).
+
+    No vendor model id lives here: the tier map in ``iga_llm`` is the single
+    source. The pack can be installed without the repo-level package, so a
+    missing import degrades to a plain alias instead of failing the tick.
+    """
+    try:
+        import sys
+        from pathlib import Path
+
+        root = str(Path(__file__).resolve().parents[3])
+        if root not in sys.path:
+            sys.path.append(root)  # append: never shadow the engine's flat imports
+        from iga_llm import resolve
+
+        provider, model = resolve("smart")
+        return model or f"{provider}:default"
+    except Exception:  # noqa: BLE001, a budget label must never abort a scan
+        return _FALLBACK_MODEL
 
 
 def _budget_model(job: Job) -> str:
     m = job.budget.get("model")
-    return str(m) if m else _DEFAULT_MODEL
+    return str(m) if m else _default_model()
 
 
 def _budget_est_tokens(job: Job) -> int:

@@ -899,7 +899,7 @@ enum ContractGuard {
     // (skills/iga-proactive-research/engine/iga-research-dispatch) on a daily
     // cadence. The wrapper runs the engine scan (atomic ledger claim + governor
     // gate + dedup) then dispatches each governor-approved WORKER_REQUEST via
-    // headless `claude -p` (MAX subscription), which files the research drawer
+    // a headless agent (default `claude -p`), which files the research drawer
     // via the IgaMemory MCP. ZERO research logic in Swift — the app only
     // TRIGGERS; the engine + wrapper decide everything. This keeps proactive
     // research OUT of the interactive `/gm` session.

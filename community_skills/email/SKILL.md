@@ -176,7 +176,7 @@ Safety defaults: `triage.dryRun = true`. Destructive ops require `confirm: true`
 - `skills/newsletter-research/SKILL.md` — consumes Newsletter-labeled mail
 - `rules/email/{accounts,taxonomy}.md` — runtime config
 - MemPalace `projects/iga` — ship memos
-- Todoist Iga project (`6gc9wc4gHMV5R3fc`) — engine tasks tracked here
+- Your task tracker's Iga project: engine tasks tracked there
 
 ## Composability self-check (per create-iga-skill checklist)
 

@@ -68,7 +68,15 @@ else
   say "venv already present: $VENV"
 fi
 say "Installing iga_mcp (editable) + mcp into the venv"
-run "'$VENV/bin/pip' -q install -e '$REPO_ROOT/iga_mcp'"
+# A venv made by `uv venv` ships without pip, so `bin/pip` is not a given.
+# Use whichever installer this venv can actually run; bootstrap pip last.
+if "$PY" -m pip --version >/dev/null 2>&1; then
+  run "'$PY' -m pip -q install -e '$REPO_ROOT/iga_mcp'"
+elif command -v uv >/dev/null 2>&1; then
+  run "uv pip install -q --python '$PY' -e '$REPO_ROOT/iga_mcp'"
+else
+  run "'$PY' -m ensurepip -q && '$PY' -m pip -q install -e '$REPO_ROOT/iga_mcp'"
+fi
 
 BIN="$VENV/bin/iga-mcp"
 if [ "$DRY" = 0 ] && [ ! -x "$BIN" ]; then

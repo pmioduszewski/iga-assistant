@@ -1,6 +1,6 @@
 # iga-assistant
 
-A personal AI assistant that runs **inside [Claude Code](https://claude.com/claude-code)** — not a standalone app. Iga is a composable substrate of **skills**, **rules**, and a persistent memory palace (**MemPalace**) that turns Claude Code into a life/projects orchestrator with real recall.
+A personal AI assistant that runs **inside an agent harness you already have**, not a standalone app: [Claude Code](https://claude.com/claude-code) (the reference harness) or [Codex CLI](https://github.com/openai/codex) (newer, see [Harness support](#harness-support)). Iga is a composable substrate of **skills**, **rules**, and a persistent memory palace (**MemPalace**) that turns that harness into a life/projects orchestrator with real recall.
 
 > Status: **early, single-maintainer, pre-1.0.** Public so the architecture and the `iga-assistant` namespace are out in the open. Expect sharp edges; APIs and pack layouts can still move.
 
@@ -17,7 +17,7 @@ Most "personal AI" projects ship a monolithic desktop app. Iga is the opposite b
 - **MemPalace** — the memory layer: AAAK diary, knowledge graph, semantic recall. Iga without it is just a chatbot.
 - **Composability contract** — `community_*` (upstream, MIT) → installed copy (provenance-stamped) → `*.local.md` (yours, gitignored). `/iga update` does a three-way merge so you can pull upstream improvements without losing personalizations.
 
-See [`CLAUDE.md`](CLAUDE.md) for the full operating contract and [`iga_memory_protocol.md`](iga_memory_protocol.md) for the memory model.
+See [`CLAUDE.md`](CLAUDE.md) (also published as `AGENTS.md`, the same file, so Codex reads it too) for the full operating contract and [`iga_memory_protocol.md`](iga_memory_protocol.md) for the memory model.
 
 ## Prerequisites — scoped by what you actually use
 
@@ -26,13 +26,14 @@ The stack is polyglot **by domain fit**, not accident. You only need the row for
 | You want… | Need | Notes |
 |---|---|---|
 | Core assistant + skill engines | **`python3` ≥ 3.11** only | Engines are **stdlib-only, zero pip deps** — runs anywhere with system Python |
-| Claude Code itself | [Claude Code](https://claude.com/claude-code) CLI | The host harness; everything runs through it |
+| A host harness | [Claude Code](https://claude.com/claude-code) CLI **or** [Codex CLI](https://github.com/openai/codex) | Conversational Iga runs inside one of them. Claude Code is the reference; see [Harness support](#harness-support) for what Codex lacks today |
+| The `iga` MCP server (habit, mood, ask tools) | `python3` with `pip` **or** [`uv`](https://docs.astral.sh/uv/) | `scripts/setup-iga-mcp.sh` creates the venv and installs with `pip`, or with `uv` when the venv has none |
 | MemPalace | the bundled `mempalace` venv | Set up once; see `iga_memory_protocol.md` |
 | MCP integrations (Todoist, Calendar, Gmail, …) | **Node.js** ≥ 20 | Only the MCP servers that need it; configured per `.mcp.json` |
 | The macOS menu-bar widget app | **macOS 14+ & Swift 6 / Xcode CLT** | Optional, Mac-only; **not** required for the core assistant |
 | Contributing / secret-scanning hooks | [`ggshield`](https://github.com/GitGuardian/ggshield) | `brew install ggshield`; see below |
 
-**Minimum to try it:** Claude Code + `python3`. Everything else is additive.
+**Minimum to try it:** Claude Code or Codex CLI, plus `python3`. Everything else is additive.
 
 ## Quick start
 
@@ -44,15 +45,21 @@ cd iga-assistant
 git config core.hooksPath .githooks
 brew install ggshield        # or your platform's package manager
 
-# 2. Open Claude Code in this directory
-claude
+# 2. One-time wiring. Idempotent, asks before each step, supports --dry-run.
+#    Builds the iga MCP venv and registers `iga` (+ `IgaMemory` if present) with
+#    every harness it finds: Claude Code, Codex CLI, VS Code, Cursor.
+#    For Codex it also links the admin commands as the `iga` skill.
+scripts/setup-iga-mcp.sh
 
-# 3. In-session, check health and see what's installed
-/iga status
-/iga rules
+# 3. Open your harness in this directory (start a NEW session after step 2)
+claude        # or: codex
+
+# 4. In-session, check health and see what's installed
+/iga status   # Claude Code
+$iga status   # Codex (skills use the $ prefix there; /iga will not autocomplete)
 ```
 
-Install a community pack:
+Install a community pack (same commands under `$iga` in Codex):
 
 ```
 /iga install <pack>      # rule pack or skill bundle, shows contents first
@@ -60,19 +67,38 @@ Install a community pack:
 /iga update <pack>       # three-way merge, preserves your *.local.md
 ```
 
+## Harness support
+
+Honest state, per capability. "Unverified" means it runs but no eval has checked the behaviour on that model yet.
+
+| Capability | Claude Code | Codex CLI |
+|---|---|---|
+| Identity + operating contract | `CLAUDE.md` | `AGENTS.md` (same file) |
+| MemPalace + `iga` MCP tools | yes | yes, via `scripts/setup-iga-mcp.sh` |
+| Admin commands | `/iga …` | `$iga …` (skill, same source of truth) |
+| Assistant behaviour quality | covered by `evals/` | unverified |
+| Personal overrides (`CLAUDE.local.md`) | auto-loaded | not loaded yet |
+| Prompt hooks (time injection, recall nudges) | yes | not ported yet |
+| `iga_ask` (persistent session tool) | yes | runs, but drives a Claude session underneath |
+| Headless engines (email triage, research, proactive) | `IGA_PROVIDER=claude-cli` (default) | `IGA_PROVIDER=codex-cli` |
+
+The headless engines go through [`iga_llm/`](iga_llm/README.md), a small provider entry point. `claude-cli` and `codex-cli` are the supported backends; `anthropic`, `openai` and `ollama` exist but are experimental (mock-tested only).
+
 ## Security & privacy
 
 - **No secrets in the tree.** Credentials live in `~/.config/<svc>`, env vars, and the gitignored state dir (`$IGA_HOME/state`, default `~/Iga/state`). The repo ships **synthetic data only**.
 - `.githooks/{pre-commit,pre-push}` run `ggshield` (same engine as the server-side GitGuardian check) **before** a commit object exists. Triaged false positives are documented per-entry in `.gitguardian.yaml` — the scanner is never disabled.
 - `*.local.md` (personal rule overrides) and `state/` are gitignored and never published upstream.
+- `.githooks/iga-guard.sh` adds an LLM privacy judge on every commit and push (personal data, not only secrets), and CI re-checks the agent-session-link rule server-side. `scripts/setup-iga-mcp.sh` turns the hooks on for you.
 
 ## Roadmap (honest — these are *intentions*, not shipped)
 
-- **Harness-agnostic / more headless.** Today conversational Iga is coupled to Claude Code. Anthropic's 2026-06-15 billing split makes programmatic `claude -p`/Agent-SDK paths metered, which is hostile to autonomous OSS use. The plan: a small **provider-abstraction entry point** over the headless paths so backends are swappable (Claude API, **Codex / GPT**, **Gemini**, local). Conversational use stays on whatever harness is cheapest. *Status: entry point built ([`iga_llm/`](iga_llm/README.md): `claude-cli`, `codex-cli`, `anthropic`, `openai`, `ollama`; select with `IGA_PROVIDER`). The email classifier, the research dispatcher and the proactive runtime go through it. `scripts/setup-iga-mcp.sh` now also registers the MCP servers with Codex CLI and links the admin commands there as the `iga` skill. Still Claude Code only: the `iga` MCP session server (it drives `claude --resume`) and the prompt hooks.*
+- **Codex parity.** Shipped so far: the `iga_llm` provider entry point, Codex MCP registration and the `$iga` skill (see [Harness support](#harness-support)). Still to do, in order: port the prompt hooks to Codex's native hooks, load personal overrides there, move the `iga` MCP session server off `claude --resume`, and run the evals on a second provider.
+- **More headless.** Anthropic's 2026-06-15 billing split makes programmatic `claude -p` and Agent SDK paths metered, which is hostile to autonomous OSS use. Keeping every headless path behind `iga_llm` is what lets a user pick the cheapest backend they already pay for.
 
 ## How it compares
 
-It does **not** try to be a 118-integration desktop app. If you want a self-contained Tauri assistant, projects like [openhuman](https://github.com/tinyhumansai/openhuman) are further along on that path. Iga's bet is different: **Claude Code-native composability** (install/fork/update skill & rule packs), **MemPalace recall quality**, and **contract-guarded native widgets**. Different shape, deliberately.
+It does **not** try to be a 118-integration desktop app. If you want a self-contained Tauri assistant, projects like [openhuman](https://github.com/tinyhumansai/openhuman) are further along on that path. Iga's bet is different: **harness-native composability** (install/fork/update skill & rule packs inside Claude Code or Codex), **MemPalace recall quality**, and **contract-guarded native widgets**. Different shape, deliberately.
 
 ## License
 

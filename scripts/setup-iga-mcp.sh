@@ -119,7 +119,8 @@ reg_claude iga "'$BIN'"
 [ -n "$MEM_BIN" ] && reg_claude IgaMemory "'$MEM_BIN' -- --palace '$MEM_PALACE'"
 
 # --- 2b. Codex CLI (user scope): same two servers, plus the `iga` skill ------
-# Codex has no `/iga` slash command, so the admin commands ship as a skill.
+# Codex has no slash command files, so the admin commands ship as a skill
+# (`/iga` in the Codex desktop app, `$iga` in Codex CLI).
 # Both .agents/ and .codex/ are gitignored here (they hold machine config), so
 # the tracked source lives in scripts/codex/ and is symlinked in: repo scope
 # only, and `git pull` keeps it current.
@@ -149,7 +150,7 @@ link_codex_skill() {
   ask "Link the 'iga' admin skill into this clone for Codex (.agents/skills/iga)?" \
     || { say "Codex: 'iga' skill skipped"; return 0; }
   run "mkdir -p '$REPO_ROOT/.agents/skills' && ln -s '$src' '$dst'"
-  say "Codex: 'iga' skill linked (in Codex, run from this clone: \$iga status)"
+  say "Codex: 'iga' skill linked (new Codex session in this clone: /iga status in the app, \$iga status in the CLI)"
 }
 reg_codex iga "'$BIN'"
 [ -n "$MEM_BIN" ] && reg_codex IgaMemory "'$MEM_BIN' --palace '$MEM_PALACE'"

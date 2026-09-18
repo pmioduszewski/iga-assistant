@@ -49,7 +49,8 @@ Creates the venv, editable-installs the package, registers `iga` with
 Claude Code at **user scope**, **also registers `IgaMemory`** (MemPalace)
 if found under `$IGA_HOME`, does the same for **Codex CLI** when `codex` is
 on PATH (`codex mcp add`, plus the `iga` admin skill linked into this clone's
-`.agents/skills`, so `$iga status` works there), and **detects VS Code /
+`.agents/skills`, so `/iga status` works in the Codex desktop app and
+`$iga status` in the CLI), and **detects VS Code /
 Cursor** and offers
 user-level entries (asks first; merge-only; `IgaMemory` is opt-in per
 coding client — it's your personal memory). Re-runnable. Flags:

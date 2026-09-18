@@ -56,10 +56,11 @@ claude        # or: codex
 
 # 4. In-session, check health and see what's installed
 /iga status   # Claude Code
-$iga status   # Codex (skills use the $ prefix there; /iga will not autocomplete)
+/iga status   # Codex desktop app (skills show up in the / menu)
+$iga status   # Codex CLI (skills use the $ prefix there)
 ```
 
-Install a community pack (same commands under `$iga` in Codex):
+Install a community pack (same commands in Codex, as `/iga` in the desktop app or `$iga` in the CLI):
 
 ```
 /iga install <pack>      # rule pack or skill bundle, shows contents first
@@ -75,7 +76,7 @@ Honest state, per capability. "Unverified" means it runs but no eval has checked
 |---|---|---|
 | Identity + operating contract | `CLAUDE.md` | `AGENTS.md` (same file) |
 | MemPalace + `iga` MCP tools | yes | yes, via `scripts/setup-iga-mcp.sh` |
-| Admin commands | `/iga …` | `$iga …` (skill, same source of truth) |
+| Admin commands | `/iga …` | `/iga …` in the desktop app, `$iga …` in the CLI (skill, same source of truth) |
 | Assistant behaviour quality | covered by `evals/` | unverified |
 | Personal overrides (`CLAUDE.local.md`) | auto-loaded | not loaded yet |
 | Prompt hooks (time injection, recall nudges) | yes | not ported yet |

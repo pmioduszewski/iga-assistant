@@ -121,12 +121,20 @@ export function sameAccount(a: string, b: string): boolean {
   return normalizeEmailForCompare(a) === normalizeEmailForCompare(b);
 }
 
-/** Which OAuth client + scopes a run uses. An explicit secrets file always wins. */
+/** Needed to learn WHICH account signed in. Without them Google sends no id_token. */
+const IDENTITY_SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email"];
+
+/**
+ * Which OAuth client + scopes a run uses. An explicit secrets file always wins.
+ * The identity scopes are always added: a credential file written by an older
+ * version may not list them, and the account check must never be skipped quietly.
+ */
 export function resolveClient(
   existing: Pick<GoogleAuthorizedUser, "client_id" | "client_secret" | "scopes"> | undefined,
   fromFile: ClientSecrets | undefined,
 ): { clientId: string; clientSecret: string; scopes: string[] } | undefined {
-  const scopes = existing?.scopes && existing.scopes.length ? existing.scopes : DEFAULT_SCOPES;
+  const base = existing?.scopes && existing.scopes.length ? existing.scopes : DEFAULT_SCOPES;
+  const scopes = [...new Set([...base, ...IDENTITY_SCOPES])];
   if (fromFile) return { clientId: fromFile.client_id, clientSecret: fromFile.client_secret, scopes };
   if (existing) return { clientId: existing.client_id, clientSecret: existing.client_secret, scopes };
   return undefined;
@@ -173,16 +181,18 @@ export async function runAuthFlow(email: string, opts: AuthFlowOptions = {}): Pr
 
   const refresh_token = await new Promise<string>((resolve, reject) => {
     let oauth: OAuth2Client | undefined;
+    let handled = false; // the code is single-use: only the first callback is processed
 
     const server = http.createServer((req, res) => {
       const reqUrl = new URL(req.url ?? "/", "http://127.0.0.1");
       const err = reqUrl.searchParams.get("error");
       const gotCode = reqUrl.searchParams.get("code");
-      if (!err && !gotCode) {
-        res.writeHead(204); // favicon / stray hit — keep waiting
+      if ((!err && !gotCode) || handled) {
+        res.writeHead(204); // favicon, stray hit, or a repeat of the callback
         res.end();
         return;
       }
+      handled = true;
       const finish = (status: number, body: string) => {
         res.writeHead(status, { "content-type": "text/html; charset=utf-8" });
         res.end(`<body style="font-family:system-ui;max-width:34rem;margin:4rem auto">${body}</body>`);
@@ -219,6 +229,18 @@ export async function runAuthFlow(email: string, opts: AuthFlowOptions = {}): Pr
         if (tokens.id_token) {
           const ticket = await oauth.verifyIdToken({ idToken: tokens.id_token, audience: clientId });
           signedIn = ticket.getPayload()?.email;
+        }
+        if (!signedIn && !opts.allowAccountMismatch) {
+          fail(
+            409,
+            `<h2>Could not confirm the account</h2><p>Google did not say which account signed in, ` +
+              `so nothing was saved. See the terminal.</p>`,
+            new Error(
+              `Could not confirm which Google account signed in (no id_token), so nothing was saved for ${email}. ` +
+                `Retry; if it keeps happening pass --allow-account-mismatch to skip this check.`,
+            ),
+          );
+          return;
         }
         if (signedIn && !sameAccount(signedIn, email) && !opts.allowAccountMismatch) {
           fail(

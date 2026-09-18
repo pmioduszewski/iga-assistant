@@ -26,16 +26,17 @@ test("sameAccount: a different account is rejected", () => {
 
 const stored = { client_id: "old-id", client_secret: "old-secret", scopes: ["scope-a"] };
 const file = { client_id: "new-id", client_secret: "new-secret" };
+const IDENTITY = ["openid", "https://www.googleapis.com/auth/userinfo.email"];
 
 test("resolveClient: plain re-auth reuses the stored client and scopes", () => {
   assert.deepEqual(resolveClient(stored, undefined), {
-    clientId: "old-id", clientSecret: "old-secret", scopes: ["scope-a"],
+    clientId: "old-id", clientSecret: "old-secret", scopes: ["scope-a", ...IDENTITY],
   });
 });
 
 test("resolveClient: a client secrets file wins over the stored client, scopes are kept", () => {
   assert.deepEqual(resolveClient(stored, file), {
-    clientId: "new-id", clientSecret: "new-secret", scopes: ["scope-a"],
+    clientId: "new-id", clientSecret: "new-secret", scopes: ["scope-a", ...IDENTITY],
   });
 });
 
@@ -47,4 +48,9 @@ test("resolveClient: new account takes the file and the default scopes", () => {
 
 test("resolveClient: nothing to go on", () => {
   assert.equal(resolveClient(undefined, undefined), undefined);
+});
+
+test("resolveClient: identity scopes are added once, never duplicated", () => {
+  const r = resolveClient({ ...stored, scopes: ["openid", "scope-a"] }, undefined);
+  assert.deepEqual(r?.scopes, ["openid", "scope-a", "https://www.googleapis.com/auth/userinfo.email"]);
 });

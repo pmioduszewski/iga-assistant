@@ -487,12 +487,19 @@ const TRIAGE_FLAG_TOKENS = new Set([
 const AUTH_HELP = `iga-mail auth — (re)authorize Google accounts via loopback OAuth
 
 Usage:
-  iga-mail auth --account <email>            re-auth one account (reuses its client_id/secret/scopes)
+  iga-mail auth --account <email>            re-auth one account (reuses its stored OAuth client)
   iga-mail auth --all                        re-auth every account with a credential file
   iga-mail auth --account <email> --client-secrets <path.json>
-                                             authorize a NEW account from a Google client secrets file
+                                             authorize a NEW account, or move an existing one to
+                                             a different OAuth client (the file wins over the stored client)
+
+Options:
+  --no-browser               only print the URL; paste it into the browser profile you want
+  --allow-account-mismatch   save the token even if a different address signed in (aliases only)
 
 Notes:
+  - One account at a time. If a different Google account signs in than the one asked for,
+    nothing is saved and the browser page says which account to pick.
   - Opens your browser for Google consent; writes ~/.local/share/iga-email/credentials/<slug>.json (mode 0600)
   - Use this when triage fails with "invalid_grant" (tokens revoked by a password change / sign-out)
   - After it finishes, restart the iga-email MCP (/mcp) so the server reloads the new tokens
@@ -508,6 +515,8 @@ async function cmdAuth(args: string[]): Promise<void> {
     return i >= 0 ? args[i + 1] : undefined;
   };
   const clientSecretsPath = getOpt("--client-secrets");
+  const openBrowser = !args.includes("--no-browser");
+  const allowAccountMismatch = args.includes("--allow-account-mismatch");
 
   let emails: string[];
   if (args.includes("--all")) {
@@ -525,9 +534,13 @@ async function cmdAuth(args: string[]): Promise<void> {
     emails = [account];
   }
 
-  for (const email of emails) {
-    process.stderr.write(`\n=== ${email} ===\n`);
-    await runAuthFlow(email, { clientSecretsPath });
+  for (const [i, email] of emails.entries()) {
+    await runAuthFlow(email, {
+      clientSecretsPath,
+      openBrowser,
+      allowAccountMismatch,
+      position: emails.length > 1 ? { index: i + 1, total: emails.length } : undefined,
+    });
   }
   process.stderr.write(
     `\nDone. Re-authorized ${emails.length} account(s). Restart the iga-email MCP (/mcp) to load the new tokens.\n`,

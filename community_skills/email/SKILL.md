@@ -165,6 +165,38 @@ Safety defaults: `triage.dryRun = true`. Destructive ops require `confirm: true`
 4. On confirm: same call with `dryRun: false`
 5. Reports labels applied + any `missingLabels` (suggests `labels_ensure` if any)
 
+## Connecting or re-connecting a Gmail account
+
+Use this whenever an account is new, triage fails with `invalid_grant`, or the
+user moves to a different OAuth client. The person in front of you may not be
+technical and may have several Google accounts spread across browser profiles,
+so the flow is ONE account at a time and you ask before each one. Never run
+`auth --all` on someone's behalf: it gives them no chance to get the right
+browser profile in front.
+
+For each account, in order:
+
+1. **Ask first.** Use the harness's question tool if it has one (Claude Code:
+   `AskUserQuestion`), otherwise a plain yes/no question:
+   "Ready to connect `<email>`? Bring the browser window where that account is
+   signed in to the front first." Options: Yes / Skip this one / Stop.
+2. **Warn about Google's screen** before the browser opens, in one sentence:
+   "Google will say it hasn't verified this app. That is expected for a
+   self-hosted app. Click Advanced, then Go to the app, then Allow."
+3. **Run exactly one account:** `iga-mail auth --account <email>`. Add
+   `--client-secrets <file>` for a new account or a new OAuth client. Add
+   `--no-browser` and hand over the printed URL if they want to paste it into a
+   specific browser profile.
+4. **Read the result and say it plainly.** Success: "`<email>` is connected."
+   Wrong account: the command saves nothing and names both addresses; tell them
+   which account to pick and offer to retry the same one. Do not move on to the
+   next account until this one is connected or skipped.
+5. After the last account, reload the email MCP server so it picks up the new
+   tokens, then confirm with a harmless read such as listing labels.
+
+Never open, print or paste the contents of a client secrets file or a
+credential file. Refer to them by path only.
+
 ## Open questions
 
 - Hook auto-trigger remains manual (`--run-hooks` flag). Auto-fire on classifier output is a v3 concern (needs guardrails).

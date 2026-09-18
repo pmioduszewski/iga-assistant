@@ -1,0 +1,10 @@
+# GitHub Pages site for the three links Google's OAuth consent screen asks for
+# (home page, privacy policy, terms). Only those pages are published; the rest
+# of docs/ is working material and stays out of the site.
+title: Iga
+description: A personal AI assistant you run yourself.
+theme: minima
+exclude:
+  - designs
+  - superpowers
+  - state-storage-convention.md

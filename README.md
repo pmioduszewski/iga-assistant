@@ -79,7 +79,7 @@ Honest state, per capability. "Unverified" means it runs but no eval has checked
 | Admin commands | `/iga …` | `/iga …` in the desktop app, `$iga …` in the CLI (skill, same source of truth) |
 | Assistant behaviour quality | covered by `evals/` | unverified |
 | Personal overrides (`CLAUDE.local.md`) | auto-loaded | not loaded yet |
-| Prompt hooks (time injection, recall nudges) | yes | not ported yet |
+| Prompt hooks (time injection, recall nudges) | yes | time injection only: `scripts/setup-iga-mcp.sh` installs it, approve it once with `/hooks`; recall nudges not ported yet |
 | `iga_ask` (persistent session tool) | yes | runs, but drives a Claude session underneath |
 | Headless engines (email triage, research, proactive) | `IGA_PROVIDER=claude-cli` (default) | `IGA_PROVIDER=codex-cli` |
 
@@ -94,7 +94,7 @@ The headless engines go through [`iga_llm/`](iga_llm/README.md), a small provide
 
 ## Roadmap (honest — these are *intentions*, not shipped)
 
-- **Codex parity.** Shipped so far: the `iga_llm` provider entry point, Codex MCP registration and the `$iga` skill (see [Harness support](#harness-support)). Still to do, in order: port the prompt hooks to Codex's native hooks, load personal overrides there, move the `iga` MCP session server off `claude --resume`, and run the evals on a second provider.
+- **Codex parity.** Shipped so far: the `iga_llm` provider entry point, Codex MCP registration, the `iga` skill and the time hook (see [Harness support](#harness-support)). Still to do, in order: port the remaining prompt hooks (recall nudges) to Codex's native hooks, load personal overrides there, move the `iga` MCP session server off `claude --resume`, and run the evals on a second provider.
 - **More headless.** Anthropic's 2026-06-15 billing split makes programmatic `claude -p` and Agent SDK paths metered, which is hostile to autonomous OSS use. Keeping every headless path behind `iga_llm` is what lets a user pick the cheapest backend they already pay for.
 
 ## How it compares

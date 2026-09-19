@@ -30,7 +30,7 @@ use the Codex equivalent:
 |---|---|
 | `claude mcp list` | `codex mcp list` |
 | `AskUserQuestion` | ask the question in plain text, offer the 2 to 4 options, wait for the answer |
-| check `~/.claude/settings.json` for a `UserPromptSubmit` time hook | check `~/.codex/hooks.json`, `.codex/hooks.json`, and the `[hooks]` table of either `config.toml`, for a `UserPromptSubmit` hook whose command starts with `date`. A project-level hook only runs once the user has trusted it via `/hooks` |
+| check `~/.claude/settings.json` for a `UserPromptSubmit` time hook | check `~/.codex/hooks.json`, `.codex/hooks.json`, and the `[hooks]` table of either `config.toml`, for a `UserPromptSubmit` hook whose command runs `scripts/codex/hooks/time_context.py` (installed by `scripts/setup-iga-mcp.sh`) or starts with `date`. A project-level hook only runs once the user has trusted it via `/hooks`. `config.toml` can hold tokens: look only at its `[hooks]` table and never print other values from it |
 | `/model` | tell the user to check the model in their Codex session |
 | "restart Claude Code sessions" | restart the Codex session |
 

@@ -6,7 +6,8 @@
 # registers the server with whichever MCP clients you actually have:
 #   • Claude Code  (user scope, via `claude mcp add`)
 #   • Codex CLI    (user scope, via `codex mcp add`), plus the `iga` admin
-#                  skill linked into this clone's .agents/skills
+#                  skill linked into this clone's .agents/skills and a time
+#                  hook in this clone's .codex/hooks.json
 #   • VS Code      (user-level mcp.json — detected; you are asked first)
 #   • Cursor       (user-level mcp.json — detected; you are asked first)
 #
@@ -152,9 +153,41 @@ link_codex_skill() {
   run "mkdir -p '$REPO_ROOT/.agents/skills' && ln -s '$src' '$dst'"
   say "Codex: 'iga' skill linked (new Codex session in this clone: /iga status in the app, \$iga status in the CLI)"
 }
+# Time hook: Codex gives the model no wall clock. A UserPromptSubmit hook adds
+# the local time to every turn. Merge-only: adds ONLY this entry to the clone's
+# .codex/hooks.json and preserves whatever else is there. Codex runs a project
+# hook only after the user trusts it (/hooks in a Codex session).
+install_codex_time_hook() {
+  command -v codex >/dev/null 2>&1 || return 0
+  local src="$REPO_ROOT/scripts/codex/hooks/time_context.py" cfg="$REPO_ROOT/.codex/hooks.json"
+  [ -f "$src" ] || return 0
+  if [ -f "$cfg" ] && grep -q "time_context.py" "$cfg"; then
+    say "Codex: time hook already installed, skipping"; return 0
+  fi
+  ask "Install the time hook for Codex in this clone (.codex/hooks.json)?" \
+    || { say "Codex: time hook skipped"; return 0; }
+  if [ "$DRY" = 1 ]; then echo "  [dry-run] merge time hook -> $cfg"; return 0; fi
+  SRC="$src" CFG="$cfg" python3 - <<'PY'
+import json, os, pathlib, sys
+cfg = pathlib.Path(os.environ["CFG"]); src = os.environ["SRC"]
+cfg.parent.mkdir(parents=True, exist_ok=True)
+try:
+    data = json.loads(cfg.read_text()) if cfg.exists() and cfg.read_text().strip() else {}
+except Exception:
+    print(f"  ! {cfg} is not clean JSON, not touching it; add the hook manually"); raise SystemExit(0)
+py = "python" if sys.platform.startswith("win") else "python3"
+entry = {"hooks": [{"type": "command", "command": f'{py} "{src}"', "timeout": 5,
+                    "statusMessage": "Reading the clock"}]}
+data.setdefault("hooks", {}).setdefault("UserPromptSubmit", []).append(entry)
+cfg.write_text(json.dumps(data, indent=2) + "\n")
+print(f"  wrote time hook -> {cfg}")
+PY
+  say "Codex: time hook installed. Open a Codex session in this clone and approve it with /hooks"
+}
 reg_codex iga "'$BIN'"
 [ -n "$MEM_BIN" ] && reg_codex IgaMemory "'$MEM_BIN' --palace '$MEM_PALACE'"
 link_codex_skill
+install_codex_time_hook
 
 # --- 3. VS Code / Cursor (user-level mcp.json) -----------------------------
 # Merge-only writer: adds/updates ONLY the named server, preserves the rest.

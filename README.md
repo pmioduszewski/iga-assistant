@@ -82,6 +82,9 @@ Honest state, per capability. "Unverified" means it runs but no eval has checked
 | Prompt hooks (time injection, recall nudges) | yes | time injection only: `scripts/setup-iga-mcp.sh` installs it, approve it once with `/hooks`; recall nudges not ported yet |
 | `iga_ask` (persistent session tool) | yes | runs, but drives a Claude session underneath |
 | Headless engines (email triage, research, proactive) | `IGA_PROVIDER=claude-cli` (default) | `IGA_PROVIDER=codex-cli` |
+| Connected integrations (calendar, tasks, email) | whatever your harness has connected | same, but connectors injected by the Claude desktop app (Google Calendar, Todoist, …) are NOT available to Codex; add them as standalone MCP servers if you want them there |
+
+Because the connected set differs per harness, the daily briefings (`/gm`, `/back`, `/eod`) run a preflight: any required source that is not reachable this session is reported as a `⚠️ <source> unavailable` line and its section runs degraded, rather than being silently dropped or papered over with an invented routine.
 
 The headless engines go through [`iga_llm/`](iga_llm/README.md), a small provider entry point. `claude-cli` and `codex-cli` are the supported backends; `anthropic`, `openai` and `ollama` exist but are experimental (mock-tested only).
 

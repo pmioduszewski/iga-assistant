@@ -3,6 +3,25 @@
 Defines daily workflow commands accessible via `/iga <command>`.
 Add this to `rules/commands.md` after installing, or use as-is.
 
+## Output format (every daily briefing)
+
+`/gm`, `/back`, and `/eod` are eye-scanned in seconds, not read. Optimize the
+layout for a fast scan, and keep it consistent day to day so the reader learns
+where each thing lives.
+
+- One line per item. Keep the section order stable across runs. No blank lines
+  except a single one before the final `Next:` line.
+- No bold labels, no decorative link text, no restating the request.
+- Emojis are sparse scan anchors placed by judgment, NOT decoration. Put one on
+  a line that carries a distinct, high-signal beat (a top priority, a `⚠️`
+  degraded source, a genuine section pivot) so the eye can jump straight to it.
+  Do not put one on every line, and do not strip them entirely: if every line
+  has an emoji, none of them anchor anything, and that is the noise to avoid.
+  Most lines should have none.
+- Keep the header line (`📅 <Day>, <Month> <Date> · Good Morning`, or the
+  `/back` and `/eod` equivalents).
+- End with one `Next:` line: at most one action and at most one question.
+
 ## Preflight (every daily briefing)
 
 `/gm`, `/back`, and `/eod` each pull from several sources: MemPalace, the

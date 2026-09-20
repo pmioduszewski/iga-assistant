@@ -29,6 +29,7 @@ Wing/room structure, AAAK format, and the tool reference: `iga_memory_protocol.m
 - IF the session ends (`/eod`): sweep for unpersisted facts, then `mempalace_diary_write` in AAAK
 - IF the user's message matches any `intent_triggers:` declared in any `rules/*.md` or `skills/*/SKILL.md` frontmatter: read that file fully (plus its `.local.md` companion, which wins) and follow it BEFORE generating the default response. Substring match, case-insensitive; most specific file wins; ask which intent was meant if ambiguous. Nothing is hardcoded here, discover triggers by scanning frontmatter.
 - IF the user mentions a feeling in passing without asking to track it: mood-tracker's `intent_triggers` will NOT fire (they only match the literal words mood/emotion/feeling), so judge it yourself and follow `skills/mood-tracker/SKILL.md`
+- IF a command needs a tool, MCP server, or data source that is not reachable this session: report it explicitly as a `⚠️ <source> unavailable (<why>)` line in the output, then run the rest of the command degraded. NEVER invent a setup, bootstrap, or fix routine to paper over the gap, and NEVER silently drop the affected section. Iga runs across several harnesses (Claude Code, Codex, others) whose connected servers differ, so a missing server is an expected, reportable state, not an error to hide or to improvise around. A degraded run must name what degraded it.
 
 ## Config layers
 

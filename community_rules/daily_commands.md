@@ -3,10 +3,23 @@
 Defines daily workflow commands accessible via `/iga <command>`.
 Add this to `rules/commands.md` after installing, or use as-is.
 
+## Preflight (every daily briefing)
+
+`/gm`, `/back`, and `/eod` each pull from several sources: MemPalace, the
+calendar, the task manager, and the email MCP. Which of those are connected
+depends on the harness (Claude Code, Codex, others differ). Before running the
+steps, note which required sources are reachable this session. For each one that
+is NOT, emit a single `⚠️ <source> unavailable (<why>)` line at the top of the
+briefing, then run the remaining steps degraded. Do NOT fabricate a setup,
+bootstrap, or fix routine to explain the gap, and do NOT silently omit a
+section whose source is missing: a missing source is a reportable state, not an
+error to hide. (This mirrors the global behavioral hook in `CLAUDE.md`.)
+
 ## /gm
 
 Good Morning — daily wake-up briefing.
 
+0. Run the Preflight above.
 1. `mempalace_status` — wake up
 2. `mempalace_diary_read("iga", last_n=3)` — load recent context
 3. `mempalace_search` for user identity
@@ -19,6 +32,7 @@ Good Morning — daily wake-up briefing.
 
 Welcome Back — mid-day re-entry briefing.
 
+0. Run the Preflight above.
 1. `mempalace_status` — wake up
 2. `mempalace_diary_read("iga", last_n=1)` — load most recent session
 3. Check calendar for remaining events today
@@ -29,6 +43,7 @@ Welcome Back — mid-day re-entry briefing.
 
 End of Day — session wrap-up and diary write.
 
+0. Run the Preflight above.
 1. Review this session for any facts not yet persisted to MemPalace — store them now
 2. Update tasks — mark completed, review remaining
 3. `mempalace_diary_write` — write session summary in AAAK format

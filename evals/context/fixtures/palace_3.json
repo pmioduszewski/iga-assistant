@@ -1,0 +1,282 @@
+[
+ {
+  "id": "d081",
+  "wing": "family",
+  "room": "rui",
+  "filed_at": "2026-03-21",
+  "content": "Rui started swimming lessons on Saturday mornings in March, at the Marrowbrook leisure centre pool."
+ },
+ {
+  "id": "d082",
+  "wing": "family",
+  "room": "home",
+  "filed_at": "2026-03-24",
+  "content": "The house has a small greenhouse in the back garden, Jordan uses it to start seedlings for client projects sometimes."
+ },
+ {
+  "id": "d083",
+  "wing": "family",
+  "room": "sam",
+  "filed_at": "2026-03-27",
+  "content": "Sam's birthday is in June, usually a quiet dinner rather than a big thing."
+ },
+ {
+  "id": "d084",
+  "wing": "tools",
+  "room": "mailboxes",
+  "filed_at": "2026-03-30",
+  "content": "The work mailbox is used for all client and supplier correspondence, personal mailbox is family and admin only."
+ },
+ {
+  "id": "d085",
+  "wing": "tools",
+  "room": "task-app",
+  "filed_at": "2026-04-03",
+  "content": "The task app syncs across Jordan's phone and the studio desktop, but not to Sam's phone."
+ },
+ {
+  "id": "d086",
+  "wing": "tools",
+  "room": "notes-app",
+  "filed_at": "2026-04-06",
+  "content": "The notes app is organised by client name for project notes, and by month for general studio notes."
+ },
+ {
+  "id": "d087",
+  "wing": "tools",
+  "room": "mailboxes",
+  "filed_at": "2026-04-09",
+  "content": "The college mailbox only gets checked once or twice a week, mostly for messages from students."
+ },
+ {
+  "id": "d088",
+  "wing": "tools",
+  "room": "calendar",
+  "filed_at": "2026-04-12",
+  "content": "The calendar app shows three separate calendars overlaid: studio, personal, and the college course."
+ },
+ {
+  "id": "d089",
+  "wing": "tools",
+  "room": "bank-app",
+  "filed_at": "2026-04-15",
+  "content": "The bank app sends a push notification for any payment over five hundred pounds, useful for catching mistakes."
+ },
+ {
+  "id": "d090",
+  "wing": "tools",
+  "room": "supplier-portal",
+  "filed_at": "2026-04-19",
+  "content": "The Thornfield portal needs a login refresh every ninety days or it logs everyone out without warning."
+ },
+ {
+  "id": "d091",
+  "wing": "tools",
+  "room": "invoicing",
+  "filed_at": "2026-04-22",
+  "content": "The invoicing tool lets Dana see draft invoices before they are sent, she reviews most of them before they go out."
+ },
+ {
+  "id": "d092",
+  "wing": "tools",
+  "room": "task-app",
+  "filed_at": "2026-04-25",
+  "content": "The task app's recurring task feature does not handle monthly tasks well, they sometimes duplicate."
+ },
+ {
+  "id": "d093",
+  "wing": "tools",
+  "room": "notes-app",
+  "filed_at": "2026-04-28",
+  "content": "The notes app has a folder called Ideas where half formed planting concepts get dumped for later."
+ },
+ {
+  "id": "d094",
+  "wing": "rules",
+  "room": "billing",
+  "filed_at": "2026-05-01",
+  "content": "RULE: Studio invoices go out on the last working day of the month, not spread through the month."
+ },
+ {
+  "id": "d095",
+  "wing": "rules",
+  "room": "clients",
+  "filed_at": "2026-05-04",
+  "content": "RULE: Client site visits always get a follow up email within 24 hours summarising what was agreed."
+ },
+ {
+  "id": "d096",
+  "wing": "rules",
+  "room": "scheduling",
+  "filed_at": "2026-05-08",
+  "content": "RULE: Priya handles all planting plan drawings, Tomasz handles all site logistics, keep that split clean."
+ },
+ {
+  "id": "d097",
+  "wing": "rules",
+  "room": "clients",
+  "filed_at": "2026-05-11",
+  "content": "RULE: New client enquiries get a reply within two working days, even if it is just to say the studio is busy."
+ },
+ {
+  "id": "d098",
+  "wing": "rules",
+  "room": "suppliers",
+  "filed_at": "2026-05-14",
+  "content": "RULE: Any plant substitution on a confirmed order needs sign off from Jordan, not just whoever is doing the order."
+ },
+ {
+  "id": "d099",
+  "wing": "finance",
+  "room": "accounts",
+  "filed_at": "2026-05-17",
+  "content": "Dana Okafor does the studio's books quarterly, plus the annual return in the spring."
+ },
+ {
+  "id": "d100",
+  "wing": "finance",
+  "room": "accounts",
+  "filed_at": "2026-05-20",
+  "content": "The studio's VAT registration threshold was crossed last year, all invoices now show VAT separately."
+ },
+ {
+  "id": "d101",
+  "wing": "finance",
+  "room": "billing",
+  "filed_at": "2026-05-24",
+  "content": "Fernline Studio pays Thornfield Growers on 30 day terms, most other small suppliers are paid on receipt."
+ },
+ {
+  "id": "d102",
+  "wing": "finance",
+  "room": "accounts",
+  "filed_at": "2026-05-27",
+  "content": "The studio's business savings account is separate from the current account, used for tax setting aside."
+ },
+ {
+  "id": "d103",
+  "wing": "finance",
+  "room": "accounts",
+  "filed_at": "2026-05-30",
+  "content": "Dana flagged that the studio should keep three months of expenses as a buffer, working toward that target."
+ },
+ {
+  "id": "d104",
+  "wing": "teaching",
+  "room": "course",
+  "filed_at": "2026-06-02",
+  "content": "The evening course covers planting design basics over eight sessions, mostly slides and a couple of site walks."
+ },
+ {
+  "id": "d105",
+  "wing": "teaching",
+  "room": "course",
+  "filed_at": "2026-06-05",
+  "content": "Marrowbrook Community College pays Jordan per session, invoiced through the college's own finance system, not Fernline's invoicing tool."
+ },
+ {
+  "id": "d106",
+  "wing": "teaching",
+  "room": "students",
+  "filed_at": "2026-06-08",
+  "content": "Course materials get shared with students through the college's own portal, not through Fernline Studio's notes app."
+ },
+ {
+  "id": "d107",
+  "wing": "teaching",
+  "room": "students",
+  "filed_at": "2026-06-12",
+  "content": "One student in the spring course works at a garden centre and often has useful supplier tips."
+ },
+ {
+  "id": "d108",
+  "wing": "teaching",
+  "room": "course",
+  "filed_at": "2026-06-15",
+  "content": "The college's evening classes run September to December and January to March, no course over the summer."
+ },
+ {
+  "id": "d109",
+  "wing": "family",
+  "room": "staff",
+  "filed_at": "2026-06-18",
+  "content": "Tomasz coaches a five a side football team on Sunday mornings, sometimes affects Monday energy levels."
+ },
+ {
+  "id": "d110",
+  "wing": "work",
+  "room": "studio-ops",
+  "filed_at": "2026-06-21",
+  "content": "The studio subscribes to a gardening trade magazine, copies pile up in the front office."
+ },
+ {
+  "id": "d111",
+  "wing": "work",
+  "room": "staff",
+  "filed_at": "2026-06-24",
+  "content": "Priya is allergic to bee stings, keeps an EpiPen in her site bag as a precaution."
+ },
+ {
+  "id": "d112",
+  "wing": "work",
+  "room": "clients",
+  "filed_at": "2026-06-28",
+  "content": "Oakridge Housing Co-op's board meets on the first Tuesday of the month, decisions on bigger spend need to go through them."
+ },
+ {
+  "id": "d113",
+  "wing": "work",
+  "room": "clients",
+  "filed_at": "2026-07-01",
+  "content": "Halden Parks Trust requires hi vis vests for anyone on site, spares are kept in the studio van."
+ },
+ {
+  "id": "d114",
+  "wing": "work",
+  "room": "clients",
+  "filed_at": "2026-07-04",
+  "content": "The Whitlow family have a cat that likes to sit in freshly dug soil, Tomasz covers new beds with mesh overnight."
+ },
+ {
+  "id": "d115",
+  "wing": "work",
+  "room": "studio-ops",
+  "filed_at": "2026-07-07",
+  "content": "Studio lunch is usually whatever is nearby on Mill Lane, there is a decent sandwich shop two doors down."
+ },
+ {
+  "id": "d116",
+  "wing": "work",
+  "room": "staff",
+  "filed_at": "2026-07-10",
+  "content": "Jordan prefers client meetings in the morning, afternoons get used for drawing and admin."
+ },
+ {
+  "id": "d117",
+  "wing": "tools",
+  "room": "supplier-portal",
+  "filed_at": "2026-07-13",
+  "content": "The studio uses a shared password manager for the supplier portal and bank app logins, Dana has access too."
+ },
+ {
+  "id": "d118",
+  "wing": "family",
+  "room": "rui",
+  "filed_at": "2026-07-17",
+  "content": "Rui's nursery key worker is called Fen, she does the daily handover chat at pickup."
+ },
+ {
+  "id": "d119",
+  "wing": "family",
+  "room": "sam",
+  "filed_at": "2026-07-20",
+  "content": "Sam handles most of the household admin, bills and insurance, Jordan handles studio side admin."
+ },
+ {
+  "id": "d120",
+  "wing": "work",
+  "room": "clients",
+  "filed_at": "2026-07-23",
+  "content": "The Marrowbrook council planning office is only open for enquiries Tuesday to Thursday."
+ }
+]

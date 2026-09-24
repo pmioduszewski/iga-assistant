@@ -73,6 +73,8 @@ def test_claude_complete_argv_and_neutral_cwd(monkeypatch):
     call = fake.calls[0]
     assert out == "hello"
     assert call["argv"][:4] == ["/x/claude", "-p", "--output-format", "text"]
+    assert "--strict-mcp-config" in call["argv"]
+    assert call["argv"][call["argv"].index("--mcp-config") + 1] == '{"mcpServers":{}}'
     assert call["argv"][call["argv"].index("--model") + 1] == "sonnet"
     assert call["argv"][call["argv"].index("--append-system-prompt") + 1] == "SYS"
     assert call["input"] == "PROMPT"

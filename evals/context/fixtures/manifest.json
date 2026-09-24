@@ -1,0 +1,300 @@
+[
+ {
+  "pattern": "P1",
+  "drawers": [
+   "d001",
+   "d002"
+  ],
+  "note": "Halden Parks Trust meadow planting: planned to done, linked."
+ },
+ {
+  "pattern": "P1",
+  "drawers": [
+   "d003",
+   "d004"
+  ],
+  "note": "Oakridge irrigation permit: pending to approved, linked."
+ },
+ {
+  "pattern": "P1",
+  "drawers": [
+   "d005",
+   "d006"
+  ],
+  "note": "Whitlow garden side fence: broken to fixed, linked."
+ },
+ {
+  "pattern": "P1",
+  "drawers": [
+   "d007",
+   "d008"
+  ],
+  "note": "Oakridge invoice dispute: open to closed, linked."
+ },
+ {
+  "pattern": "P1",
+  "drawers": [
+   "d009",
+   "d010"
+  ],
+  "note": "College evening course proposal: planned to confirmed, linked."
+ },
+ {
+  "pattern": "P2",
+  "drawers": [
+   "d011",
+   "d012"
+  ],
+  "note": "Priya's hours: part time to full time, not linked."
+ },
+ {
+  "pattern": "P2",
+  "drawers": [
+   "d013",
+   "d014"
+  ],
+  "note": "Rui's nursery pickup time: 3pm to 4pm, not linked."
+ },
+ {
+  "pattern": "P2",
+  "drawers": [
+   "d015",
+   "d016"
+  ],
+  "note": "Plant supplier: Merrow Bulb Co to Thornfield Growers, not linked."
+ },
+ {
+  "pattern": "P2",
+  "drawers": [
+   "d017",
+   "d018"
+  ],
+  "note": "Evening course room: Room 4 to Room 9, not linked."
+ },
+ {
+  "pattern": "P2",
+  "drawers": [
+   "d019",
+   "d020"
+  ],
+  "note": "Business bank: Brindlewick Bank to Carrow Bank, not linked."
+ },
+ {
+  "pattern": "P3",
+  "drawers": [
+   "d021"
+  ],
+  "note": "Rule: no emails to Halden Parks Trust on Fridays."
+ },
+ {
+  "pattern": "P3",
+  "drawers": [
+   "d022"
+  ],
+  "note": "Rule: Wednesday site visits must include Tomasz."
+ },
+ {
+  "pattern": "P3",
+  "drawers": [
+   "d023"
+  ],
+  "note": "Rule: Oakridge invoices need Dana's review before marking paid."
+ },
+ {
+  "pattern": "P3",
+  "drawers": [
+   "d024"
+  ],
+  "note": "Rule: Whitlow orders must use Sam's Thornfield trade account."
+ },
+ {
+  "pattern": "P3",
+  "drawers": [
+   "d025"
+  ],
+  "note": "Rule: no billing figures in the studio group chat."
+ },
+ {
+  "pattern": "P4",
+  "drawers": [
+   "d026"
+  ],
+  "note": "Quirk: combined mailbox search skips the college mailbox, unfixed."
+ },
+ {
+  "pattern": "P4",
+  "drawers": [
+   "d027",
+   "d028"
+  ],
+  "note": "Quirk: Thornfield portal 40 line timeout, fixed and linked."
+ },
+ {
+  "pattern": "P4",
+  "drawers": [
+   "d029",
+   "d030"
+  ],
+  "note": "Quirk: invoicing tool per line VAT rounding, fixed and linked."
+ },
+ {
+  "pattern": "P4",
+  "drawers": [
+   "d031",
+   "d032"
+  ],
+  "note": "Quirk: bank app CSV US date format, fixed and linked."
+ },
+ {
+  "pattern": "P4",
+  "drawers": [
+   "d033"
+  ],
+  "note": "Quirk: calendar app does not sync single occurrence edits, unfixed."
+ },
+ {
+  "pattern": "P5",
+  "drawers": [
+   "d034"
+  ],
+  "note": "Correction: Rui's allergy is tree nuts, not peanuts."
+ },
+ {
+  "pattern": "P5",
+  "drawers": [
+   "d035"
+  ],
+  "note": "Correction: Dana's office is on Fernbank Road, not the High Street."
+ },
+ {
+  "pattern": "P5",
+  "drawers": [
+   "d036"
+  ],
+  "note": "Correction: Whitlow house number is 14, not 4."
+ },
+ {
+  "pattern": "P5",
+  "drawers": [
+   "d037"
+  ],
+  "note": "Correction: Pickle off leash only in the fenced dog field at Halden Parks."
+ },
+ {
+  "pattern": "P5",
+  "drawers": [
+   "d038"
+  ],
+  "note": "Correction: evening course is 18 plus only."
+ },
+ {
+  "pattern": "P6",
+  "drawers": [
+   "d039"
+  ],
+  "note": "Decoy: Sam Ferris the Thornfield rep, versus Jordan's partner Sam."
+ },
+ {
+  "pattern": "P6",
+  "drawers": [
+   "d040"
+  ],
+  "note": "Decoy: Halden Road Nursery, versus client Halden Parks Trust."
+ },
+ {
+  "pattern": "P6",
+  "drawers": [
+   "d041"
+  ],
+  "note": "Decoy: Oakridge's 2025 summer fair, versus the current 2026 fair."
+ },
+ {
+  "pattern": "P6",
+  "drawers": [
+   "d042"
+  ],
+  "note": "Decoy: Priya Nettleton at the college, versus studio designer Priya."
+ },
+ {
+  "pattern": "P6",
+  "drawers": [
+   "d043"
+  ],
+  "note": "Decoy: rival firm Quillhaven Landscapes, versus Fernline Studio itself."
+ },
+ {
+  "pattern": "P7",
+  "drawers": [
+   "d044"
+  ],
+  "note": "Long note: Halden meadow mulch delivery gate code buried in chunk 3."
+ },
+ {
+  "pattern": "P7",
+  "drawers": [
+   "d045"
+  ],
+  "note": "Long note: bank late fee waived once, pay a day earlier from now on, buried in chunk 4."
+ },
+ {
+  "pattern": "P7",
+  "drawers": [
+   "d046"
+  ],
+  "note": "Long note: vet only takes phone bookings Tuesday and Thursday mornings, buried in chunk 3."
+ },
+ {
+  "pattern": "P7",
+  "drawers": [
+   "d047"
+  ],
+  "note": "Long note: attendance sheets now due the Friday after each class, buried in chunk 3."
+ },
+ {
+  "pattern": "P7",
+  "drawers": [
+   "d048"
+  ],
+  "note": "Long note: Whitlow garden deliveries must be small vehicle only, buried in chunk 3."
+ },
+ {
+  "pattern": "P8",
+  "drawers": [
+   "d049",
+   "d050"
+  ],
+  "note": "Rule restated: no site visits before 8am / 8:30."
+ },
+ {
+  "pattern": "P8",
+  "drawers": [
+   "d051",
+   "d052"
+  ],
+  "note": "Rule restated: Dana needs 48 hours notice before invoicing."
+ },
+ {
+  "pattern": "P8",
+  "drawers": [
+   "d053",
+   "d054"
+  ],
+  "note": "Rule restated: no Monday morning Thornfield deliveries."
+ },
+ {
+  "pattern": "P8",
+  "drawers": [
+   "d055",
+   "d056"
+  ],
+  "note": "Rule restated: keep Rui's nursery times off the shared studio calendar."
+ },
+ {
+  "pattern": "P8",
+  "drawers": [
+   "d057",
+   "d058"
+  ],
+  "note": "Rule restated: Halden Parks Trust plan changes need written email confirmation."
+ }
+]

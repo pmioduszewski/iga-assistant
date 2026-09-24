@@ -45,7 +45,13 @@ def _claude_bin(env: Mapping[str, str]) -> str:
 
 
 def claude_cli_complete(prompt, *, model, system, timeout, env) -> str:
-    argv = [_claude_bin(env), "-p", "--output-format", "text"]
+    # A pure completion needs no tools: without --strict-mcp-config every call
+    # would start every user-scope MCP server (slower, and OAuth servers can
+    # open browser tabs).
+    argv = [
+        _claude_bin(env), "-p", "--output-format", "text",
+        "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}',
+    ]
     if model:
         argv += ["--model", model]
     if system:

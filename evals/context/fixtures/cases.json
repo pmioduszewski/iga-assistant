@@ -1,0 +1,720 @@
+[
+ {
+  "id": "c01",
+  "pattern": "P1",
+  "trigger": {
+   "kind": "prompt",
+   "text": "can you check if the Halden meadow planting actually happened yet"
+  },
+  "must": [
+   "d002"
+  ],
+  "must_not": [
+   "d001"
+  ],
+  "why": "d002 is the current done status, d001 is the superseded planned status."
+ },
+ {
+  "id": "c02",
+  "pattern": "P1",
+  "trigger": {
+   "kind": "prompt",
+   "text": "has the Oakridge irrigation permit come through yet"
+  },
+  "must": [
+   "d004"
+  ],
+  "must_not": [
+   "d003"
+  ],
+  "why": "d004 is the approved permit, d003 is the superseded pending status."
+ },
+ {
+  "id": "c03",
+  "pattern": "P1",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "schedule a plant delivery to the Whitlow garden for Thursday",
+   "tool": "calendar_app.create_event",
+   "args": {
+    "client": "Whitlow family garden",
+    "day": "Thursday",
+    "note": "confirm lane access before booking"
+   }
+  },
+  "must": [
+   "d006"
+  ],
+  "must_not": [
+   "d005"
+  ],
+  "why": "the side fence was fixed in February, the earlier broken fence note no longer applies to lane access."
+ },
+ {
+  "id": "c04",
+  "pattern": "P1",
+  "trigger": {
+   "kind": "tool_error",
+   "text": "resend that queried invoice to Oakridge",
+   "tool": "invoicing_tool.resend_invoice",
+   "error": "invoice already marked closed, cannot resend as disputed"
+  },
+  "must": [
+   "d008"
+  ],
+  "must_not": [
+   "d007"
+  ],
+  "why": "the dispute closed on 2026-04-02 once Dana resent it with the receipt, explaining why it is already closed."
+ },
+ {
+  "id": "c05",
+  "pattern": "P1",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "add a task to order name badges, the first evening session is coming up",
+   "tool": "task_app.create_task",
+   "args": {
+    "title": "Order name badges",
+    "context": "evening course"
+   }
+  },
+  "must": [
+   "d010"
+  ],
+  "must_not": [
+   "d009"
+  ],
+  "why": "the course is confirmed with a start date of 2026-09-15, the earlier note was only a pending proposal."
+ },
+ {
+  "id": "c06",
+  "pattern": "P2",
+  "trigger": {
+   "kind": "prompt",
+   "text": "who's around at the studio on Fridays these days"
+  },
+  "must": [
+   "d012"
+  ],
+  "must_not": [
+   "d011"
+  ],
+  "why": "Priya went full time in May and is now in five days a week, the old three day note is stale."
+ },
+ {
+  "id": "c07",
+  "pattern": "P2",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "add Rui's pickup to today's calendar",
+   "tool": "calendar_app.create_event",
+   "args": {
+    "title": "Rui pickup",
+    "location": "Little Acorns"
+   }
+  },
+  "must": [
+   "d014"
+  ],
+  "must_not": [
+   "d013"
+  ],
+  "why": "the pickup window moved to 4pm in April, the old 3pm note would set the wrong time."
+ },
+ {
+  "id": "c08",
+  "pattern": "P2",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "place the usual spring bulb order",
+   "tool": "supplier_portal.create_order",
+   "args": {
+    "items": [
+     "tulip bulbs",
+     "daffodil bulbs"
+    ],
+    "qty": 200
+   }
+  },
+  "must": [
+   "d016"
+  ],
+  "must_not": [
+   "d015"
+  ],
+  "why": "the studio switched suppliers to Thornfield Growers in March, Merrow Bulb Co is no longer the account in use."
+ },
+ {
+  "id": "c09",
+  "pattern": "P2",
+  "trigger": {
+   "kind": "prompt",
+   "text": "which room is the evening class in this week"
+  },
+  "must": [
+   "d018"
+  ],
+  "must_not": [
+   "d017"
+  ],
+  "why": "the room changed to Room 9 in September, Room 4 is the stale location."
+ },
+ {
+  "id": "c10",
+  "pattern": "P2",
+  "trigger": {
+   "kind": "prompt",
+   "text": "how long does it take for our card payments to clear these days"
+  },
+  "must": [
+   "d020"
+  ],
+  "must_not": [
+   "d019"
+  ],
+  "why": "the studio switched banks to Carrow Bank in July with next day settlement, Brindlewick's 2 day figure is stale."
+ },
+ {
+  "id": "c11",
+  "pattern": "P3",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "send Halden the updated meadow photos now",
+   "tool": "email.send",
+   "args": {
+    "mailbox": "work",
+    "to": "contact@example.org",
+    "client": "Halden Parks Trust",
+    "day_of_send": "Friday"
+   }
+  },
+  "must": [
+   "d021"
+  ],
+  "must_not": [],
+  "why": "the rule against emailing Halden Parks Trust on Fridays only matters because the args show the send day is Friday, not mentioned in the request text."
+ },
+ {
+  "id": "c12",
+  "pattern": "P3",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "book the site visit for the Oakridge job next week",
+   "tool": "calendar_app.create_event",
+   "args": {
+    "client": "Oakridge Housing Co-op",
+    "day": "Wednesday",
+    "attendees": [
+     "Jordan"
+    ]
+   }
+  },
+  "must": [
+   "d022"
+  ],
+  "must_not": [],
+  "why": "Wednesday visits must include Tomasz per the rule, the args show Wednesday with only Jordan attending."
+ },
+ {
+  "id": "c13",
+  "pattern": "P3",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "mark the Oakridge invoice as paid",
+   "tool": "invoicing_tool.mark_paid",
+   "args": {
+    "client": "Oakridge Housing Co-op",
+    "invoice": "March planting",
+    "reviewed_by": null
+   }
+  },
+  "must": [
+   "d023"
+  ],
+  "must_not": [],
+  "why": "Oakridge invoices need Dana's review before being marked paid, and the args show no reviewer set."
+ },
+ {
+  "id": "c14",
+  "pattern": "P3",
+  "trigger": {
+   "kind": "tool_error",
+   "text": "order the roses for the Whitlow garden",
+   "tool": "supplier_portal.create_order",
+   "error": "discount code invalid for this account"
+  },
+  "must": [
+   "d024"
+  ],
+  "must_not": [],
+  "why": "Whitlow orders must go through Sam's trade account for the discount code, explaining the invalid code error on the studio account."
+ },
+ {
+  "id": "c15",
+  "pattern": "P3",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "post the invoice total in the team chat so everyone's up to speed",
+   "tool": "chat.post_message",
+   "args": {
+    "channel": "studio-group",
+    "content": "Oakridge invoice total update"
+   }
+  },
+  "must": [
+   "d025"
+  ],
+  "must_not": [],
+  "why": "billing figures are not allowed in the studio group chat, that has to go through Dana first."
+ },
+ {
+  "id": "c16",
+  "pattern": "P4",
+  "trigger": {
+   "kind": "tool_error",
+   "text": "search all my mailboxes for the invoice PDF from Thornfield",
+   "tool": "mail.search_all",
+   "error": "0 results returned from the college mailbox, search skipped that account"
+  },
+  "must": [
+   "d026"
+  ],
+  "must_not": [],
+  "why": "the combined mailbox search always skips the college mailbox since it is a different account type, this is a known unfixed quirk."
+ },
+ {
+  "id": "c17",
+  "pattern": "P4",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "place the big Oakridge planting order, it's a long list",
+   "tool": "supplier_portal.create_order",
+   "args": {
+    "client": "Oakridge Housing Co-op",
+    "line_items": 85
+   }
+  },
+  "must": [
+   "d028"
+  ],
+  "must_not": [
+   "d027"
+  ],
+  "why": "the 40 line timeout on the Thornfield portal was fixed in June, an 85 line order now goes through without needing to split it."
+ },
+ {
+  "id": "c18",
+  "pattern": "P4",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "generate this month's invoices",
+   "tool": "invoicing_tool.generate_invoice",
+   "args": {
+    "period": "2026-08",
+    "vat_mode": "invoice_level"
+   }
+  },
+  "must": [
+   "d030"
+  ],
+  "must_not": [
+   "d029"
+  ],
+  "why": "the invoicing tool's VAT rounding was fixed in July, invoice level rounding is now correct."
+ },
+ {
+  "id": "c19",
+  "pattern": "P4",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "pull last month's bank export for Dana",
+   "tool": "bank_app.export_csv",
+   "args": {
+    "month": "2026-08",
+    "format": "day-month"
+   }
+  },
+  "must": [
+   "d032"
+  ],
+  "must_not": [
+   "d031"
+  ],
+  "why": "the bank app's US date format bug was fixed in August, exports now read day-month correctly."
+ },
+ {
+  "id": "c20",
+  "pattern": "P4",
+  "trigger": {
+   "kind": "tool_error",
+   "text": "edit just this Tuesday's evening course class time",
+   "tool": "calendar_app.edit_event",
+   "error": "change did not appear on Sam's synced calendar"
+  },
+  "must": [
+   "d033"
+  ],
+  "must_not": [],
+  "why": "the calendar app does not sync single occurrence edits to recurring events across devices, a known unfixed quirk."
+ },
+ {
+  "id": "c21",
+  "pattern": "P5",
+  "trigger": {
+   "kind": "prompt",
+   "text": "does Rui need to avoid peanuts at nursery"
+  },
+  "must": [
+   "d034"
+  ],
+  "must_not": [],
+  "why": "the earlier peanut note was wrong, the correction says it is actually tree nuts."
+ },
+ {
+  "id": "c22",
+  "pattern": "P5",
+  "trigger": {
+   "kind": "prompt",
+   "text": "what's Dana's office address again"
+  },
+  "must": [
+   "d035"
+  ],
+  "must_not": [],
+  "why": "the correction says her office is on Fernbank Road now, not the old High Street address."
+ },
+ {
+  "id": "c23",
+  "pattern": "P5",
+  "trigger": {
+   "kind": "prompt",
+   "text": "double check the house number for the Whitlow delivery"
+  },
+  "must": [
+   "d036"
+  ],
+  "must_not": [],
+  "why": "the correction says the house number is 14, the earlier 4 was a typo."
+ },
+ {
+  "id": "c24",
+  "pattern": "P5",
+  "trigger": {
+   "kind": "prompt",
+   "text": "can Pickle go off the lead at Halden Parks"
+  },
+  "must": [
+   "d037"
+  ],
+  "must_not": [],
+  "why": "the correction limits off leash to the fenced dog field only, not the whole park."
+ },
+ {
+  "id": "c25",
+  "pattern": "P5",
+  "trigger": {
+   "kind": "prompt",
+   "text": "a parent's asking if their sixteen year old can join the evening course"
+  },
+  "must": [
+   "d038"
+  ],
+  "must_not": [],
+  "why": "the correction confirms the course is 18 plus only, contrary to an earlier note."
+ },
+ {
+  "id": "c26",
+  "pattern": "P6",
+  "trigger": {
+   "kind": "prompt",
+   "text": "can you get me Sam's number, need to sort a rush delivery for tomorrow's site visit"
+  },
+  "must": [
+   "d039"
+  ],
+  "must_not": [
+   "d134"
+  ],
+  "why": "in this supplier context Sam is Sam Ferris the Thornfield rep, not Jordan's partner Sam who shares the name."
+ },
+ {
+  "id": "c27",
+  "pattern": "P6",
+  "trigger": {
+   "kind": "tool_error",
+   "text": "order a few extra perennials same day from our usual supplier near Halden",
+   "tool": "supplier_portal.create_order",
+   "error": "no trade account found for this supplier"
+  },
+  "must": [
+   "d040"
+  ],
+  "must_not": [
+   "d002"
+  ],
+  "why": "Halden Road Nursery is a retail shop with no trade account, distinct from the client Halden Parks Trust which the similar name can get confused with."
+ },
+ {
+  "id": "c28",
+  "pattern": "P6",
+  "trigger": {
+   "kind": "prompt",
+   "text": "when's the Oakridge summer fair this year"
+  },
+  "must": [
+   "d135"
+  ],
+  "must_not": [
+   "d041"
+  ],
+  "why": "the question asks about this year's fair, d041 is the 2025 fair from last year and would give the wrong date."
+ },
+ {
+  "id": "c29",
+  "pattern": "P6",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "email Priya about the room booking for next week's class",
+   "tool": "email.send",
+   "args": {
+    "to_name": "Priya",
+    "subject": "Room booking",
+    "context": "evening course"
+   }
+  },
+  "must": [
+   "d042"
+  ],
+  "must_not": [
+   "d136"
+  ],
+  "why": "room bookings for the college course go through Priya Nettleton in the college admin office, not Priya the studio designer who shares the first name."
+ },
+ {
+  "id": "c30",
+  "pattern": "P6",
+  "trigger": {
+   "kind": "prompt",
+   "text": "pull up what we've done so far for Oakridge, need it for a quick recap"
+  },
+  "must": [
+   "d004",
+   "d008"
+  ],
+  "must_not": [
+   "d043"
+  ],
+  "why": "the recap should cover Fernline Studio's own Oakridge history, not Quillhaven Landscapes, a rival firm with a similar name that also dealt with Oakridge."
+ },
+ {
+  "id": "c31",
+  "pattern": "P7",
+  "trigger": {
+   "kind": "prompt",
+   "text": "what's the gate code for the Halden meadow delivery"
+  },
+  "must": [
+   "d044"
+  ],
+  "must_not": [],
+  "why": "the gate code, 4471, is buried mid way through a long multi topic weekly note."
+ },
+ {
+  "id": "c32",
+  "pattern": "P7",
+  "trigger": {
+   "kind": "prompt",
+   "text": "did the bank ever sort out that late fee thing"
+  },
+  "must": [
+   "d045"
+  ],
+  "must_not": [],
+  "why": "the late fee waiver and the new day-earlier payment habit are buried mid way through a long finance note."
+ },
+ {
+  "id": "c33",
+  "pattern": "P7",
+  "trigger": {
+   "kind": "prompt",
+   "text": "when can I actually get Pickle booked in at the vet"
+  },
+  "must": [
+   "d046"
+  ],
+  "must_not": [],
+  "why": "the vet's phone-only Tuesday and Thursday morning booking window is buried mid way through a long family note."
+ },
+ {
+  "id": "c34",
+  "pattern": "P7",
+  "trigger": {
+   "kind": "prompt",
+   "text": "when do I need to get the attendance sheets in for the college"
+  },
+  "must": [
+   "d047"
+  ],
+  "must_not": [],
+  "why": "the tightened Friday after each class deadline is buried mid way through a long teaching note."
+ },
+ {
+  "id": "c35",
+  "pattern": "P7",
+  "trigger": {
+   "kind": "prompt",
+   "text": "what size van can actually get down to the Whitlow place for a delivery"
+  },
+  "must": [
+   "d048"
+  ],
+  "must_not": [],
+  "why": "the small vehicle only lane restriction is buried mid way through a long project note."
+ },
+ {
+  "id": "c36",
+  "pattern": "P8",
+  "trigger": {
+   "kind": "tool_error",
+   "text": "try to get an early 7am slot for the Oakridge visit",
+   "tool": "calendar_app.create_event",
+   "error": "requested time outside allowed booking window"
+  },
+  "must": [
+   "d050"
+  ],
+  "must_not": [],
+  "why": "the rule against site visits before 8am, restated twice, explains the booking window rejection."
+ },
+ {
+  "id": "c37",
+  "pattern": "P8",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "ask Dana to get an invoice out today for the Whitlow job",
+   "tool": "invoicing_tool.request_invoice",
+   "args": {
+    "requested_for": "today",
+    "client": "Whitlow family garden"
+   }
+  },
+  "must": [
+   "d052"
+  ],
+  "must_not": [],
+  "why": "Dana needs 48 hours notice before invoicing, a rule restated twice, so a same day request will not work."
+ },
+ {
+  "id": "c38",
+  "pattern": "P8",
+  "trigger": {
+   "kind": "tool_error",
+   "text": "book a Thornfield delivery for first thing Monday",
+   "tool": "supplier_portal.book_delivery",
+   "error": "requested slot unavailable, stock count in progress"
+  },
+  "must": [
+   "d054"
+  ],
+  "must_not": [],
+  "why": "Monday morning Thornfield deliveries are unreliable due to their stock count, a rule restated twice."
+ },
+ {
+  "id": "c39",
+  "pattern": "P8",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "add Rui's nursery pickup to the calendar so the team can see when I'm out",
+   "tool": "calendar_app.create_event",
+   "args": {
+    "calendar": "studio_shared",
+    "title": "Rui pickup"
+   }
+  },
+  "must": [
+   "d056"
+  ],
+  "must_not": [],
+  "why": "family times including Rui's nursery must stay off the shared studio calendar, a rule restated twice, so this should go on the personal calendar instead."
+ },
+ {
+  "id": "c40",
+  "pattern": "P8",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "just tell Halden verbally we're tweaking the planting mix slightly, save the email for now",
+   "tool": "task_app.create_task",
+   "args": {
+    "client": "Halden Parks Trust",
+    "action": "verbal_confirmation_only"
+   }
+  },
+  "must": [
+   "d058"
+  ],
+  "must_not": [],
+  "why": "Halden Parks Trust plan changes need written email confirmation, a rule restated twice, so a verbal only change is not enough."
+ },
+ {
+  "id": "c41",
+  "pattern": "P7",
+  "trigger": {
+   "kind": "prompt",
+   "text": "roughly how many people signed up for the autumn course so far"
+  },
+  "must": [
+   "d146"
+  ],
+  "must_not": [],
+  "why": "the enrolment count is buried in a long note about the start of the autumn term."
+ },
+ {
+  "id": "c42",
+  "pattern": "P6",
+  "trigger": {
+   "kind": "prompt",
+   "text": "remind me which supplier we use for the survey pads"
+  },
+  "must": [
+   "d067"
+  ],
+  "must_not": [
+   "d040"
+  ],
+  "why": "the survey pads come from the Mill Lane stationer, not a plant supplier, easy to conflate with the studio's plant suppliers."
+ },
+ {
+  "id": "c43",
+  "pattern": "P8",
+  "trigger": {
+   "kind": "tool_call",
+   "text": "block out some time this week for site drawings",
+   "tool": "calendar_app.create_event",
+   "args": {
+    "title": "Drawing time",
+    "recurring": true
+   }
+  },
+  "must": [
+   "d116"
+  ],
+  "must_not": [],
+  "why": "Jordan's standing preference is mornings for client meetings and afternoons for drawing, so drawing time should be blocked in the afternoon."
+ },
+ {
+  "id": "c44",
+  "pattern": "P4",
+  "trigger": {
+   "kind": "tool_error",
+   "text": "pull the studio's card transactions for Dana to review",
+   "tool": "bank_app.export_transactions",
+   "error": "permission scope is view only, export blocked"
+  },
+  "must": [
+   "d133"
+  ],
+  "must_not": [],
+  "why": "Dana's bank app access was set up as read only in March, which explains why an export attempt is blocked."
+ }
+]

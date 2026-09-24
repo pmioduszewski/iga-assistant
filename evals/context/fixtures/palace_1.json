@@ -1,0 +1,282 @@
+[
+ {
+  "id": "d001",
+  "wing": "work",
+  "room": "clients",
+  "filed_at": "2026-02-20",
+  "content": "STATUS: Halden Parks Trust wildflower meadow planting is planned for the week of 2026-03-09, seed mix ordered from Thornfield Growers."
+ },
+ {
+  "id": "d002",
+  "wing": "work",
+  "room": "clients",
+  "filed_at": "2026-03-13",
+  "content": "STATUS: Halden Parks Trust wildflower meadow planting is done as of 2026-03-13, four days early, Tomasz signed off the site."
+ },
+ {
+  "id": "d003",
+  "wing": "work",
+  "room": "clients",
+  "filed_at": "2026-02-02",
+  "content": "STATUS: Oakridge Housing Co-op irrigation permit application is pending with the Marrowbrook council planning office, submitted 2026-02-02."
+ },
+ {
+  "id": "d004",
+  "wing": "work",
+  "room": "clients",
+  "filed_at": "2026-04-17",
+  "content": "STATUS: Oakridge Housing Co-op irrigation permit was approved on 2026-04-17. Certificate number is kept in the notes app under Oakridge."
+ },
+ {
+  "id": "d005",
+  "wing": "work",
+  "room": "clients",
+  "filed_at": "2026-02-10",
+  "content": "STATUS: The side fence panel at the Whitlow family garden is broken, blown down in the February storm, blocks site access from the lane."
+ },
+ {
+  "id": "d006",
+  "wing": "work",
+  "room": "clients",
+  "filed_at": "2026-02-24",
+  "content": "STATUS: The side fence panel at the Whitlow family garden was fixed on 2026-02-24, a contractor rehung it, lane access is clear again."
+ },
+ {
+  "id": "d007",
+  "wing": "finance",
+  "room": "billing",
+  "filed_at": "2026-03-25",
+  "content": "STATUS: Invoice dispute open with Oakridge Housing Co-op over the March planting invoice, they queried the plant costs line."
+ },
+ {
+  "id": "d008",
+  "wing": "finance",
+  "room": "billing",
+  "filed_at": "2026-04-02",
+  "content": "STATUS: Invoice dispute with Oakridge Housing Co-op closed 2026-04-02, Dana Okafor resent the invoice with the Thornfield receipt attached and they paid in full."
+ },
+ {
+  "id": "d009",
+  "wing": "teaching",
+  "room": "course",
+  "filed_at": "2026-05-01",
+  "content": "STATUS: Proposal to run the autumn term evening course (Planting for Small Gardens) at Marrowbrook Community College is planned, waiting on the college's course committee, submitted 2026-05-01."
+ },
+ {
+  "id": "d010",
+  "wing": "teaching",
+  "room": "course",
+  "filed_at": "2026-06-10",
+  "content": "STATUS: Autumn term evening course confirmed by Marrowbrook Community College on 2026-06-10, Tuesdays 6:30pm to 8:30pm, starts 2026-09-15."
+ },
+ {
+  "id": "d011",
+  "wing": "work",
+  "room": "staff",
+  "filed_at": "2026-01-12",
+  "content": "Priya works three days a week at Fernline Studio, Tuesday, Wednesday, Thursday, part time since she joined."
+ },
+ {
+  "id": "d012",
+  "wing": "work",
+  "room": "staff",
+  "filed_at": "2026-05-04",
+  "content": "Priya moved to full time at Fernline Studio from 2026-05-04, now in the studio five days a week."
+ },
+ {
+  "id": "d013",
+  "wing": "family",
+  "room": "rui",
+  "filed_at": "2026-01-20",
+  "content": "Rui's pickup time at Little Acorns nursery is 3pm, Jordan or Sam collects."
+ },
+ {
+  "id": "d014",
+  "wing": "family",
+  "room": "rui",
+  "filed_at": "2026-04-06",
+  "content": "Little Acorns nursery changed the pickup window, Rui now gets collected at 4pm, applies from 2026-04-06."
+ },
+ {
+  "id": "d015",
+  "wing": "work",
+  "room": "suppliers",
+  "filed_at": "2026-01-15",
+  "content": "Fernline Studio orders bedding plants and bulbs from Merrow Bulb Co, account set up under the studio name."
+ },
+ {
+  "id": "d016",
+  "wing": "work",
+  "room": "suppliers",
+  "filed_at": "2026-03-02",
+  "content": "Fernline Studio now orders plants through Thornfield Growers, better prices on trees and easier delivery slots for Marrowbrook. Placed the first order 2026-03-02."
+ },
+ {
+  "id": "d017",
+  "wing": "teaching",
+  "room": "course",
+  "filed_at": "2026-06-15",
+  "content": "The evening course at Marrowbrook Community College is held in Room 4, ground floor near reception."
+ },
+ {
+  "id": "d018",
+  "wing": "teaching",
+  "room": "course",
+  "filed_at": "2026-09-16",
+  "content": "Evening course room changed, now in Room 9 upstairs, better projector. First class in the new room was 2026-09-16."
+ },
+ {
+  "id": "d019",
+  "wing": "finance",
+  "room": "accounts",
+  "filed_at": "2026-01-08",
+  "content": "Fernline Studio's business account is with Brindlewick Bank, card payments settle in 2 days."
+ },
+ {
+  "id": "d020",
+  "wing": "finance",
+  "room": "accounts",
+  "filed_at": "2026-07-01",
+  "content": "Fernline Studio banks with Carrow Bank now, opened the account 2026-07-01, card payments settle next day which is faster."
+ },
+ {
+  "id": "d021",
+  "wing": "rules",
+  "room": "comms",
+  "filed_at": "2026-02-05",
+  "content": "RULE: Do not send emails to Halden Parks Trust on Fridays. Their office does not check the inbox over the weekend so anything sent Friday sits until Monday and looks ignored. Hold Friday sends until Monday morning instead."
+ },
+ {
+  "id": "d022",
+  "wing": "rules",
+  "room": "scheduling",
+  "filed_at": "2026-01-28",
+  "content": "RULE: Any site visit booked for a Wednesday must include Tomasz on the calendar invite. Wednesday is his site lead day and he needs the handover notes before he heads out."
+ },
+ {
+  "id": "d023",
+  "wing": "rules",
+  "room": "billing",
+  "filed_at": "2026-03-01",
+  "content": "RULE: Do not mark an Oakridge Housing Co-op invoice as paid in the invoicing tool before Dana Okafor has reviewed it. She checks the VAT line, Oakridge invoices have caught rounding errors twice."
+ },
+ {
+  "id": "d024",
+  "wing": "rules",
+  "room": "suppliers",
+  "filed_at": "2026-04-10",
+  "content": "RULE: Orders for the Whitlow family garden on the Thornfield portal must go through Sam's trade account, not the studio account. The discount code for private clients is tied to that login only."
+ },
+ {
+  "id": "d025",
+  "wing": "rules",
+  "room": "comms",
+  "filed_at": "2026-05-20",
+  "content": "RULE: Do not post billing figures or invoice amounts in the studio group chat. Anything with money in it goes through Dana Okafor first, she flagged this after a number got shared by mistake in March."
+ },
+ {
+  "id": "d026",
+  "wing": "tools",
+  "room": "mailboxes",
+  "filed_at": "2026-01-10",
+  "content": "QUIRK: Searching across all three mailboxes at once does not work, the Marrowbrook Community College mailbox is a different kind of account with no labels or folders, so a combined search silently skips it. Search it separately."
+ },
+ {
+  "id": "d027",
+  "wing": "tools",
+  "room": "supplier-portal",
+  "filed_at": "2026-02-14",
+  "content": "QUIRK: The Thornfield ordering portal times out on any order with more than 40 line items, it just hangs and loses the cart. Split big planting lists into two orders."
+ },
+ {
+  "id": "d028",
+  "wing": "tools",
+  "room": "supplier-portal",
+  "filed_at": "2026-06-22",
+  "content": "QUIRK FIXED: Thornfield upgraded their ordering portal in June, the 40 line timeout is gone, tested an 85 line order on 2026-06-22 and it went through fine."
+ },
+ {
+  "id": "d029",
+  "wing": "tools",
+  "room": "invoicing",
+  "filed_at": "2026-01-25",
+  "content": "QUIRK: The invoicing tool rounds VAT per line item instead of on the invoice total, so multi-line invoices can be a penny or two off from what the bank statement shows. Dana flagged this as a known issue."
+ },
+ {
+  "id": "d030",
+  "wing": "tools",
+  "room": "invoicing",
+  "filed_at": "2026-07-15",
+  "content": "QUIRK FIXED: The invoicing tool added an invoice level VAT rounding setting, switched it on 2026-07-15, penny mismatches have stopped since."
+ },
+ {
+  "id": "d031",
+  "wing": "tools",
+  "room": "bank-app",
+  "filed_at": "2026-02-01",
+  "content": "QUIRK: The bank app's CSV export writes dates in US format, month first, with no label. Easy to misread 03/04 as March 4th when it means April 3rd."
+ },
+ {
+  "id": "d032",
+  "wing": "tools",
+  "room": "bank-app",
+  "filed_at": "2026-08-05",
+  "content": "QUIRK FIXED: The bank app added a date format setting on the export screen, switched it to day-month on 2026-08-05, exports now read normally."
+ },
+ {
+  "id": "d033",
+  "wing": "tools",
+  "room": "calendar",
+  "filed_at": "2026-03-18",
+  "content": "QUIRK: The calendar app does not sync edits made to a single occurrence of a recurring event, only changes to the whole series show up on other devices. Editing just one Tuesday of the evening course class does not carry over to Sam's phone."
+ },
+ {
+  "id": "d034",
+  "wing": "family",
+  "room": "rui",
+  "filed_at": "2026-02-18",
+  "content": "CORRECTION (Jordan, 2026-02-18): Rui's allergy note was wrong, it said peanuts on the old nursery form but it is actually tree nuts. Little Acorns has the corrected form now."
+ },
+ {
+  "id": "d035",
+  "wing": "finance",
+  "room": "accounts",
+  "filed_at": "2026-03-05",
+  "content": "CORRECTION (Jordan, 2026-03-05): Dana Okafor's office is not on Marrowbrook High Street, that was the old address. She has been on Fernbank Road since last year."
+ },
+ {
+  "id": "d036",
+  "wing": "work",
+  "room": "clients",
+  "filed_at": "2026-04-22",
+  "content": "CORRECTION (Jordan, 2026-04-22): The Whitlow family garden house number is 14, not 4. The 4 in earlier notes was a typo and it has sent post to the wrong door twice."
+ },
+ {
+  "id": "d037",
+  "wing": "family",
+  "room": "pickle",
+  "filed_at": "2026-05-30",
+  "content": "CORRECTION (Jordan, 2026-05-30): Pickle is not allowed off leash at Halden Parks, that rule only applies to the fenced dog field on the north side. Got this wrong in an earlier note and nearly let him off by the meadow."
+ },
+ {
+  "id": "d038",
+  "wing": "teaching",
+  "room": "course",
+  "filed_at": "2026-07-08",
+  "content": "CORRECTION (Jordan, 2026-07-08): The evening course is not open to under 18s despite what was noted before. Marrowbrook Community College confirmed 18 plus only, a parent asked about their teenager and the answer is no."
+ },
+ {
+  "id": "d039",
+  "wing": "work",
+  "room": "suppliers",
+  "filed_at": "2026-03-10",
+  "content": "Sam Ferris is the account rep at Thornfield Growers, handles the studio's trade orders and can rush deliveries for site visits."
+ },
+ {
+  "id": "d040",
+  "wing": "work",
+  "room": "suppliers",
+  "filed_at": "2026-02-27",
+  "content": "Halden Road Nursery is a small retail plant shop on the edge of Marrowbrook, good for last minute perennials but no trade account there."
+ }
+]

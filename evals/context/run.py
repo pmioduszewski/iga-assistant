@@ -167,10 +167,15 @@ def strat_names(palace, trigger, k):
     return out
 
 
+MAX_DIST = 0.0  # set by --max-dist: drop hits farther than this (0 = off)
+
+
 def strat_semantic(palace, trigger, k):
     """Meaning of the whole situation (message + tool call or error), top k."""
     out = []
     for h in palace.search(situation_text(trigger), n=k * 3):
+        if MAX_DIST and (h.get("distance") or 0) > MAX_DIST:
+            continue
         sid = palace.synth(h)
         if sid and sid not in out:
             out.append(sid)
@@ -332,10 +337,13 @@ def main():
     ap.add_argument("--link", action="store_true", help="simulate save-time linking before scoring")
     ap.add_argument("--link-model", default=None, help="model for the linker (default: cheap tier)")
     ap.add_argument("--link-cache", default=None, help="verdict cache file (reruns skip model calls)")
+    ap.add_argument("--max-dist", type=float, default=0.0, help="relevance floor for semantic (0 = off)")
     ap.add_argument("--verbose", action="store_true")
     ap.add_argument("--json", dest="json_out", default=None, help="write per-case results here")
     args = ap.parse_args()
 
+    global MAX_DIST
+    MAX_DIST = args.max_dist
     drawers, supersedes, cases = load_fixtures(args.cases_file)
     if args.cases:
         wanted = set(args.cases.split(","))

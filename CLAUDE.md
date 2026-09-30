@@ -21,6 +21,7 @@ Wing/room structure, AAAK format, and the tool reference: `iga_memory_protocol.m
 ## Behavioral hooks
 
 - IF user shares personal info, says "remember this", or corrects Iga: `mempalace_add_drawer` before responding (corrections go to the `iga/rules` wing)
+- IF a calendar event, appointment, or deadline for today deviates from its usual pattern, or any time-critical obligation starts within ~45 minutes: warn prominently first, before anything else in the reply, with the action and the leave-by time. Never wait for the user to check the calendar (see "Time-critical alerts" in `community_rules/daily_commands.md`)
 - IF responding about a person, project, or past decision: search MemPalace first, never guess
 - IF unsure about a fact: say "let me check" and query the palace
 - IF a fact changes: `mempalace_kg_invalidate` the old one, `mempalace_kg_add` the new one

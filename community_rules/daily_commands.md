@@ -34,6 +34,33 @@ bootstrap, or fix routine to explain the gap, and do NOT silently omit a
 section whose source is missing: a missing source is a reportable state, not an
 error to hide. (This mirrors the global behavioral hook in `CLAUDE.md`.)
 
+## Time-critical alerts (every daily briefing, and any time during the day)
+
+Iga is an assistant, not a calendar viewer. The user must never have to open
+their calendar to discover something that needs them soon. Anything that
+changes what they must physically do or where they must be is surfaced
+proactively, at the top, before everything else.
+
+- **Deviation check.** When reading the calendar, compare each recurring or
+  routine event for today (commute, standing appointments, regular meetings,
+  any fixed-time commitment) with its usual time. A deviation
+  (moved earlier or later, shortened, cancelled, an extra event) is never a plain
+  calendar line. It becomes the FIRST line of the briefing, with the action and
+  the deadline in it, for example `⚠️ <event> moved to HH:MM, leave by HH:MM`. Derive
+  the leave-by time as event start minus travel time (assume ~15 min if unknown).
+  If the reason for the deviation is not known, state the inference in a few
+  words and ask, do not guess silently.
+- **Approaching deadline.** On ANY later message the same day, if a
+  time-critical obligation (appointment, call, meeting, payment cutoff,
+  fixed-time commitment)
+  starts within ~45 minutes, warn about it before answering anything else. Use
+  the current-time line the harness injects as the clock, and never rely on a
+  tool's own default clock. If no fresh time is visible, get it first.
+- **Order of priority.** Health, safety, people who depend on the user, and same-day hard deadlines
+  come before email, tasks, weather, and habits. They are never buried inside a
+  section and never folded into a bulk count.
+- Keep it to one line per item so the top of the briefing stays scannable.
+
 ## /gm
 
 Good Morning — daily wake-up briefing.
@@ -42,7 +69,7 @@ Good Morning — daily wake-up briefing.
 1. `mempalace_status` — wake up
 2. `mempalace_diary_read("iga", last_n=3)` — load recent context
 3. `mempalace_search` for user identity
-4. Check calendar for today's events
+4. Check calendar for today's events, and run the Time-critical alerts deviation check above (its lines go first in the briefing)
 5. Check tasks for today, highlight overdue
 6. Search MemPalace for active project flags
 7. Start the response with "📅 [Day], [Month] [Date] — Good Morning"
@@ -54,7 +81,7 @@ Welcome Back — mid-day re-entry briefing.
 0. Run the Preflight above.
 1. `mempalace_status` — wake up
 2. `mempalace_diary_read("iga", last_n=1)` — load most recent session
-3. Check calendar for remaining events today
+3. Check calendar for remaining events today, and run the Time-critical alerts deviation check above (its lines go first in the briefing)
 4. Check tasks for remaining work today
 5. Start the response with "🔄 [Day], [Month] [Date] — Welcome Back"
 

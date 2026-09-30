@@ -121,6 +121,7 @@ skills/*
 !skills/mempalace-seed/
 !skills/mood-tracker/
 !skills/newsletter-research/
+!skills/response-guard/
 
 # =============================================================================
 # community_skills/email/dist/ — compiled build output. Ship source, not dist.

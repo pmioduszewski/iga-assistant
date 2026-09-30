@@ -4,7 +4,7 @@ description: Keep everyday replies brief with a local word counter and one corre
 triggers:
   - kind: hook
     spec: UserPromptSubmit and Stop in Claude Code or Codex
-status: building
+status: shipped
 ---
 
 # Response guard

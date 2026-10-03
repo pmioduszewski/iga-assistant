@@ -82,7 +82,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[3])
     parser.add_argument("--host", choices=("claude", "codex", "both"), default="both")
-    parser.add_argument("--max-words", type=int, default=120)
+    parser.add_argument("--max-words", type=int, default=150)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--uninstall", action="store_true")
     args = parser.parse_args()

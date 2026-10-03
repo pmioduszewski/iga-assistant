@@ -10,7 +10,8 @@ status: shipped
 # Response guard
 
 Answer first, using the fewest words that fully address the request. Default:
-120 whitespace-separated words, including bullets, code and links. Explicit
+150 words. Code and bare URLs count; markdown symbols (table pipes, list
+dashes, rules) and the URL part of a markdown link do not. Explicit
 requests for detail bypass the limit for that turn. Keep essential facts,
 citations and required follow-up lines. Complete the work before summarizing it.
 

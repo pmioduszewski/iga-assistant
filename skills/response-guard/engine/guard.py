@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_MAX_WORDS = 120
+DEFAULT_MAX_WORDS = 150
 REWRITE_MARKER = "[Iga response guard: rewrite once]"
 DETAIL_OFFER_TTL_SECONDS = 30 * 60
 
@@ -67,9 +67,19 @@ _DETAIL_OFFER_RE = re.compile(
 )
 
 
+_MARKDOWN_LINK_RE = re.compile(r"!?\[([^\]]*)\]\([^)\s]*(?:\s+\"[^\"]*\")?\)")
+_HAS_LETTER_OR_DIGIT_RE = re.compile(r"[^\W_]")
+
+
 def count_words(text: str) -> int:
-    """Count whitespace-delimited words, including code and links."""
-    return len(text.split())
+    """Count words the reader actually reads.
+
+    A markdown link counts as its label, not its URL. Tokens without a letter
+    or digit (table pipes, list dashes, rules, bare emphasis markers) are
+    markup and do not count. Code and bare URLs still count.
+    """
+    text = _MARKDOWN_LINK_RE.sub(r" \1 ", text)
+    return sum(1 for token in text.split() if _HAS_LETTER_OR_DIGIT_RE.search(token))
 
 
 def _without_quoted_text(text: str) -> str:
@@ -168,13 +178,13 @@ def _guidance(max_words: int, detail_allowed: bool, retry: bool = False) -> str:
     if retry:
         return (
             f"Response guard retry: Rewrite the previous answer once in at most {max_words} "
-            "whitespace-delimited words. Do not repeat the original answer or redo tools. "
+            "words (markdown symbols and link URLs are not counted). Do not repeat the original answer or redo tools. "
             "Preserve essential facts, code, citations, and any required Next: line."
         )
     limit = (
         "The user explicitly requested detail, so the default word limit is exempt."
         if detail_allowed
-        else f"Use no more than {max_words} whitespace-delimited words."
+        else f"Use no more than {max_words} words (markdown symbols and link URLs are not counted)."
     )
     return (
         f"Response guard: Answer first and use the minimum useful words. {limit} Fully fulfill "
@@ -286,7 +296,7 @@ def _stop_event(
         "decision": "block",
         "reason": (
             f"{REWRITE_MARKER} Rewrite the previous answer in at most {max_words} "
-            "whitespace-delimited words. Do not repeat the original answer or redo tools. "
+            "words (markdown symbols and link URLs are not counted). Do not repeat the original answer or redo tools. "
             "Preserve essential facts, code, citations, and any required Next: line."
         ),
     }

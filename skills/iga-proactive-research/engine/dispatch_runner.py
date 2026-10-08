@@ -29,6 +29,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from iga_llm import AGENT_PROVIDERS, LLMError, resolve, run_agent  # noqa: E402
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import todoist_close  # noqa: E402
+
 # Minimal, research-appropriate tool surface. Drawer filing is via the
 # IgaMemory MCP; web tools for the research itself; Read for local context.
 # Deliberately NO Bash/Write — research must not mutate the working tree.
@@ -85,6 +88,22 @@ def main() -> int:
         print(json.dumps(out, indent=2))
         return 92
 
+    # Close-the-loop post-step: headless workers have no Bash/Todoist tool, so
+    # the runner removes the research label and posts the TL;DR comment once
+    # the worker's drawer exists. Palace import is lazy (dry runs skip it).
+    palace = {"mod": None}
+
+    def _close(entry: dict) -> dict:
+        try:
+            if palace["mod"] is None:
+                from mempalace import mcp_server  # type: ignore
+                palace["mod"] = mcp_server
+        except Exception as ex:  # noqa: BLE001, close is best-effort
+            return {"error": f"cannot import mempalace: {ex}"}
+        return todoist_close.close_for_request(
+            entry, mempalace_mod=palace["mod"], token=todoist_close.load_token()
+        )
+
     results = []
     for entry in batch:
         prompt = (
@@ -118,6 +137,7 @@ def main() -> int:
                 "exit": res.exit,
                 "stdout_tail": res.stdout[-800:],
                 "stderr_tail": res.stderr[-400:],
+                "todoist_close": _close(entry),
             })
         except Exception as ex:  # noqa: BLE001 — one topic failing must not abort the rest
             results.append({

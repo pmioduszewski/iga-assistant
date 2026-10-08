@@ -71,7 +71,9 @@ Phase 2 (optional, not required for v1): a launchd LaunchAgent (Mac) or systemd 
 
 **Dropped from v1:** calendar keyword scan. Rationale (2026-05-14 decision): Todoist tasks already carry due dates, and tagging is cheap. Calendar would mostly duplicate Todoist signals with worse precision. Future v2 may revisit.
 
-**Dedup (idempotency):** for each candidate, compute `topic_hash = sha1(normalized_title + target_date).hexdigest()[:16]`. Normalize title: lowercase, strip whitespace, collapse internal whitespace, drop emoji and punctuation. Query MemPalace for a drawer matching `RESEARCH:<topic_hash>` in `projects/*/research`; skip if any have `last_updated > NOW() - 48h`. If MemPalace lacks `last_updated`, fall back to name-only dedup (conservative — never re-researches until drawer is deleted).
+**Dedup in the engine path:** the `research-todoist` job's `condition: not exists drawer for task` is evaluated against the palace: a drawer in any wing's `research` room whose `source_file` is `todoist:<task id>` suppresses the candidate for good (one research per task). Only a genuine palace error (not importable, no palace, query failed) fails open, with a logged warning; the ledger and governor still gate the spawn.
+
+**Dedup (legacy scanner.py):** for each candidate, compute `topic_hash = sha1(normalized_title + target_date).hexdigest()[:16]`. Normalize title: lowercase, strip whitespace, collapse internal whitespace, drop emoji and punctuation. Query MemPalace for a drawer matching `RESEARCH:<topic_hash>` in `projects/*/research`; skip if any have `last_updated > NOW() - 48h`. If MemPalace lacks `last_updated`, fall back to name-only dedup (conservative: never re-researches until drawer is deleted).
 
 **Output:** `~/Iga/scratch/iga-research-queue.json` — array of:
 ```json
@@ -106,12 +108,12 @@ Phase 2 (optional, not required for v1): a launchd LaunchAgent (Mac) or systemd 
 - ✅ WebSearch, WebFetch
 - ✅ MemPalace search + add_drawer (read everything, write only to `projects/<project>/research/`)
 - ✅ Linear search, Jira search, Slack search (read-only)
-- ❌ No code edits, no shell commands beyond read-only, no Todoist writes except the one comment on the source task
+- ❌ No code edits, no shell commands beyond read-only, no Todoist writes except closing the loop on the source task (label removal + one comment)
 - ❌ No external API calls that cost money or send messages
 
 **Output contract (mandatory):**
 
-1. **MemPalace drawer** at `wing: projects/<inferred_project>`, `room: research`, content in AAAK:
+1. **MemPalace drawer** at `wing: projects/<inferred_project>`, `room: research`, `source_file: <source>:<source_id>` (e.g. `todoist:<task id>`; mandatory, it is the dedup key), content in AAAK:
    ```
    RESEARCH:<topic_hash>|<target_date>|depth:<shallow|deep>|★★★
    TLDR: <one sentence>
@@ -123,7 +125,9 @@ Phase 2 (optional, not required for v1): a launchd LaunchAgent (Mac) or systemd 
    CONFIDENCE: <low|med|high>
    ```
 
-2. **Todoist comment on source task** (only if `source: todoist`): the TL;DR + MemPalace drawer ID. Skip if `source: mempalace` (no Todoist task to comment on).
+2. **Close the loop in Todoist** (mandatory if `source: todoist`): remove the `iga-research` label from the task (other labels kept) and post one comment with the TL;DR + MemPalace drawer ID. Skip if `source: mempalace` (no Todoist task). Both halves are idempotent: the label is only rewritten when present, and the comment is skipped when one already contains `Drawer: <drawer_id>`.
+   - **Inline (`/gm`, `/back`):** the worker does it with the session's Todoist tool.
+   - **Headless (`iga-research-dispatch`):** workers have no Bash or Todoist tool, so `engine/dispatch_runner.py` runs `engine/todoist_close.py` after each worker exits. It finds the drawer by `source_file`, then closes the task. No drawer means the worker failed: the label stays and the task is retried. The result lands under `todoist_close` in the dispatch log.
 
 3. **Queue update:** mark `spawned_at` + `completed_at` on the queue entry. Scanner reads on next tick to skip.
 

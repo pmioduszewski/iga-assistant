@@ -26,6 +26,8 @@ from runtime import (  # noqa: E402
     eval_condition,
     discover_job_sources,
     load_jobs,
+    research_drawer_exists,
+    PalaceError,
 )
 import dispatcher as disp  # noqa: E402
 
@@ -95,6 +97,181 @@ def test_condition_none_is_true():
 
 def test_condition_not_exists_fails_open():
     assert eval_condition("not exists drawer for task", {}) is True
+
+
+# ---------- not exists drawer for task (store-backed) -------------------
+class _FakeCollection:
+    """Chroma-shaped ``get(where=...)`` over a list of (id, metadata)."""
+
+    def __init__(self, rows):
+        self.rows = rows
+        self.calls = []
+
+    @staticmethod
+    def _match(meta, where):
+        if "$and" in where:
+            return all(_FakeCollection._match(meta, w) for w in where["$and"])
+        return all(meta.get(k) == v for k, v in where.items())
+
+    def get(self, where=None, include=None, limit=None):
+        self.calls.append(where)
+        ids = [i for i, m in self.rows if where is None or self._match(m, where)]
+        return {"ids": ids[:limit] if limit else ids}
+
+
+class _FakePalace:
+    def __init__(self, rows=None, collection_error=None):
+        self._col = _FakeCollection(rows or [])
+        self._err = collection_error
+
+    def _get_collection(self):
+        if self._err:
+            raise self._err
+        return self._col
+
+
+# Shape of a real worker-filed research drawer:
+# chunked, wing projects_<x>, room research, source_file todoist:<task id>.
+_RESEARCH_ROWS = [
+    (
+        "drawer_projects_demo_research_abc_chunk_000000",
+        {"wing": "projects_demo", "room": "research", "source_file": "todoist:101"},
+    ),
+    (
+        "drawer_projects_demo_research_abc_chunk_000001",
+        {"wing": "projects_demo", "room": "research", "source_file": "todoist:101"},
+    ),
+    # Same source_file but NOT a research room: must not suppress.
+    ("drawer_x_research_queue_1", {"wing": "x", "room": "research-queue", "source_file": "todoist:202"}),
+]
+
+
+def test_research_drawer_exists_matches_source_file_in_research_room():
+    pal = _FakePalace(_RESEARCH_ROWS)
+    assert research_drawer_exists(pal, "todoist:101") is True
+    assert research_drawer_exists(pal, "todoist:202") is False
+    assert research_drawer_exists(pal, "todoist:999") is False
+
+
+def test_research_drawer_exists_wraps_palace_failures():
+    with pytest.raises(PalaceError):
+        research_drawer_exists(_FakePalace(collection_error=OSError("locked")), "todoist:1")
+
+    class _NoPalace:
+        def _get_collection(self):
+            return None
+
+    with pytest.raises(PalaceError):
+        research_drawer_exists(_NoPalace(), "todoist:1")
+
+
+def test_condition_drawer_lookup_uses_trigger_kind_and_source_id():
+    seen = []
+
+    def lookup(sf):
+        seen.append(sf)
+        return sf == "todoist:101"
+
+    ns = {"trigger.kind": "todoist", "source.id": "101"}
+    assert eval_condition("not exists drawer for task", ns, drawer_exists=lookup) is False
+    ns2 = {"trigger.kind": "todoist", "source.id": "102"}
+    assert eval_condition("not exists drawer for task", ns2, drawer_exists=lookup) is True
+    assert seen == ["todoist:101", "todoist:102"]
+
+
+def test_condition_drawer_palace_error_fails_open():
+    def lookup(sf):
+        raise PalaceError("palace down")
+
+    ns = {"trigger.kind": "todoist", "source.id": "101"}
+    assert eval_condition("not exists drawer for task", ns, drawer_exists=lookup) is True
+
+
+def test_condition_drawer_non_palace_error_propagates():
+    def lookup(sf):
+        raise KeyError("bug")
+
+    ns = {"trigger.kind": "todoist", "source.id": "101"}
+    with pytest.raises(KeyError):
+        eval_condition("not exists drawer for task", ns, drawer_exists=lookup)
+
+
+def test_scan_tick_existing_research_drawer_suppresses_candidate(tmp_path):
+    """Regression: a task already researched (drawer with
+    source_file todoist:<id> in a research room) must NOT be re-queued once
+    the ledger cooldown has expired."""
+    sd = tmp_path / "skills"
+    _make_skill(sd, "research", _TODOIST_JOB)
+    tasks = _one_task("101") + [
+        {"id": "202", "content": "Fresh topic", "description": "", "due": {"date": "2026-05-18"}}
+    ]
+    pal = _FakePalace(_RESEARCH_ROWS)
+    res = scan_tick(
+        now=NOW,
+        skills_dir=sd,
+        db_path=tmp_path / "e.db",
+        token="t",
+        todoist_fetcher=lambda tok, label: tasks,
+        mempalace_mod=pal,
+    )
+    queued = [q.candidate.source_id for q in res.queue]
+    assert queued == ["202"]
+    assert res.condition_skipped == 1
+    assert res.errors == []
+
+
+def test_scan_tick_palace_error_fails_open(tmp_path):
+    sd = tmp_path / "skills"
+    _make_skill(sd, "research", _TODOIST_JOB)
+    res = scan_tick(
+        now=NOW,
+        skills_dir=sd,
+        db_path=tmp_path / "e.db",
+        token="t",
+        todoist_fetcher=lambda tok, label: _one_task("101"),
+        mempalace_mod=_FakePalace(collection_error=OSError("locked")),
+    )
+    assert [q.candidate.source_id for q in res.queue] == ["101"]
+
+
+def test_scan_tick_condition_bug_fails_closed(tmp_path):
+    sd = tmp_path / "skills"
+    _make_skill(sd, "research", _TODOIST_JOB)
+
+    def lookup(sf):
+        raise KeyError("bug")
+
+    res = scan_tick(
+        now=NOW,
+        skills_dir=sd,
+        db_path=tmp_path / "e.db",
+        token="t",
+        todoist_fetcher=lambda tok, label: _one_task("101"),
+        drawer_exists=lookup,
+    )
+    assert res.queue == []
+    assert any("condition raised" in e for e in res.errors)
+
+
+def test_research_drawer_exists_against_real_chromadb(tmp_path):
+    """Same fixture drawer through a real chromadb ``where`` clause, so the
+    query shape is checked against the store, not just the fake."""
+    chromadb = pytest.importorskip("chromadb")
+    client = chromadb.PersistentClient(path=str(tmp_path / "palace"))
+    col = client.get_or_create_collection("drawers_test", embedding_function=None)
+    col.add(
+        ids=[i for i, _ in _RESEARCH_ROWS],
+        metadatas=[m for _, m in _RESEARCH_ROWS],
+        documents=["RESEARCH:x"] * len(_RESEARCH_ROWS),
+        embeddings=[[0.1, 0.2, 0.3]] * len(_RESEARCH_ROWS),
+    )
+
+    class _Palace:
+        def _get_collection(self):
+            return col
+
+    assert research_drawer_exists(_Palace(), "todoist:101") is True
+    assert research_drawer_exists(_Palace(), "todoist:202") is False
 
 
 def test_condition_exists_checks_namespace():

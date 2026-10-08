@@ -227,12 +227,111 @@ def render_template(template: str, ns: dict[str, str]) -> str:
 
 
 # --------------------------------------------------------------------------- #
+# research-drawer existence (backs `not exists drawer for task`)
+# --------------------------------------------------------------------------- #
+RESEARCH_ROOM = "research"
+
+# `not exists drawer` / `not exists drawer for task` (the store-backed form).
+_NO_DRAWER_RE = re.compile(r"^not\s+exists\s+drawer(\s+for\s+\w+)?$")
+
+
+class PalaceError(RuntimeError):
+    """A genuine MemPalace failure (not importable, no palace, query raised).
+
+    The ONLY failure the drawer-existence condition fails open on."""
+
+
+def candidate_source_file(ns: dict[str, str]) -> str:
+    """``<trigger.kind>:<source.id>``, e.g. ``todoist:<task id>``.
+
+    This is the ``source_file`` a research worker stamps on the drawer it
+    files (worker.prompt.md output contract), so it is the join key between
+    a candidate and its finished research."""
+    kind = (ns.get("trigger.kind") or "").strip()
+    sid = (ns.get("source.id") or "").strip()
+    return f"{kind}:{sid}" if kind and sid else ""
+
+
+def research_drawer_exists(mempalace_mod: Any, source_file: str) -> bool:
+    """True iff a drawer in any wing's ``research`` room has this exact
+    ``source_file``.
+
+    Queries the collection's metadata directly: ``tool_list_drawers`` returns
+    only id/wing/room/content_preview (no ``source_file``), so it cannot
+    answer this. Any failure to reach or query the palace raises
+    :class:`PalaceError`.
+    """
+    try:
+        col = mempalace_mod._get_collection()
+    except Exception as exc:  # noqa: BLE001, normalised to PalaceError
+        raise PalaceError(f"cannot open palace collection: {exc}") from exc
+    if not col:
+        raise PalaceError("no palace collection (palace missing or unreadable)")
+    try:
+        res = col.get(
+            where={"$and": [{"source_file": source_file}, {"room": RESEARCH_ROOM}]},
+            include=[],
+            limit=1,
+        )
+    except Exception as exc:  # noqa: BLE001, normalised to PalaceError
+        raise PalaceError(f"palace query failed: {exc}") from exc
+    return bool((res or {}).get("ids"))
+
+
+def _palace_drawer_lookup(mempalace_mod: Any | None) -> Callable[[str], bool]:
+    """Build the ``drawer_exists`` callable for one tick. The mempalace
+    import is lazy and cached, so a tick with no drawer conditions never
+    imports it; an import failure is a :class:`PalaceError`."""
+    cache: dict[str, Any] = {"mod": mempalace_mod}
+
+    def lookup(source_file: str) -> bool:
+        if cache["mod"] is None:
+            try:
+                cache["mod"] = triggers_mod._import_mempalace()
+            except Exception as exc:  # noqa: BLE001, normalised to PalaceError
+                raise PalaceError(f"cannot import mempalace: {exc}") from exc
+        return research_drawer_exists(cache["mod"], source_file)
+
+    return lookup
+
+
+def _eval_no_drawer(
+    ns: dict[str, str], drawer_exists: Callable[[str], bool] | None
+) -> bool:
+    source_file = candidate_source_file(ns)
+    if not source_file:
+        LOG.warning("drawer condition: candidate has no trigger.kind/source.id; failing open")
+        return True
+    if drawer_exists is None:
+        LOG.warning("drawer condition: no palace lookup wired; failing open for %s", source_file)
+        return True
+    try:
+        exists = drawer_exists(source_file)
+    except PalaceError as exc:
+        LOG.warning(
+            "drawer condition: palace error for %s, failing open "
+            "(ledger/governor still gate): %s",
+            source_file,
+            exc,
+        )
+        return True
+    if exists:
+        LOG.info("drawer condition: research drawer exists for %s, skipping", source_file)
+    return not exists
+
+
+# --------------------------------------------------------------------------- #
 # condition evaluation — tiny, safe predicate language
 # --------------------------------------------------------------------------- #
 _COND_OPS = ("==", "!=", " contains ", " in ", " exists", " not exists")
 
 
-def eval_condition(condition: str | None, ns: dict[str, str]) -> bool:
+def eval_condition(
+    condition: str | None,
+    ns: dict[str, str],
+    *,
+    drawer_exists: Callable[[str], bool] | None = None,
+) -> bool:
     """Evaluate a job ``condition`` against a candidate namespace.
 
     Deliberately tiny and ``eval``-free (never run arbitrary code from a
@@ -241,11 +340,12 @@ def eval_condition(condition: str | None, ns: dict[str, str]) -> bool:
       * ``None`` / empty                     → True (no gating)
       * ``manual``                           → True (always-eligible marker)
       * ``<key> exists``                     → key present & non-empty
-      * ``<key> not exists`` / ``not exists drawer for task``
-                                             → conservatively True here;
-        real existence checks are the worker/trigger's job (the old scanner
-        deduped against MemPalace, not in a SKILL.md predicate). We do NOT
-        silently treat it as a hard gate the engine can't actually evaluate.
+      * ``not exists drawer for task``       → False iff ``drawer_exists``
+        finds a ``research``-room drawer whose ``source_file`` is
+        ``<trigger.kind>:<source.id>`` (e.g. ``todoist:<task id>``). Fails
+        open (True, logged) ONLY on a :class:`PalaceError` or when no lookup
+        is wired; any other exception propagates.
+      * ``<key> not exists``                 → conservatively True here
       * ``<key> == <value>`` / ``!=``        → string compare against ns
       * ``<key> contains <substr>``          → substring test
       * ``<value> in <key>``                 → membership in ns[key]
@@ -261,10 +361,12 @@ def eval_condition(condition: str | None, ns: dict[str, str]) -> bool:
     if not c or c == "manual":
         return True
 
+    if _NO_DRAWER_RE.match(c):
+        return _eval_no_drawer(ns, drawer_exists)
+
     if c.endswith(" not exists") or c.startswith("not exists"):
-        # Cannot truly evaluate "no drawer exists for this task" from a flat
-        # namespace — that requires a store query the trigger layer already
-        # owns. Fail-open: defer to ledger/governor (the real guards).
+        # Not evaluable from a flat namespace. Fail-open: defer to
+        # ledger/governor (the real guards).
         return True
 
     if c.endswith(" exists"):
@@ -386,13 +488,16 @@ def scan_tick(
     token: str | None = None,
     todoist_fetcher: Callable[[str, str], list[dict[str, Any]]] | None = None,
     mempalace_mod: Any | None = None,
+    drawer_exists: Callable[[str], bool] | None = None,
     max_spawn_per_tick: int | None = None,
     queue_alert_threshold: int | None = None,
 ) -> TickResult:
     """Run one scan tick. Pure orchestration — spawns nothing.
 
     Everything external is injectable so the whole tick is unit-testable with
-    no network, no MCP, and a temp-file ledger/governor db.
+    no network, no MCP, and a temp-file ledger/governor db. ``drawer_exists``
+    backs ``not exists drawer for task``; it defaults to a palace lookup via
+    ``mempalace_mod`` (lazily imported when that is None).
     """
     now = now or datetime.now(timezone.utc)
     base = Path(skills_dir).expanduser() if skills_dir else _SKILLS_DIR_DEFAULT
@@ -421,6 +526,8 @@ def scan_tick(
         queue_alert_threshold = caps_alert
 
     res = TickResult()
+    if drawer_exists is None:
+        drawer_exists = _palace_drawer_lookup(mempalace_mod)
 
     sources = discover_job_sources(base)
     jobs, load_errs, skipped_np = load_jobs(sources)
@@ -450,7 +557,13 @@ def scan_tick(
             res.fired_candidates += 1
             ns = cand.render_context()
 
-            if not eval_condition(job.condition, ns):
+            try:
+                eligible = eval_condition(job.condition, ns, drawer_exists=drawer_exists)
+            except Exception as exc:  # noqa: BLE001, not a palace error: fail CLOSED
+                res.errors.append(f"{job.id}: condition raised: {exc}")
+                res.condition_skipped += 1
+                continue
+            if not eligible:
                 res.condition_skipped += 1
                 continue
 

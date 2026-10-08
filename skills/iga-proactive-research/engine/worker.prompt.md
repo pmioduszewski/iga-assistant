@@ -20,6 +20,12 @@ A JSON object will arrive on stdin with this shape:
 }
 ```
 
+When dispatched by the generic engine (`iga-research-dispatch` or `/gm`), the
+input is a `WORKER_REQUEST` instead: `trigger_kind` is the source and the ids
+live in `context` (`context["task.id"]` for Todoist, `context["drawer.id"]`
+for MemPalace; `context["source.id"]` holds either). Read `source` and
+`source_id` from there.
+
 Parse stdin first. If parsing fails, exit immediately with a one-line
 error — do NOT improvise a research topic.
 
@@ -61,7 +67,7 @@ You are allowed to:
 You are NOT allowed to:
 
 - Edit code or run shell commands beyond pure read-only inspections
-- Write to Todoist except the single output comment (see below)
+- Write to Todoist except closing the loop on the source task (see below)
 - Send messages on Slack / email / SMS / push
 - Spend on paid APIs beyond the model invocation itself
 - Loop or re-spawn yourself
@@ -85,6 +91,10 @@ Call `mempalace_add_drawer` with:
 - `wing`: `projects/<inferred_project>` — infer from title/context. If
   unclear, use `projects/general`.
 - `room`: `research`
+- `source_file` (MANDATORY): `<source>:<source_id>`, e.g. `todoist:<task id>`.
+  This is the key the engine's `not exists drawer for task` condition and the
+  dispatcher's close-the-loop step look up. A drawer without it is invisible
+  to dedup, and the task gets researched again.
 - `content` (verbatim AAAK format, no extra prose):
 
 ```
@@ -104,28 +114,40 @@ CONFIDENCE: <low|med|high>
 Use ★ count for self-rated quality (1 = thin, 3 = solid). Replace
 placeholders with real values. Keep total drawer under 1200 chars.
 
-### 2. Todoist comment (only if `source: todoist`)
+### 2. Close the loop in Todoist (MANDATORY if `source: todoist`)
 
-Post ONE comment to task `source_id` via the Todoist REST API directly
-(no MCP — headless workers may not have OAuth). Use Bash with `curl`:
+The task must stop looking pending once its research exists. On task
+`source_id`:
+
+1. **Remove the `iga-research` label**, keeping every other label: read the
+   task's `labels`, then update the task with that list minus `iga-research`.
+2. **Post ONE comment**, unless a comment already contains
+   `Drawer: <drawer_id>`:
+   `[Iga prepared] <TLDR>` + newline + `Drawer: <drawer_id>`.
+
+Use whatever Todoist tool this session has (Todoist MCP, or Bash + REST):
 
 ```bash
 TOKEN=$(cat ~/.config/todoist/token)
-curl -s -X POST "https://api.todoist.com/api/v1/comments" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"task_id":"<source_id>","content":"[Iga prepared] <TLDR>\nDrawer: <drawer_id>"}'
+# read labels: GET  https://api.todoist.com/api/v1/tasks/<source_id>
+# set labels:  POST https://api.todoist.com/api/v1/tasks/<source_id>  {"labels":[...without iga-research...]}
+# comment:     POST https://api.todoist.com/api/v1/comments  {"task_id":"<source_id>","content":"..."}
 ```
 
-If the token file is missing or the call returns non-2xx, log the
-failure to stderr and continue — do NOT fail the whole run for a
-missing comment. Drawer filing is the primary deliverable.
+Headless runs (`iga-research-dispatch`) have no Bash and no Todoist tool:
+skip this step there. The dispatcher runs the same close (idempotent:
+label only removed if present, comment skipped if one names the drawer)
+after you exit, using the drawer's `source_file`, so step 1's
+`source_file` is what makes it work.
+
+If a Todoist call fails, log it to stderr and continue. Drawer filing is
+the primary deliverable.
 
 Skip entirely if `source != "todoist"`.
 
 ### 3. Queue update
 
-After filing both, append `completed_at: <ISO timestamp>` to the queue
+After steps 1 and 2, append `completed_at: <ISO timestamp>` to the queue
 entry by rewriting the entry in
 `~/Iga/scratch/iga-research-queue.json`. If multiple entries share the
 same `topic_hash`, update the matching one. Do NOT remove other entries.

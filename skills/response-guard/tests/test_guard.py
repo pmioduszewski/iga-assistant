@@ -64,7 +64,42 @@ def words(count: int) -> str:
     return " ".join(f"w{i}" for i in range(count))
 
 
-def test_threshold_is_whitespace_words_and_blocks_only_over_120(tmp_path: Path):
+def test_markdown_table_pipes_and_rules_are_not_words():
+    table = "| Plan | Price |\n|---|---|\n| Free | $0 |\n| Pro | 29.9 |"
+    assert guard.count_words(table) == 6
+
+
+def test_list_markers_and_bare_emphasis_are_not_words():
+    assert guard.count_words("- one\n* two\n** ---") == 2
+
+
+def test_markdown_link_counts_as_its_label_only():
+    text = "Sources: [Digital Citizen](https://example.com/a-very-long-slug-here), [B](https://x.io \"t\")"
+    assert guard.count_words(text) == 4
+
+
+def test_code_and_bare_urls_still_count():
+    assert guard.count_words("Run `wt-sweep --dry-run` see https://example.com/x") == 5
+
+
+def test_default_limit_is_150(tmp_path: Path):
+    guard.process_event(prompt("d", "Summarize it"), host="codex", state_dir=tmp_path)
+    assert guard.process_event(stop("d", words(150)), host="codex", state_dir=tmp_path) == {}
+    guard.process_event(prompt("d2", "Summarize it"), host="codex", state_dir=tmp_path)
+    blocked = guard.process_event(stop("d2", words(151)), host="codex", state_dir=tmp_path)
+    assert blocked["decision"] == "block"
+
+
+def test_table_heavy_answer_under_limit_is_not_blocked(tmp_path: Path):
+    rows = "\n".join(f"| item{i} | {i} zł |" for i in range(30))
+    answer = "Summary line.\n\n| Item | Price |\n|---|---|\n" + rows
+    assert guard.count_words(answer) == 94
+    assert len(answer.split()) > 120
+    run_hook(tmp_path, prompt("tbl", "Summarize it"))
+    assert run_hook(tmp_path, stop("tbl", answer)) is None
+
+
+def test_threshold_blocks_only_over_max_words(tmp_path: Path):
     run_hook(tmp_path, prompt("s120", "Summarize it"))
     assert run_hook(tmp_path, stop("s120", words(120))) is None
 

@@ -1,6 +1,6 @@
 ---
 name: session-continuity
-description: One Iga across sessions and harnesses. Reads this workspace's other sessions (Claude Code, Codex) so a fact said in one is not lost to the next, at session start, on demand, and in the end-of-day sweep.
+description: One Iga across sessions and harnesses. Reads this workspace's other sessions (Claude Code; Codex opt-in) so a fact said in one is not lost to the next, at session start, on demand, and in the end-of-day sweep.
 intent_triggers:
   - "other session"
   - "another session"

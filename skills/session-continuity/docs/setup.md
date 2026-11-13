@@ -38,7 +38,7 @@ harness shows up as a warning instead of an empty day.
 | Variable | Default | Meaning |
 |---|---|---|
 | `IGA_HOME` | this clone | the workspace whose sessions count |
-| `IGA_SESSIONS_HARNESSES` | all | space or comma separated subset, for example `claude` |
+| `IGA_SESSIONS_HARNESSES` | `claude` | space or comma separated list; Codex is opt-in: `claude codex` |
 | `IGA_SESSIONS_REFRESH_MIN` | `60` | minutes between hook re-checks after the first prompt; `0` means first prompt only |
 | `IGA_SESSION_ID` | unset | the current session's id, for harnesses that do not expose one to commands |
 | `CLAUDE_CONFIG_DIR`, `CODEX_HOME` | unset | read as the harness data directory when set |

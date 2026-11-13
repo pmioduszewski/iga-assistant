@@ -21,6 +21,7 @@ UTC = timezone.utc
 def ws(tmp_path, monkeypatch):
     for name in ("CLAUDE_CONFIG_DIR", "CODEX_HOME", "IGA_SESSIONS_HARNESSES", "IGA_HOME"):
         monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("IGA_SESSIONS_HARNESSES", "claude codex")  # most tests cover both readers
     home, root = tmp_path / "home", tmp_path / "workspace"
     home.mkdir()
     root.mkdir()
@@ -191,6 +192,8 @@ def test_harness_selection_from_env(ws, monkeypatch):
     assert {s.harness for s in collect(ws)} == {"claude", "codex"}
     monkeypatch.setenv("IGA_SESSIONS_HARNESSES", "claude")
     assert [s.harness for s in collect(ws)] == ["claude"]
+    monkeypatch.delenv("IGA_SESSIONS_HARNESSES")
+    assert [s.harness for s in collect(ws)] == ["claude"]  # Codex is opt-in
 
 
 def test_claude_slug_matches_the_harness_folder_naming():
@@ -236,7 +239,9 @@ def test_secret_in_a_transcript_never_reaches_the_output(ws):
 def run_cli(ws, *args, **env_extra):
     home, root = ws
     env = {k: v for k, v in os.environ.items() if not k.startswith(("IGA_", "CLAUDE_", "CODEX_"))}
-    env.update(HOME=str(home), USERPROFILE=str(home), IGA_HOME=str(root), TZ="UTC", **env_extra)
+    env.update(HOME=str(home), USERPROFILE=str(home), IGA_HOME=str(root), TZ="UTC",
+               IGA_SESSIONS_HARNESSES="claude codex")
+    env.update(env_extra)
     return subprocess.run([sys.executable, str(ENGINE / "sessions.py"), *args],
                           capture_output=True, text=True, env=env)
 

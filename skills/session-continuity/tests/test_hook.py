@@ -21,6 +21,7 @@ NOON = datetime(2026, 3, 4, 12, 0, tzinfo=UTC)
 def ws(tmp_path, monkeypatch):
     for name in ("CLAUDE_CONFIG_DIR", "CODEX_HOME", "IGA_SESSIONS_HARNESSES", "IGA_SESSIONS_REFRESH_MIN"):
         monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("IGA_SESSIONS_HARNESSES", "claude codex")  # most tests cover both readers
     home, root = tmp_path / "home", tmp_path / "workspace"
     home.mkdir()
     root.mkdir()

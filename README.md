@@ -81,7 +81,7 @@ Honest state, per capability. "Unverified" means it runs but no eval has checked
 | Personal overrides (`CLAUDE.local.md`) | auto-loaded | not loaded yet |
 | Prompt hooks (time injection, recall nudges) | yes | time injection only: `scripts/setup-iga-mcp.sh` installs it, approve it once with `/hooks`; recall nudges not ported yet |
 | Response length guard | optional, 120 words with one rewrite | same guard; approve its hooks with `/hooks` |
-| One Iga across sessions (reads the day's other sessions) | reader for `/eod`, `/gm` and lookups, plus an optional first-prompt index hook | same reader and hook; the Codex reader is tested on synthetic rollouts and the hook needs approval |
+| One Iga across sessions (reads the day's other sessions) | reader for `/eod`, `/gm` and lookups, plus an optional first-prompt index hook | same reader and hook, opt-in (`IGA_SESSIONS_HARNESSES="claude codex"`); the Codex reader is tested on synthetic rollouts and the hook needs approval |
 | Rule gate (no memory rule per correction) | optional `PreToolUse` hook | not wired, the deny contract is unverified there; the `AGENTS.md` guidance applies |
 | `iga_ask` (persistent session tool) | yes | runs, but drives a Claude session underneath |
 | Headless engines (email triage, research, proactive) | `IGA_PROVIDER=claude-cli` (default) | `IGA_PROVIDER=codex-cli` |

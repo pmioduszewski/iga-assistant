@@ -31,6 +31,9 @@ from pathlib import Path
 from typing import Iterable, Iterator
 
 HARNESSES = ("claude", "codex")
+# Read by default. Codex transcripts are opt-in: a user may keep Codex for
+# unrelated work and not want it reviewed. IGA_SESSIONS_HARNESSES="claude codex" adds it.
+DEFAULT_HARNESSES = ("claude",)
 # Where a harness tells a command which session it runs in. IGA_SESSION_ID lets
 # a harness without such a variable (or a wrapper script) supply it.
 CURRENT_SESSION_ENV = ("IGA_SESSION_ID", "CLAUDE_CODE_SESSION_ID")
@@ -121,9 +124,9 @@ def workspace_root() -> Path:
 
 
 def enabled_harnesses() -> list[str]:
-    """All known harnesses, or the ones named in $IGA_SESSIONS_HARNESSES."""
+    """The harnesses named in $IGA_SESSIONS_HARNESSES, else DEFAULT_HARNESSES."""
     names = os.environ.get("IGA_SESSIONS_HARNESSES", "").replace(",", " ").split()
-    return [h for h in names if h in HARNESSES] or list(HARNESSES)
+    return [h for h in names if h in HARNESSES] or list(DEFAULT_HARNESSES)
 
 
 def claude_slug(path: Path) -> str:
@@ -383,7 +386,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--grep", help="only turns containing this text (case-insensitive)")
     ap.add_argument("--max-chars", type=int, default=1500, help="cut longer turns (default 1500)")
     ap.add_argument("--out-dir", type=Path, help="write one <harness>-<id>.txt per session here")
-    ap.add_argument("--harness", action="append", choices=HARNESSES, help="limit to these (default: all, or $IGA_SESSIONS_HARNESSES)")
+    ap.add_argument("--harness", action="append", choices=HARNESSES, help="limit to these (default: claude, or $IGA_SESSIONS_HARNESSES)")
     ap.add_argument("--root", type=Path, help="workspace folder (default: $IGA_HOME or this clone)")
     a = ap.parse_args(argv)
 

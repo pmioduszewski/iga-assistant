@@ -21,7 +21,7 @@ Draft issues in chat before creating them in Linear. Show: title, description, t
 
 ## Labels and projects
 
-Ask the user about their label and project conventions on first use. Store preferences in MemPalace `iga/rules` wing for future reference.
+Ask the user about their label and project conventions on first use. Write them to `rules/linear.local.md` for future reference: tool preferences live in rule files, not in the palace.
 
 ## Cycle awareness
 

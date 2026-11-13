@@ -81,6 +81,8 @@ Honest state, per capability. "Unverified" means it runs but no eval has checked
 | Personal overrides (`CLAUDE.local.md`) | auto-loaded | not loaded yet |
 | Prompt hooks (time injection, recall nudges) | yes | time injection only: `scripts/setup-iga-mcp.sh` installs it, approve it once with `/hooks`; recall nudges not ported yet |
 | Response length guard | optional, 120 words with one rewrite | same guard; approve its hooks with `/hooks` |
+| One Iga across sessions (reads the day's other sessions) | reader for `/eod`, `/gm` and lookups, plus an optional first-prompt index hook | same reader and hook; the Codex reader is tested on synthetic rollouts and the hook needs approval |
+| Rule gate (no memory rule per correction) | optional `PreToolUse` hook | not wired, the deny contract is unverified there; the `AGENTS.md` guidance applies |
 | `iga_ask` (persistent session tool) | yes | runs, but drives a Claude session underneath |
 | Headless engines (email triage, research, proactive) | `IGA_PROVIDER=claude-cli` (default) | `IGA_PROVIDER=codex-cli` |
 | Connected integrations (calendar, tasks, email) | whatever your harness has connected | same, but connectors injected by the Claude desktop app (Google Calendar, Todoist, …) are NOT available to Codex; add them as standalone MCP servers if you want them there |
@@ -88,6 +90,8 @@ Honest state, per capability. "Unverified" means it runs but no eval has checked
 Because the connected set differs per harness, the daily briefings (`/gm`, `/back`, `/eod`) run a preflight: any required source that is not reachable this session is reported as a `⚠️ <source> unavailable` line and its section runs degraded, rather than being silently dropped or papered over with an invented routine.
 
 To enable the optional response guard, run `python3 skills/response-guard/engine/install.py`, then restart the host and review Codex's new hooks with `/hooks`. It requests one rewrite for oversized replies; the original may already be visible. See [setup and limits](skills/response-guard/docs/setup.md).
+
+You talk to one Iga, however many sessions you open. Each session files a fact in memory the turn it is settled, and `/eod` reviews every session of the day in this workspace, across harnesses, through [`skills/session-continuity`](skills/session-continuity/SKILL.md). A transcript store that cannot be read is reported as `⚠️ <harness> sessions unavailable`, never skipped. To also give each new session a short index of the day's other sessions, run `python3 skills/session-continuity/engine/install.py` ([setup and limits](skills/session-continuity/docs/setup.md)). The optional [rule gate](skills/rule-gate/SKILL.md) keeps corrections from piling up as memory rules.
 
 The headless engines go through [`iga_llm/`](iga_llm/README.md), a small provider entry point. `claude-cli` and `codex-cli` are the supported backends; `anthropic`, `openai` and `ollama` exist but are experimental (mock-tested only).
 

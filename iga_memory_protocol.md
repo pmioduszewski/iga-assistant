@@ -21,7 +21,7 @@ Wings are **semantic categories**, not specific names. Any Iga instance must be 
 | `user` | Everything about the user | identity, schedule, habits, health, finance |
 | `people` | All people and relationships | family, work-team, business-contacts |
 | `projects` | All projects, one room per project | project-name-1, project-name-2 |
-| `iga` | Assistant self-knowledge | rules, corrections, patterns |
+| `iga` | Assistant self-knowledge | tooling, patterns, rules the user asked for |
 | `decisions` | Timestamped choices with reasoning | architecture, business, personal |
 
 **Rules:**
@@ -69,9 +69,9 @@ Wings are **semantic categories**, not specific names. Any Iga instance must be 
 | MemPalace | External structured tools (Notion, databases, etc.) |
 |-----------|-----------------------------------------------------|
 | People & relationships | Structured procedures & checklists |
-| Preferences & corrections | Financial tables & formulas |
+| Preferences & corrected facts | Financial tables & formulas |
 | Decisions with reasoning | Project sprint state |
-| Behavioral rules (case law) | Skill definitions (versioned) |
+| Rules the user asked for | Skill definitions (versioned) |
 | Emotional context & patterns | Reference docs with structure |
 
 **Rule of thumb:** Semantic search needed → MemPalace. Structured lookup needed → external tool. Both → store in both.
@@ -86,13 +86,22 @@ Session start
 
 During conversation
   → search before assumptions about people/projects
-  → store corrections and new facts immediately
+  → store a new or changed fact the turn it is settled, in its topic wing
   → add_drawer for important context shared by user
 
-Session end (/eod)
-  → review session for unpersisted facts
-  → mempalace_diary_write (session summary in AAAK)
+Day end (/eod)
+  → review every session of the day for unpersisted facts
+  → mempalace_diary_write (the day's summary in AAAK)
 ```
+
+A correction is not a rule. When the user corrects Iga, the fix is to do the
+skipped thing and, if the correction carries a fact, update that fact's
+drawer. Filing one rule drawer per correction buries the rules that matter
+under near-duplicates; `iga/rules` holds only rules the user asked for.
+
+The user may have several sessions open, in more than one harness. Memory is
+the only store all of them read, so nothing waits for `/eod` to be filed
+(`skills/session-continuity/SKILL.md`).
 
 ## Duplicate Prevention
 Before adding a drawer, call `mempalace_check_duplicate` or search for existing content. Overlapping drawers degrade retrieval quality. When updating existing knowledge, use `mempalace_update_drawer` instead of creating a new one.

@@ -122,6 +122,8 @@ skills/*
 !skills/mood-tracker/
 !skills/newsletter-research/
 !skills/response-guard/
+!skills/rule-gate/
+!skills/session-continuity/
 
 # =============================================================================
 # community_skills/email/dist/ — compiled build output. Ship source, not dist.

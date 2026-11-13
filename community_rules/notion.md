@@ -68,4 +68,4 @@ Notion fetches are expensive (5–10K tokens per page). To minimize cost:
 
 - Pages older than 90 days that haven't been read or updated → suggest archiving to a `Log & Archive` subpage
 - Research docs whose decisions are made → archive once decisions are codified elsewhere (MemPalace, repo, or another stable home)
-- Behavioral rules and corrections live in MemPalace `iga/rules`. Any Notion "rules" page is duplicate state and should be deprecated.
+- Behavioral rules live in the rule files (`rules/*.md` and their `.local.md`) and, for rules the user asked for, MemPalace `iga/rules`. Any Notion "rules" page is duplicate state and should be deprecated.

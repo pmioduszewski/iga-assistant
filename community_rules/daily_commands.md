@@ -25,7 +25,8 @@ where each thing lives.
 ## Preflight (every daily briefing)
 
 `/gm`, `/back`, and `/eod` each pull from several sources: MemPalace, the
-calendar, the task manager, and the email MCP. Which of those are connected
+calendar, the task manager, the email MCP, and the transcripts of the day's
+other sessions. Which of those are reachable
 depends on the harness (Claude Code, Codex, others differ). Before running the
 steps, note which required sources are reachable this session. For each one that
 is NOT, emit a single `⚠️ <source> unavailable (<why>)` line at the top of the
@@ -68,6 +69,7 @@ Good Morning — daily wake-up briefing.
 0. Run the Preflight above.
 1. `mempalace_status` — wake up
 2. `mempalace_diary_read("iga", last_n=3)` — load recent context
+   - Then catch up on what was said after the newest diary entry: `python3 skills/session-continuity/engine/sessions.py --list --since <that entry's time> --exclude-current` (if the entry carries only a date, use the start of the next day). A session listed there was never swept, because a day ended without `/eod` or the talk continued after it. Read those sessions and persist what is missing before briefing (`skills/session-continuity/SKILL.md`). Carry any `⚠️` line it prints into the briefing.
 3. `mempalace_search` for user identity
 4. Check calendar for today's events, and run the Time-critical alerts deviation check above (its lines go first in the briefing)
 5. Check tasks for today, highlight overdue
@@ -81,18 +83,19 @@ Welcome Back — mid-day re-entry briefing.
 0. Run the Preflight above.
 1. `mempalace_status` — wake up
 2. `mempalace_diary_read("iga", last_n=1)` — load most recent session
+   - Then list today's other sessions (`python3 skills/session-continuity/engine/sessions.py --list --day <today> --exclude-current`) and search MemPalace for what they settled, so the briefing reflects the whole day and not only this conversation.
 3. Check calendar for remaining events today, and run the Time-critical alerts deviation check above (its lines go first in the briefing)
 4. Check tasks for remaining work today
 5. Start the response with "🔄 [Day], [Month] [Date] — Welcome Back"
 
 ## /eod
 
-End of Day — session wrap-up and diary write.
+End of Day: wrap-up of the whole day and diary write.
 
 0. Run the Preflight above.
-1. Review this session for any facts not yet persisted to MemPalace — store them now
+1. Review every session of the day, not only this one, for facts not yet persisted to MemPalace, and store them now. The user talks to one Iga across sessions and harnesses, so a fact said in another session today is Iga's to keep. Follow "The end-of-day sweep" in `skills/session-continuity/SKILL.md`; review this conversation from context. If the skill is missing or prints a `⚠️` line, carry it into the briefing (`⚠️ other sessions unavailable (<why>)`) and review what is reachable.
 2. Update tasks — mark completed, review remaining
-3. `mempalace_diary_write` — write session summary in AAAK format
+3. `mempalace_diary_write`: write the day's summary (all sessions) in AAAK format
 4. Flag anything important for tomorrow's `/iga gm`
 
 ## /hi

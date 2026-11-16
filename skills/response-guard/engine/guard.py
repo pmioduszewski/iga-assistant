@@ -69,15 +69,28 @@ _DETAIL_OFFER_RE = re.compile(
 
 _MARKDOWN_LINK_RE = re.compile(r"!?\[([^\]]*)\]\([^)\s]*(?:\s+\"[^\"]*\")?\)")
 _HAS_LETTER_OR_DIGIT_RE = re.compile(r"[^\W_]")
+# A fenced block (``` or ~~~, optionally indented) up to its closing fence or,
+# if the answer was cut off, the end of the text.
+_FENCED_BLOCK_RE = re.compile(
+    r"^[ \t]*(`{3,}|~{3,})[^\n]*\n.*?(?:^[ \t]*\1[ \t]*$|\Z)",
+    re.DOTALL | re.MULTILINE,
+)
+_EXEMPTION_NOTE = (
+    "markdown symbols, link URLs and fenced code blocks are not counted; "
+    "never shorten a copyable block"
+)
 
 
 def count_words(text: str) -> int:
     """Count words the reader actually reads.
 
-    A markdown link counts as its label, not its URL. Tokens without a letter
+    Fenced code blocks are copy-paste deliverables (prompts, commands, code),
+    so they never count and the guard never pressures shortening them. A
+    markdown link counts as its label, not its URL. Tokens without a letter
     or digit (table pipes, list dashes, rules, bare emphasis markers) are
-    markup and do not count. Code and bare URLs still count.
+    markup and do not count. Inline code and bare URLs still count.
     """
+    text = _FENCED_BLOCK_RE.sub(" ", text)
     text = _MARKDOWN_LINK_RE.sub(r" \1 ", text)
     return sum(1 for token in text.split() if _HAS_LETTER_OR_DIGIT_RE.search(token))
 
@@ -178,13 +191,13 @@ def _guidance(max_words: int, detail_allowed: bool, retry: bool = False) -> str:
     if retry:
         return (
             f"Response guard retry: Rewrite the previous answer once in at most {max_words} "
-            "words (markdown symbols and link URLs are not counted). Do not repeat the original answer or redo tools. "
+            f"words ({_EXEMPTION_NOTE}). Do not repeat the original answer or redo tools. "
             "Preserve essential facts, code, citations, and any required Next: line."
         )
     limit = (
         "The user explicitly requested detail, so the default word limit is exempt."
         if detail_allowed
-        else f"Use no more than {max_words} words (markdown symbols and link URLs are not counted)."
+        else f"Use no more than {max_words} words ({_EXEMPTION_NOTE})."
     )
     return (
         f"Response guard: Answer first and use the minimum useful words. {limit} Fully fulfill "
@@ -296,7 +309,7 @@ def _stop_event(
         "decision": "block",
         "reason": (
             f"{REWRITE_MARKER} Rewrite the previous answer in at most {max_words} "
-            "words (markdown symbols and link URLs are not counted). Do not repeat the original answer or redo tools. "
+            f"words ({_EXEMPTION_NOTE}). Do not repeat the original answer or redo tools. "
             "Preserve essential facts, code, citations, and any required Next: line."
         ),
     }

@@ -10,8 +10,10 @@ status: shipped
 # Response guard
 
 Answer first, using the fewest words that fully address the request. Default:
-150 words. Code and bare URLs count; markdown symbols (table pipes, list
-dashes, rules) and the URL part of a markdown link do not. Explicit
+150 words. Inline code and bare URLs count; markdown symbols (table pipes,
+list dashes, rules), the URL part of a markdown link and fenced code blocks
+do not. A fenced block is a copy-paste deliverable (prompt, command, code):
+never shorten it to fit the limit. Explicit
 requests for detail bypass the limit for that turn. Keep essential facts,
 citations and required follow-up lines. Complete the work before summarizing it.
 

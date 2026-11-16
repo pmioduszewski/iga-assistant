@@ -82,6 +82,23 @@ def test_code_and_bare_urls_still_count():
     assert guard.count_words("Run `wt-sweep --dry-run` see https://example.com/x") == 5
 
 
+def test_fenced_code_blocks_are_not_counted():
+    text = "Prompt:\n```\n" + words(400) + "\n```\nDone."
+    assert guard.count_words(text) == 2
+    tilde = "A\n  ~~~text\n" + words(50) + "\n  ~~~\nB"
+    assert guard.count_words(tilde) == 2
+
+
+def test_unclosed_fence_is_not_counted():
+    assert guard.count_words("Here:\n```\n" + words(300)) == 1
+
+
+def test_long_prompt_block_with_short_prose_is_not_blocked(tmp_path: Path):
+    answer = "Prompt to paste:\n\n```\n" + words(400) + "\n```\n\nPaste it as is."
+    guard.process_event(prompt("cb", "Write a prompt"), host="codex", state_dir=tmp_path)
+    assert guard.process_event(stop("cb", answer), host="codex", state_dir=tmp_path) == {}
+
+
 def test_default_limit_is_150(tmp_path: Path):
     guard.process_event(prompt("d", "Summarize it"), host="codex", state_dir=tmp_path)
     assert guard.process_event(stop("d", words(150)), host="codex", state_dir=tmp_path) == {}
